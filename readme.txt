@@ -9,7 +9,7 @@ Stable tag: trunk
 
 == Description ==
 
-This plugin is in beta stages.  However, we are very interested in hearing any feedback you may have, feel free to suggest ideas on our [feedback site http://feedback.twincitiestech.com/] or by visiting our [forums http://forums.twincitiestech.com/].
+This plugin is in beta stages.  However, we are very interested in hearing any feedback you may have, feel free to suggest ideas on our [feedback site](http://feedback.twincitiestech.com/) or by visiting our [forums](http://forums.twincitiestech.com/).
 
 This plugin is intended to improve user management, easily create contact forms, and keep track of incoming contact form messages.
 
