@@ -1,0 +1,55 @@
+
+.wp_crm_message_quick_action {
+  background: none repeat scroll 0 0 #EFEFEF;
+  margin-right: 5px;
+  padding: 2px 6px;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  border-radius: 5px;
+  border: 1px solid #D7D3D3;
+  cursor: pointer;
+}
+
+
+.user_card .user_avatar {
+	margin-right: 10px;
+	float: left;
+}
+	
+.user_card.column-user_card{ 
+	padding: 10px;
+	color: #737373;
+}
+
+.user_card.column-user_card ul {
+  float: left;
+}
+
+ 
+.user_card .primary {
+	font-size: 1.4em;
+	font-weight:bold;
+}
+ 
+ 
+ 
+pre {
+  background: yellow;
+}
+
+.wp_crm_link {
+	color: #21759B;
+	cursor: pointer;
+	text-decoration: underline; }
+
+.wp_crm_link:hover { color: #D54E21; }
+
+
+.wp_crm_checkbox_on_left label{
+  float: none;
+  margin-left: 5px;
+  width: auto !important;
+}
+.wp_crm_checkbox_on_left input{
+  float: left;
+}

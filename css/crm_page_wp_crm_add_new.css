@@ -1,0 +1,244 @@
+@import url("wp_crm_global.css");
+
+body.crm_page_wp_crm_add_new  #user_activity_history.postbox .inside,
+body.crm_page_wp_crm_add_new  #primary_information.postbox .inside {
+  padding: 0;
+}
+
+body.crm_page_wp_crm_add_new  input.regular-text {
+  width: 20em;
+}
+
+#special_actions .inside {
+  padding: 0;
+}
+
+#wp_crm_user_activity_stream .wp_crm_activity_single  .email_header,
+#wp_crm_user_activity_stream .wp_crm_activity_single  .email_body{
+  font-family: Calibri;
+    line-height: 1.4em;
+    font-size: 13px;
+}
+
+.wp_crm_activity_single .timestamp .time {
+  display:none;
+}
+.wp_crm_activity_single ul.message_meta  {
+  margin-left: 5px;
+}
+
+
+.wp_crm_activity_single .by_user,
+.wp_crm_activity_single .timestamp {
+     color: #939393;
+    font-size: 11px;
+    margin-top: 5px;
+}
+
+.wp_crm_activity_single .truncated {
+    background: none repeat scroll 0 0 #EFEFEF;
+    padding: 5px;
+}
+
+.wp_crm_activity_single .truncated .truncated_content {
+    border-left: 1px solid #CCCCCC;
+    display: none;
+    margin: 10px;
+    padding: 10px;
+}
+
+.wp_crm_activity_single .email_header {
+    background: none repeat scroll 0 0 #F5F5F5;
+    margin-bottom: 5px;
+    padding: 5px;
+}
+.wp_crm_activity_single .email_body {
+
+}
+@import url("jquery-ui-1.8.11.custom.css");
+
+.wp_crm_new_message_options_line {
+    border-top: 1px solid #E8E8E8;
+    margin-top: 7px;
+    overflow: auto;
+    padding-top: 5px;
+ }
+ 
+ .wp_crm_show_message_options{
+  color: #9A9A9A;
+  cursor: pointer;
+ }
+ 
+ .wp_crm_message_options {
+    margin-top: 5px;
+ }
+ 
+ 
+#wp_crm_message_content {
+  width: 100%;
+  
+}
+.wp_crm_new_message {
+  background: none repeat scroll 0 0 #F5F5F5;
+  padding: 10px;
+}
+
+
+.wp_crm_activity_top {
+  background: #EFEFEF;
+  padding: 5px;
+  overflow: auto;
+  border-bottom: 1px solid #DDDDDD;
+
+}
+
+.wp_crm_activity_top #wp_crm_get_all_emails {
+  float: right;
+}
+
+.wp_crm_activity_top .wp_crm_last_sync {
+  position: relative;
+  top: 7px;
+  right: 15px;
+  color: #B3B1B1;
+  float: left;
+}
+
+#user_activity_history .inside {
+  margin: 0;
+}
+
+#wp_crm_user_activity_stream {
+  width: 100%;
+}
+
+.wp_crm_activity_single td {
+  border-bottom: 1px solid #E0E0E0;
+}
+
+.wp_crm_activity_single .left {
+  vertical-align: top;
+  width: 150px;
+}
+
+.wp_crm_activity_single .right {
+     vertical-align: top;
+ 
+}
+
+#side-info-column {
+  width: 450px;
+}
+
+.inner-sidebar #side-sortables {
+  width: 449px;
+ }
+.has-right-sidebar #post-body  {
+  margin-right: -550px;
+}
+
+.has-right-sidebar #post-body-content {
+    margin-right: 471px;
+}
+
+/* Autocomplete */
+.crm_page_wp_crm_add_new ul.ui-autocomplete  {
+	 padding: 5px;
+}
+.crm_page_wp_crm_add_new ul.ui-autocomplete .ui-menu-item {
+
+}
+
+.crm_page_wp_crm_add_new ul.ui-autocomplete .ui-menu-item a.ui-corner-all {
+
+}
+/* Autocomplete */
+.input_div textarea {
+  width: 99%;
+  padding: 5px;
+}
+
+.wp_crm_user_entry_row input.regular-text {
+  
+ }
+
+
+#icon-wp_crm {
+    background: url("images/wp-crm-icon.png") no-repeat center center;
+}
+
+#primary_information .inside {
+	margin: 0;
+}
+
+#primary_information table {
+	margin: 0;
+}
+
+div.blank_slate {
+    color: #999999;
+    cursor: pointer;
+    font-size: 12px;
+    margin: 4px 0 5px;
+    padding: 1px;
+}
+
+
+tr.wp_crm_user_entry_row th,
+tr.wp_crm_user_entry_row td {
+	border-bottom: 1px solid #EDEDED;
+	padding: 10px;
+}
+
+tr.wp_crm_user_entry_row th{
+	font-weight: bold;	
+	width: 150px;
+}
+
+div.add_another {
+    color: #999999;
+     text-decoration: none;
+	cursor: pointer;
+}
+	
+tr.wp_crm_user_entry_row th label{
+	width: 150px;
+	margin-top: 6px;
+	display: block;
+}
+tr.wp_crm_user_entry_row select option{
+	margin-right: 10px;
+}
+
+tr.wp_crm_user_entry_row.primary {
+	background: #EDEDED
+}
+tr.wp_crm_user_entry_row.primary:last-child  {
+	border-bottom: 1px solid red;
+}
+
+tr.wp_crm_user_entry_row.primary input.regular-text{
+	font-size: 1.3em;
+  width: 320px;
+  border: 1px solid #CFCFCF;
+
+}
+
+.form-table input[type=checkbox] {
+	width: auto;
+}
+
+#special_actions .inside {
+	margin:0;
+}
+#special_actions #minor-publishing{
+	padding: 10px;
+
+}
+.email_subject {
+	margin-right: 10px;
+}
+.sent_date,
+.email_summary {
+	color: #928F8F;
+}

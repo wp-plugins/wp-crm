@@ -1,0 +1,62 @@
+@import url("wp_crm_global.css");
+
+.major-publishing-actions {
+  border-top: medium none;
+  clear: both;
+  padding: 10px 10px 8px;
+}
+
+#actions.postbox  .inside {
+  padding: 0;
+  margin:0;
+}
+
+#actions.postbox  .inside .publishing-action {
+  float: right;
+  line-height: 23px;
+  text-align: right;
+}
+
+#poststuff p.search-box {
+  float: none;
+  margin:0;
+}
+
+
+.tablenav .wp_crm_bulk {
+  display:none;
+}
+
+.wpp_crm_filter_section_title {
+  margin: 0 0 2px 0;
+  font-size: 1.1em;
+  font-weight: bold;
+}
+ 
+.wp_crm_overview_filters{
+  clear: both;
+  margin: 5px 0 5px 0;
+}
+.wp_crm_overview_filters .wp_crm_checkbox_filter {
+  display:none;
+}
+
+.wp_crm_overview_filters .wp_crm_checkbox_filter label{
+  margin-left: 3px;
+}
+
+#icon-wp_crm {
+    background: url("images/wp-crm-icon.png") no-repeat center center;
+}
+ 
+.wp_crm_sidebar  .subsubsub li {
+	float: none;
+	display: list-item;
+}
+.wpp_crm_filter_show{
+  float: right;
+  margin-right: 25px;
+  cursor: pointer;
+  font-weight: normal;
+}
+
