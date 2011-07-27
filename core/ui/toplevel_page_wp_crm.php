@@ -12,7 +12,7 @@
 
 <div class="wp_crm_overview_wrapper wrap">
     <?php screen_icon(); ?>
-    <h2>CRM <a href="<?php echo admin_url('admin.php?page=wp_crm_add_new'); ?>" class="button add-new-h2">Add New</a></h2>
+    <h2><?php _e('CRM - All People'); ?> <a href="<?php echo admin_url('admin.php?page=wp_crm_add_new'); ?>" class="button add-new-h2">Add New</a></h2>
 
     <div id="poststuff" class="<?php echo $current_screen->id; ?>_table metabox-holder has-right-sidebar">
     <form id="wp-crm-filter" action="#" method="POST">

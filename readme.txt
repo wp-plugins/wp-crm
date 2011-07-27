@@ -1,7 +1,7 @@
 === WP-CRM - Customer Relations Management for WordPress ===
 Contributors: Usability Dynamics, andypotanin
 Donate link: http://twincitiestech.com/plugins/
-Tags: CRM, user management, contact form
+Tags: CRM, user management, contact form, email, feedback, form, contact form plugin
 Requires at least: 3.0
 Tested up to: 3.2.2
 Stable tag: trunk
@@ -19,6 +19,14 @@ This plugin is intended to improve user management, easily create contact forms,
 * Form Creation.
 * Contact Message Management.
 * Keep track of customer, client and vendor notes.
+
+= Contact Forms =
+
+[vimeo http://vimeo.com/26983459]
+
+= Attribute Management =
+
+[vimeo http://vimeo.com/26984134]
 
 
 = Premium Features =
@@ -39,12 +47,10 @@ Visit CRM -> Settings and click on the "Data" tab.  There you will  be able to a
 
 == Screenshots ==
 
-1. Properties Overview
-2. Editing Property 
-3. Customize Front-end with Property Widgets
-4. Property Listings
-5. A Building  Page
-6. Image from gallery enlarged
+1. Main View
+2. User Editing
+3. Contact Form
+4. Contact Messages
 
 == Upgrade Notice ==
 
@@ -52,6 +58,11 @@ Visit CRM -> Settings and click on the "Data" tab.  There you will  be able to a
 * Initial public release.
  
 == Changelog ==
+
+= 0.09 =
+* Minor release.
+* Adding tutorial videos to WordPress plugin page.
+* Few UI fixes.
 
 = 0.08 =
 * Initial public release.

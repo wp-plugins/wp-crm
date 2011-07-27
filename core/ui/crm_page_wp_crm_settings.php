@@ -20,8 +20,9 @@ if(empty($wp_crm['notifications'])) {
   $wp_crm['notifications']['example']['send_from'] = get_bloginfo('admin_email');
 }
 
-if(empty($wp_crm['data_structure']['attributes']))
+if(empty($wp_crm['data_structure']['attributes'])) {
   $wp_crm['data_structure']['attributes'] = array('user_email' => array('title' => 'Email', 'primary' => 'true'));
+}
 
 ?>
 
@@ -143,7 +144,11 @@ if(empty($wp_crm['data_structure']['attributes']))
 
             <?php if(is_array($wp_crm['notification_actions'])): ?>
             <ul class="wp-tab-panel">
-              <?php foreach($wp_crm['notification_actions'] as $action_slug => $action_title): $action_hash = rand(1000,9999); ?>
+              <?php foreach($wp_crm['notification_actions'] as $action_slug => $action_title): $action_hash = rand(1000,9999); 
+              if(empty($action_title)) {
+                continue;
+              }
+              ?>
                 <li>
                   <input type="checkbox" id="action_<?php echo $action_hash; ?>" <?php CRM_UD_UI::checked_in_array($action_slug, $data['fire_on_action']); ?> name="wp_crm[notifications][<?php echo $notification_slug; ?>][fire_on_action][]"  value="<?php echo $action_slug; ?>" />
                   <label for="action_<?php echo $action_hash; ?>" ><?php echo $action_title; ?></label>
@@ -227,10 +232,13 @@ if(empty($wp_crm['data_structure']['attributes']))
             <input  id="<?php echo $row_hash; ?>_allow_multiple"  value='true' type="checkbox"  <?php checked($wp_crm['data_structure']['attributes'][$slug]['allow_multiple'], 'true'); ?> name="wp_crm[data_structure][attributes][<?php echo $slug; ?>][allow_multiple]" />
             <label  for="<?php echo $row_hash; ?>_allow_multiple"  ><?php _e('Allow Multiple', 'wp_crm'); ?></label>
         </li>
+        
+        <?php /*
         <li>
             <input  id="<?php echo $row_hash; ?>_autocomplete"  value='true' type="checkbox"  <?php checked($wp_crm['data_structure']['attributes'][$slug]['autocomplete'], 'true'); ?> name="wp_crm[data_structure][attributes][<?php echo $slug; ?>][autocomplete]" />
             <label  for="<?php echo $row_hash; ?>_autocomplete"  ><?php _e('Autocomplete Field', 'wp_crm'); ?></label>
         </li>
+        */ ?>
 
         </ul>
         </td>

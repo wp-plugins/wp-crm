@@ -1,15 +1,15 @@
 <?php
 /*
 Plugin Name: WP-CRM - Customer Relationship Management
-Plugin URI: http://twincitiestech.com/plugins/wp-crm/
+Plugin URI: http://twincitiestech.com/plugins/
 Description: Integrated Customer Relationship Management for WordPress. 
-Author: TwinCitiesTech.com, Inc.
-Version: 0.08
+Author: Usability Dynamics, Inc.
+Version: 0.09
 Author URI: http://twincitiestech.com
 
-Copyright 2010  TwinCitiesTech.com Inc.   (email : andy.potanin@twincitiestech.com)
+Copyright 2010  Usability Dynamics, Inc.    (email : andy.potanin@twincitiestech.com)
 
-Created by TwinCitiesTech.com (website: twincitiestech.com       email : support@twincitiestech.com)
+Created by Usability Dynamics, Inc (website: twincitiestech.com       email : support@twincitiestech.com)
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -36,17 +36,18 @@ define('WP_CRM_Templates', WP_CRM_Path . '/templates');
 define('WP_CRM_URL', WP_PLUGIN_URL . '/wp-crm');
 
 /** Plugin Version */
-define('WP_CRM_Version', '0.08');
+define('WP_CRM_Version', '0.09');
 
 /** Directory path for include_onces of template files  */
 define('WP_CRM_Premium', WP_PLUGIN_DIR . '/wp-crm/core/premium');
 
- function WP_CRM_load_textdomain() {
+function WP_CRM_load_textdomain() {
 	$locale = get_locale();
-	$mofile = WP_CRM_Path . "/langs/WP_CRM-$locale.mo";
+	$mofile = WP_CRM_Path . "/langs/wp-crm-$locale.mo";
 
-	if ( file_exists( $mofile ) )
+	if ( file_exists( $mofile ) ) {
 		load_textdomain( 'WP_CRM', $mofile );
+  }
 }
 add_action ( 'plugins_loaded', 'WP_CRM_load_textdomain', 2 );
 	

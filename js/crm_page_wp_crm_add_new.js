@@ -8,9 +8,6 @@ jQuery(document).bind('wp_crm_value_changed', function(event, data) {
     return;
   }
   
-  
-  
-
   if(jQuery(object).val() == '') {
     jQuery('.input_div', parent).hide();
     jQuery('.blank_slate', parent).show();
@@ -20,7 +17,6 @@ jQuery(document).bind('wp_crm_value_changed', function(event, data) {
 
 
 jQuery(document).ready(function() {
-
  
   
   jQuery('.form-table tr.not_primary').each(function() {
@@ -38,17 +34,21 @@ jQuery(document).ready(function() {
   });
     
   jQuery('tr.not_primary .wp_crm_input_wrap input,  tr.not_primary .wp_crm_input_wrap textarea').live('focusout', function() {
+  
+    var parent = jQuery(this).parents('.wp_crm_input_wrap');
+ 
+    if(jQuery('select', parent).length) {
+      //** Don't hide element if there's a select field in there */
+      return;
+    }
+    
     jQuery(this).trigger('wp_crm_value_changed', {object: this, action: 'input_focusout'});
   });
   
   
   jQuery('tr.not_primary .wp_crm_input_wrap select,  tr.not_primary .wp_crm_input_wrap select').live('mousedown', function() {
     jQuery(this).trigger('wp_crm_value_changed', {object: this, action: 'option_mousedown'});
-  });
-    
-
-
-  
+  });  
  
   jQuery( ".datepicker" ).datepicker({
     changeMonth: true,
@@ -198,13 +198,5 @@ jQuery(document).ready(function() {
     });
 
   }
-
-
-
-
-
-
-
-
 
 

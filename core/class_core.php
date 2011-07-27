@@ -123,7 +123,13 @@ class WP_CRM_Core {
     add_action("template_redirect", array('WP_CRM_Core', "template_redirect"));
     add_action("deleted_user", array('WP_CRM_F', "deleted_user"));
      
-
+    
+    //** Add capabilities */
+    if(is_array($wp_crm['capabilities']) && $wp_roles) {
+      foreach($wp_crm['capabilities'] as $capability => $description) {
+        $wp_roles->add_cap('administrator','wp_crm_' . $capability,true);
+      }
+    } 
  
     // Filers are applied
     $wp_crm['configuration']       = apply_filters('wp_crm_configuration', $wp_crm['configuration']);
@@ -138,7 +144,7 @@ class WP_CRM_Core {
    *
    */
   function template_redirect() {
-      global $post, $property, $wp, $wp_query, $wp_styles;
+      global $post, $wp, $wp_query, $wp_styles;
 
       if(!strpos($post->post_content, "wp_crm_form"))
         return;
@@ -201,8 +207,7 @@ class WP_CRM_Core {
     global $wp_rewrite, $wp_roles, $wp_crm; 
  
     do_action('wp_crm_metaboxes');  
-    
- 
+
     
     // Add overview table rows. Static because admin_menu is not loaded on ajax calls.
     add_filter("manage_toplevel_page_wp_crm_columns", array('WP_CRM_Core', "overview_columns"));        
@@ -218,8 +223,9 @@ class WP_CRM_Core {
     if(is_array($wp_crm['system']['pages'])) {
       foreach($wp_crm['system']['pages'] as $screen) {
 
-        if(!class_exists($screen))
+        if(!class_exists($screen)) {
           continue;
+        }
 
         $location_prefixes = array('side_', 'normal_', 'advanced_');
 
@@ -227,14 +233,15 @@ class WP_CRM_Core {
 
           // Set context and priority if specified for box
 
-
           $context = 'normal';
 
-          if(strpos($box, "side_") === 0)
+          if(strpos($box, "side_") === 0) {
             $context = 'side';
+          }
 
-          if(strpos($box, "advanced_") === 0)
+          if(strpos($box, "advanced_") === 0) {
             $context = 'advanced';
+          }
 
           // Get name from slug
           $label = CRM_UD_F::slug_to_label(str_replace($location_prefixes, '', $box));
@@ -248,11 +255,7 @@ class WP_CRM_Core {
     
     WP_CRM_F::manual_activation();    
     
-    if(is_array($wp_crm['capabilities']) && $wp_roles) {
-        foreach($wp_crm['capabilities'] as $capability => $description) {
-          $wp_roles->add_cap('administrator','wp_crm_' . $capability,true);
-        }
-    }
+
           
     add_filter('admin_title', array('WP_CRM_F', 'admin_title'));
   }
@@ -364,19 +367,15 @@ class WP_CRM_Core {
   function page_loader() {
     global $wp_crm, $screen_layout_columns, $current_screen, $wpdb, $crm_messages, $user_ID;
 
-    echo "<script type='text/javascript'>console.log('screen id: {$current_screen->base}');</script>";
-
+    //** echo "<script type='text/javascript'>console.log('screen id: {$current_screen->base}');</script>"; */
 
     $file_path = WP_CRM_Path . "/core/ui/{$current_screen->base}.php";
 
-
-    if(file_exists($file_path))
+    if(file_exists($file_path)) {
       include $file_path;
-    else
+    } else {
       echo "<div class='wrap'><h2>Error</h2><p>Template not found:" . $file_path. "</p></div>";
-
-    //print_r(func_get_args());
-
+    }
 
   }
 
@@ -442,7 +441,7 @@ class WP_CRM_Core {
   }
 
   /**
-   * Modify admin body class on property pages for CSS
+   * Modify admin body class on CRM  pages for CSS
    *
    * @return string|$request a modified request to query listings
    * @since 0.5
@@ -474,7 +473,7 @@ class WP_CRM_Core {
    function plugin_action_links( $links, $file ){
 
      if ( $file == 'wp-crm/wp-crm.php' ){
-      $settings_link =  '<a href="'.admin_url("edit.php?post_type=property&page=property_settings").'">' . __('Settings','wp_crm') . '</a>';
+      $settings_link =  '<a href="'.admin_url("admin.php?page=wp_crm_settings").'">' . __('Settings','wp_crm') . '</a>';
       array_unshift( $links, $settings_link ); // before other links
     }
     return $links;
