@@ -21,7 +21,10 @@ class WP_CRM_F {
     */
     static function list_options($user_object, $column_name, $args = '') {
       global $wp_crm;
-      if(!is_array($user_object[$column_name])) {        return;      }
+
+      if(!is_array($user_object[$column_name])) {
+        return;
+      }
       foreach($user_object[$column_name] as $option_type_slug => $option_type_values) {
 
         foreach($option_type_values as $single_option_value) {
@@ -108,7 +111,8 @@ class WP_CRM_F {
     static function user_search($search_vars = false, $args = array()) {
       global $wp_crm, $wpdb;
 
-      $sort_by = ' ORDER BY user_registered DESC ';
+
+      $sort_by = ' ORDER BY user_registered DESC ';
       /** Start our SQL, we include the 'WHERE 1' to avoid complex statements later */
       $sql = "SELECT * FROM {$wpdb->prefix}users AS u WHERE 1";
 
@@ -446,13 +450,15 @@ class WP_CRM_F {
    function get_trigger_action_notification($action = false) {
     global $wp_crm;
 
-    if(!$action)
+    if(!$action) {
       return;
-
+    }
+ 
     foreach($wp_crm['notifications'] as $slug => $notification_data){
 
-      if(is_array($notification_data['fire_on_action']) && in_array($action, $notification_data['fire_on_action']))
+      if(is_array($notification_data['fire_on_action']) && in_array($action, $notification_data['fire_on_action'])) {
         $notifications[$slug] = $notification_data;
+      }
 
     }
 
@@ -1247,12 +1253,18 @@ class WP_CRM_F {
     );
 
     if(!is_dir(WP_CRM_Premium)) {
-      return;    }
+      return;
+    }
 
     if ($premium_dir = opendir(WP_CRM_Premium)) {
 
       if(file_exists(WP_CRM_Premium . "/index.php")) {
-        if(WP_DEBUG) {          include_once(WP_CRM_Premium . "/index.php");        } else {          @include_once(WP_CRM_Premium . "/index.php");        }
+
+        if(WP_DEBUG) {
+          include_once(WP_CRM_Premium . "/index.php");
+        } else {
+          @include_once(WP_CRM_Premium . "/index.php");
+        }
       }
 
       while (false !== ($file = readdir($premium_dir))) {
@@ -1263,15 +1275,25 @@ class WP_CRM_F {
         if(end(explode(".", $file)) == 'php') {
 
           $plugin_slug = str_replace(array('.php'), '', $file);
-          if(WP_DEBUG) {
-            $plugin_data = get_file_data( WP_CRM_Premium . "/" . $file, $default_headers, 'plugin' );          } else {            $plugin_data = @get_file_data( WP_CRM_Premium . "/" . $file, $default_headers, 'plugin' );          }
+
+
+          if(WP_DEBUG) {
+            $plugin_data = get_file_data( WP_CRM_Premium . "/" . $file, $default_headers, 'plugin' );
+          } else {
+            $plugin_data = @get_file_data( WP_CRM_Premium . "/" . $file, $default_headers, 'plugin' );
+          }
           $wp_crm['installed_features'][$plugin_slug]['name'] = $plugin_data['Name'];
           $wp_crm['installed_features'][$plugin_slug]['version'] = $plugin_data['Version'];
           $wp_crm['installed_features'][$plugin_slug]['description'] = $plugin_data['Description'];
 
           // Check if the plugin is disabled
-          if($wp_crm['installed_features'][$plugin_slug]['disabled'] != 'true') {            if(WP_DEBUG) {
-              include_once(WP_CRM_Premium . "/" . $file);            } else {              @include_once(WP_CRM_Premium . "/" . $file);            }
+          if($wp_crm['installed_features'][$plugin_slug]['disabled'] != 'true') {
+
+            if(WP_DEBUG) {
+              include_once(WP_CRM_Premium . "/" . $file);
+            } else {
+              @include_once(WP_CRM_Premium . "/" . $file);
+            }
 
              // Disable plugin if class does not exists - file is empty
             if(!class_exists($plugin_slug))

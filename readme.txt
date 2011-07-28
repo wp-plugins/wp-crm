@@ -59,6 +59,10 @@ Visit CRM -> Settings and click on the "Data" tab.  There you will  be able to a
  
 == Changelog ==
 
+= 0.11 =
+* Minor fix with message notifications. 
+* Better screenshots included. 
+
 = 0.10 =
 * Added screenshots. 
 

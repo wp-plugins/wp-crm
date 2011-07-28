@@ -517,14 +517,17 @@ class class_contact_messages {
 
     $data = $_REQUEST['wp_crm'];
 
-    if(empty($data))
+    if(empty($data)) {
       die();
+    }
 
     $md5_form_slug = $_REQUEST['form_slug'];
-
     foreach($wp_crm['wp_crm_contact_system_data'] as $form_slug => $form_data) {
-      if($md5_form_slug = md5($form_slug)) {
+    
+      if($md5_form_slug == md5($form_slug)) {
+ 
         $confirmed_form_slug = $form_slug;
+        continue;
       }
     }
 
@@ -541,12 +544,11 @@ class class_contact_messages {
     $message = WP_CRM_F::get_first_value($_REQUEST['wp_crm']['user_data']['message_field']);
  
     if(empty($message)) {
-      //** No message submitted */
-      
+      //** No message submitted */      
     
     }
 
-    $message_id = class_contact_messages::insert_message($user_id, $message, $form_slug);
+    $message_id = class_contact_messages::insert_message($user_id, $message, $confirmed_form_slug);
 
     $notification_info = (array) wp_crm_get_user($user_id);
     $notification_info['message_content'] = stripslashes($message);
@@ -588,7 +590,8 @@ class class_contact_messages {
     });
   </script>
   <div class="wp_crm_inner_tab">
-
+
+
       <p>
         <?php _e('Use this section to add and configure new contact forms.', 'wp_crm'); ?>
       </p>
@@ -628,7 +631,13 @@ class class_contact_messages {
           <td>
            <?php if(is_array($wp_crm['data_structure']['attributes'])): ?>
             <ul class="wp-tab-panel">
-              <?php foreach($wp_crm['data_structure']['attributes'] as $attribute_slug => $attribute_data):                            if(empty( $attribute_data['title'])) {                continue;              }              ?>
+              <?php foreach($wp_crm['data_structure']['attributes'] as $attribute_slug => $attribute_data):
+              
+              if(empty( $attribute_data['title'])) {
+                continue;
+              }
+
+              ?>
                 <li>
                   <input id="field_<?php echo $attribute_slug; ?>_<?php echo $row_hash; ?>" type="checkbox" <?php CRM_UD_UI::checked_in_array($attribute_slug, $data['fields']); ?> name="wp_crm[wp_crm_contact_system_data][<?php echo $contact_form_slug; ?>][fields][]"  value="<?php echo $attribute_slug; ?>" />
                   <label for="field_<?php echo $attribute_slug; ?>_<?php echo $row_hash; ?>"><?php echo $attribute_data['title']; ?></label>
@@ -642,7 +651,12 @@ class class_contact_messages {
 
             <?php if(is_array($wp_crm['notification_actions'])): ?>
             <ul class="wp-tab-panel">
-              <?php foreach($wp_crm['notification_actions'] as $action_slug => $action_title):                             if(empty($action_title)) {                continue;              }               ?>
+              <?php foreach($wp_crm['notification_actions'] as $action_slug => $action_title): 
+              
+              if(empty($action_title)) {
+                continue;
+              } 
+              ?>
                 <li>
                   <input <?php if( $action_slug == $contact_form_slug) echo ' DISABLED checked=true ' ; ?> id="field_<?php echo $action_slug; ?>_<?php echo $row_hash; ?>"  type="checkbox" <?php CRM_UD_UI::checked_in_array($action_slug, $data['fire_on_action']); ?> name="wp_crm[wp_crm_contact_system_data][<?php echo $contact_form_slug; ?>][fire_on_action][]"  value="<?php echo $action_slug; ?>" />
                   <label for="field_<?php echo $action_slug; ?>_<?php echo $row_hash; ?>"><?php echo $action_title; ?></label>

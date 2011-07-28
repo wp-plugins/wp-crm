@@ -192,35 +192,44 @@ if(!function_exists('wp_crm_send_notification')) {
   function wp_crm_send_notification($action = false, $args = false) {
     global $wp_crm, $wpdb;
 
-    if(!$action)
+    if(!$action) {
       return false;
-
+    }
+ 
     $defaults = array();
 
-    if(!is_array($args))
+    if(!is_array($args)) {
       $args = wp_parse_args( $args, $defaults );
+    }
 
-    if(empty($args))
+    if(empty($args)) {
       return false;
+    }
 
     // Verify that at minium certain arguments necessary for sending a message out are passed
      //if(empty($args['user_email'])) return false;
 
     $notifications = WP_CRM_F::get_trigger_action_notification($action);
-
-    if(!$notifications)
+   
+    
+    
+    if(!$notifications) {
       return false;
+    }
 
 
      // Act upon every notification one at a time
      foreach($notifications as $notification) {
 
-        $message = WP_CRM_F::replace_notification_values($notification, $args);
+      $message = WP_CRM_F::replace_notification_values($notification, $args);
 
-        if(!$message)
-          continue;
+      if(!$message) {
+        continue;
+      }
 
       $headers = "From: {$message[send_from]} \r\n\\";
+      
+    
 
       wp_mail($message['to'], $message['subject'], $message['message'], $headers);
 
@@ -229,7 +238,7 @@ if(!function_exists('wp_crm_send_notification')) {
 
 
   }
-}; /* wp_crm_send_notification */
+} /* wp_crm_send_notification */
 
 if(!function_exists('wp_crm_save_user_data')) {
   /**
