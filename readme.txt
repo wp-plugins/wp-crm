@@ -47,10 +47,10 @@ Visit CRM -> Settings and click on the "Data" tab.  There you will  be able to a
 
 == Screenshots ==
 
-1. Main View
-2. User Editing
-3. Contact Form
-4. Contact Messages
+1. Main view and filter
+2. User editing
+4. Incoming contact messages overview
+3. Example of the contact form in action
 
 == Upgrade Notice ==
 
@@ -58,6 +58,9 @@ Visit CRM -> Settings and click on the "Data" tab.  There you will  be able to a
 * Initial public release.
  
 == Changelog ==
+
+= 0.10 =
+* Added screenshots. 
 
 = 0.09 =
 * Minor release.
