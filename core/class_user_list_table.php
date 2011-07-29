@@ -264,12 +264,12 @@ class CRM_User_List_Table extends WP_CMR_List_Table {
             if($wp_crm['data_structure']['attributes'][$column_name]['has_options']) {
 
               //** Get label and only show when enabled */
-              $visible_options = WP_CRM_F::list_options($user_object, $column_name);
+              $visible_options = nl2br(WP_CRM_F::list_options($user_object, $column_name));
 
             } else {
               //** Regular value, no need to get option title */
               foreach($values as $single_value) {
-                $visible_options[] = $single_value;
+                $visible_options[] = nl2br($single_value);
               }
             }
           }

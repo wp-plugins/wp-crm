@@ -9,6 +9,9 @@ body.crm_page_wp_crm_add_new  input.regular-text {
   width: 20em;
 }
 
+.wp_crm_toggle_advanced_user_actions.wp_crm_link {
+  margin-bottom: 10px;
+}
 #special_actions .inside {
   padding: 0;
 }

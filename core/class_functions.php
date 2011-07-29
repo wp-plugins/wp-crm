@@ -526,6 +526,13 @@ class WP_CRM_F {
                   } else {
                     return $user_object[$key]['default'];
                   }
+                } else {
+                  //** Default is empty */
+                  foreach($user_object[$key] as $some_value) {
+                    if(!empty($some_value)) {
+                      return $some_value;
+                    }
+                  }
                 }
             }
         }
@@ -535,8 +542,22 @@ class WP_CRM_F {
 
 
     /**
-     * Get user data structure.  May be depreciated.
+     * Get first value -> used to guess "default" user value
      *
+     * @since 0.1
+     *
+    */    
+    static function get_first_user_data_key()  {
+      global $wp_crm;
+      
+      foreach($wp_crm['data_structure']['attributes'] as $key => $data) {
+        return $key;
+      }
+    
+    }
+ 
+    /**
+     * Get user data structure.  May be depreciated.
      *
      * @since 0.1
      *
@@ -1457,11 +1478,24 @@ class WP_CRM_F {
         'user_id' => $current_user->ID,
         'attribute' => 'general_message',
         'action' => 'insert',
-        'ajax' => 'false'
+        'ajax' => 'false',
+        'time' => date('Y-m-d H:i:s')        
      );
+   
+ 
+
 
     $args = wp_parse_args( $args, $defaults );
-
+    
+    //** Convert time - just in case */
+    if(empty($args['time'])) {
+      $time_stamp = time();
+    } else {
+      $time_stamp = strtotime($args['time']);    
+    }
+    
+    $args['time'] = date('Y-m-d H:i:s', $time_stamp);
+    die($args['time']);
 
     $wpdb->insert($wpdb->prefix . 'crm_log', array(
       'object_id' => $args['object_id'],
@@ -1472,7 +1506,7 @@ class WP_CRM_F {
       'value' => $args['value'],
       'text' => $args['text'],
       'other' => $args['other'],
-      'time' => date('Y-m-d H:i:s')
+      'time' => $time
     ));
 
 //    echo $wpdb->last_query;

@@ -59,6 +59,10 @@ Visit CRM -> Settings and click on the "Data" tab.  There you will  be able to a
  
 == Changelog ==
 
+= 0.12 =
+* Minor fixes with account creation.
+* Added ability to set user password from CRM user editing screen.
+
 = 0.11 =
 * Minor fix with message notifications. 
 * Better screenshots included. 

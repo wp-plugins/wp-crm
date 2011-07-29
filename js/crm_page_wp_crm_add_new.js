@@ -18,6 +18,24 @@ jQuery(document).bind('wp_crm_value_changed', function(event, data) {
 
 jQuery(document).ready(function() {
  
+  //** Verify deletion saving */
+  jQuery('.submitdelete').click(function() {
+  
+    
+    return confirm('Are you sure you want to delete user?');
+  });
+  
+  
+  //** Handles form saving */
+  jQuery("#crm_user").submit(function(form) {
+    return wp_crm_save_user_form(form);
+  });
+  
+  jQuery('div.wp_crm_toggle_advanced_user_actions').click(function() {
+    
+    jQuery('div.wp_crm_advanced_user_actions').toggle();
+    
+  });
   
   jQuery('.form-table tr.not_primary').each(function() {
 
@@ -90,12 +108,14 @@ jQuery(document).ready(function() {
     
     var wp_crm_message_content = jQuery("#wp_crm_message_content").val();
     
-    if(wp_crm_message_content == '')
+    if(wp_crm_message_content == '') {
       return;
+    }
 
     jQuery.post(ajaxurl,
       {
         action: 'wp_crm_insert_activity_message',
+        time: jQuery('.wp_crm_message_options .datepicker').val(),
         content: wp_crm_message_content,
         user_id: user_id
       }, function(response) {
@@ -199,4 +219,25 @@ jQuery(document).ready(function() {
 
   }
 
-
+  /**
+   * Contact history and messages for a user
+   *
+   *
+   */
+  function wp_crm_save_user_form(form) {
+  
+    var password_1 = jQuery("#wp_crm_password_1").val();
+    var password_2 = jQuery("#wp_crm_password_2").val();
+    
+    //** Check if password has been entered and they match */
+    if(password_1 != "") {
+    
+      if(password_1 != password_2) {
+        jQuery(".wp_crm_advanced_user_actions").show();
+        jQuery("#wp_crm_password_1").focus();
+        return false;
+      }
+    
+    }
+    return true;
+  }

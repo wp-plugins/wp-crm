@@ -410,20 +410,39 @@ if(!function_exists('wp_crm_save_user_data')) {
     }
 
 
-    //die("<pre>" . print_r($passed_data, true));
-    //die("<pre>" . print_r($insert_data, true));
+
     //die("<pre>" . print_r($insert_custom_data, true));
     //die("<pre>" . print_r($wp_user_meta_data, true));
 
     // Automate Things
     if(empty($insert_data['user_login'])) {
-      $insert_data['user_login'] = $insert_data['user_email'];
+      if(!empty($insert_data['user_email'])) {
+        $insert_data['user_login'] = $insert_data['user_email'];
+      } else {
+        //** Try to guess user_login from first passed user value */
+        if($first_value = WP_CRM_F::get_primary_display_value($user_data)) {
+          if($first_value['value']) {
+            $insert_data['user_login'] = $first_value['value'];
+          }
+        }
+      }
     }
 
     if(empty($insert_data['display_name'])) {
       $insert_data['display_name'] = $insert_data['user_email'];
     }
+
+    //** If password is passed, we hash it */
+    if(empty($insert_data['user_pass'])) {
+      unset($insert_data['user_pass']);
+    } else {
+      $insert_data['user_pass'] = wp_hash_password($insert_data['user_pass']);
+    }
+
+    //die("<pre>" . print_r($insert_data, true));
+ 
     $user_id = wp_insert_user($insert_data);
+ 
 
     if(is_numeric($user_id)) {
 

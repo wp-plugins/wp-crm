@@ -527,6 +527,7 @@ class class_contact_messages {
       if($md5_form_slug == md5($form_slug)) {
  
         $confirmed_form_slug = $form_slug;
+        $confirmed_form_data = $form_data;
         continue;
       }
     }
@@ -538,7 +539,13 @@ class class_contact_messages {
     $user_id = wp_crm_save_user_data($_REQUEST['wp_crm']['user_data'], 'default_role='.$wp_crm['configuration']['new_contact_role'].'&use_global_messages=false&match_login=true');
 
     if(!$user_id) {
-      die(json_encode(array('success' => 'false', 'message' => __('Message could not be sent. Please make sure you have entered your information properly.','wp_crm'))));
+      if($confirmed_form_data['message_field'] == 'on') {
+        //** If contact form includes a message, notify that message could not be sent */
+        die(json_encode(array('success' => 'false', 'message' => __('Message could not be sent. Please make sure you have entered your information properly.','wp_crm'))));
+      } else {
+        //** If contact form DOES NOT include a message, notify that it could not be submitted */
+        die(json_encode(array('success' => 'false', 'message' => __('Form could not be submitted. Please make sure you have entered your information properly.','wp_crm'))));      
+      }
     }
 
     $message = WP_CRM_F::get_first_value($_REQUEST['wp_crm']['user_data']['message_field']);

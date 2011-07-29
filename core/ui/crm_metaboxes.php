@@ -98,8 +98,27 @@ class crm_page_wp_crm_add_new {
   <li>Add a <b><a href='#' class='wp_crm_toggle_message_entry'>general note</a></b>.</li> 
   
   <?php if(current_user_can( 'edit_users' )): ?>
-  <li>User Role: <select id="wp_crm_user_role" name="wp_crm[user_data][user_role][<?php echo rand(1000,9999); ?>][value]"><option value=""></option><?php wp_dropdown_roles($object['user_role']['default'][0]); ?></select>
+  <li><?php _('User Role:'); ?> <select id="wp_crm_user_role" name="wp_crm[user_data][user_role][<?php echo rand(1000,9999); ?>][value]"><option value=""></option><?php wp_dropdown_roles($object['user_role']['default'][0]); ?></select>
   <?php endif; ?>
+  
+  <li class="wp_crm_advanced_user_actions">
+    <div class="wp_crm_toggle_advanced_user_actions wp_crm_link"><?php _e('Toggle Advanced User Settings'); ?></div>
+    <div class="wp_crm_advanced_user_actions hidden wp-tab-panel">
+    <?php _e('Set Password:'); ?>
+    <ul>
+      <li>
+        <input type="password" autocomplete="off" value="" size="16" class="wp_crm_user_password" id="wp_crm_password_1" name="wp_crm[user_data][user_pass][<?php echo rand(1000,9999); ?>][value]" />
+        <span class="description"><?php _e('Type in new password twice to change.'); ?></span>
+      </li>
+      
+      <li>
+        <input type="password" autocomplete="off" value="" size="16" class="wp_crm_user_password" id="wp_crm_password_2" />
+        <span class="description"><?php _e('Type your new password again.'); ?></span>
+      </li>
+      
+    </ul>
+    </div>
+  </li>
   
   </ul>
   <?php do_action('wp_crm_metabox_special_actions'); ?>
