@@ -60,8 +60,9 @@ Visit CRM -> Settings and click on the "Data" tab.  There you will  be able to a
 == Changelog ==
 
 = 0.12 =
-* Minor fixes with account creation.
-* Added ability to set user password from CRM user editing screen.
+* Fixed some issues with contact form user creation.
+* Fixed issue with user deletion.
+* Added option to have WP-CRM replace default User Management menu.
 
 = 0.11 =
 * Minor fix with message notifications. 

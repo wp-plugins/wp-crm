@@ -95,7 +95,19 @@ if(empty($wp_crm['data_structure']['attributes'])) {
         </div>
       </td>
     </tr>
-
+    
+    <tr>
+      <th>
+        <?php _e('General Settings','wp_crm'); ?>
+      </th>
+      <td>
+        <ul>
+          <li>
+          <input id="replace_default_user_page" value='true' type="checkbox"  <?php checked($wp_crm['configuration']['replace_default_user_page'], 'true'); ?> name="wp_crm[configuration][replace_default_user_page]" />
+          <label for="replace_default_user_page"><?php _e('Replace default WordPress User page with WP-CRM.'); ?></label>          
+          </li>
+        </ul>
+      </td>
     </table>
   </div>
 
@@ -349,7 +361,7 @@ if(empty($wp_crm['data_structure']['attributes'])) {
         <thead>
         <tr>
           <td colspan="2" class="wp_crm_premium_feature_intro">
-              <span class="header"><?php _e('WP-Property Premium Features','wp_crm') ?></span>
+              <span class="header"><?php _e('WP-CRM Premium Features','wp_crm') ?></span>
               <p><?php _e('Premium features will become available shortly, we are still waiting on more feedback on the core of the plugin.','wp_crm') ?></p>
               <?php /*<p><?php _e('If you're recently purchased a premium feature, <span id="wp_crm_check_premium_updates" class="wp_crm_link">download updates</a>.','wp_crm') ?></p> */ ?>
               <p id="wp_crm_plugins_ajax_response" class="hidden"></p>
@@ -368,14 +380,14 @@ if(empty($wp_crm['data_structure']['attributes'])) {
         <tr class="wp_crm_premium_feature_block">
 
           <td valign="top" class="wp_crm_premium_feature_image">
-            <a href="http://twincitiestech.com/plugins/wp-property/"><img src="<?php echo $plugin_data['image']; ?>" /></a>
+            <a href="http://twincitiestech.com/plugins/wp-crm/"><img src="<?php echo $plugin_data['image']; ?>" /></a>
           </td>
 
           <td valign="top">
             <div class="wp_crm_box">
             <div class="wp_crm_box_header">
               <strong><?php echo $plugin_data['title']; ?></strong>
-              <p><?php echo $plugin_data['tagline']; ?> <a href="http://twincitiestech.com/plugins/wp-property/premium/"><?php _e('[learn more]','wp_crm') ?></a>
+              <p><?php echo $plugin_data['tagline']; ?> <a href="http://twincitiestech.com/plugins/wp-crm/premium/"><?php _e('[learn more]','wp_crm') ?></a>
               </p>
             </div>
             <div class="wp_crm_box_content">
@@ -388,13 +400,13 @@ if(empty($wp_crm['data_structure']['attributes'])) {
 
                 <div class="alignleft">
                 <?php
-                           $disable_text = __('Disable plugin.','wp_crm');
-                           echo CRM_UD_UI::checkbox("name=wp_crm_settings[installed_features][$plugin_slug][disabled]&label=$disable_text", $wp_crm['installed_features'][$plugin_slug]['disabled']); ?>
+                     $disable_text = __('Disable plugin.','wp_crm');
+                     echo CRM_UD_UI::checkbox("name=wp_crm_settings[installed_features][$plugin_slug][disabled]&label=$disable_text", $wp_crm['installed_features'][$plugin_slug]['disabled']); ?>
                 </div>
 
                 <div class="alignright"><?php _e('Feature installed, using version','wp_crm') ?> <?php echo $wp_crm['installed_features'][$plugin_slug]['version']; ?>.</div>
               <?php else: ?>
-                <?php $pr_link = 'http://twincitiestech.com/plugins/wp-property/premium/'; echo sprintf(__('Please visit <a href="%s">TwinCitiesTech.com</a> to purchase this feature.','wp_crm'),$pr_link); ?>
+                <?php $pr_link = 'http://twincitiestech.com/plugins/wp-crm/premium/'; echo sprintf(__('Please visit <a href="%s">TwinCitiesTech.com</a> to purchase this feature.','wp_crm'),$pr_link); ?>
               <?php endif; ?>
             </div>
             </div>

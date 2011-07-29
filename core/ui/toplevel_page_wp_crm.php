@@ -1,4 +1,8 @@
  <?php
+ 
+  if($_REQUEST['message'] == 'user_deleted') {
+    WP_CRM_F::add_message(__('User has been deleted.'));
+  }
 
   include WP_CRM_Path . '/core/class_user_list_table.php';
 
@@ -12,8 +16,9 @@
 
 <div class="wp_crm_overview_wrapper wrap">
     <?php screen_icon(); ?>
-    <h2><?php _e('CRM - All People'); ?> <a href="<?php echo admin_url('admin.php?page=wp_crm_add_new'); ?>" class="button add-new-h2">Add New</a></h2>
-
+    <h2><?php _e('CRM - All People'); ?> <a href="<?php echo admin_url('admin.php?page=wp_crm_add_new'); ?>" class="button add-new-h2"><?php _e('Add New'); ?></a></h2>
+    <?php WP_CRM_F::print_messages(); ?>
+    
     <div id="poststuff" class="<?php echo $current_screen->id; ?>_table metabox-holder has-right-sidebar">
     <form id="wp-crm-filter" action="#" method="POST">
 

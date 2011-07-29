@@ -161,7 +161,7 @@ if(!function_exists('wp_crm_get_user')) {
     if (!empty ($capabilities)) {
       foreach($capabilities as $cap_slug => $cap_active) {
         if($cap_active) {
-          $user_data['user_role']['default'][0] = $cap_slug;
+          $user_data['role']['default'][0] = $cap_slug;
         }
       }
     }
@@ -195,7 +195,7 @@ if(!function_exists('wp_crm_send_notification')) {
     if(!$action) {
       return false;
     }
- 
+
     $defaults = array();
 
     if(!is_array($args)) {
@@ -210,9 +210,9 @@ if(!function_exists('wp_crm_send_notification')) {
      //if(empty($args['user_email'])) return false;
 
     $notifications = WP_CRM_F::get_trigger_action_notification($action);
-   
-    
-    
+
+
+
     if(!$notifications) {
       return false;
     }
@@ -228,8 +228,8 @@ if(!function_exists('wp_crm_send_notification')) {
       }
 
       $headers = "From: {$message[send_from]} \r\n\\";
-      
-    
+
+
 
       wp_mail($message['to'], $message['subject'], $message['message'], $headers);
 
@@ -273,6 +273,7 @@ if(!function_exists('wp_crm_save_user_data')) {
       'user_email',
       'user_login',
       'user_url',
+      'role',
       'user_nicename',
       'display_name',
       'user_registered',
@@ -324,23 +325,12 @@ if(!function_exists('wp_crm_save_user_data')) {
       $new_user = true;
     }
 
-    $wp_user_object = new WP_User($insert_data['ID']);
-
 
     // Prepare Data
     foreach($user_data as $meta_key => $values) {
 
       foreach((array)$values as $temp_key => $data) {
-
-        // Handle roles
-        if($meta_key == 'user_role') {
-          if($data['value']) {
-            $wp_user_object->set_role($data['value']);
-          } else {
-            $wp_user_object->set_role($default_role);
-          }
-          continue;
-        }
+ 
 
         if(in_array($meta_key, $wp_insert_user_vars)) {
           $insert_data[$meta_key] = $data['value'];
@@ -409,8 +399,7 @@ if(!function_exists('wp_crm_save_user_data')) {
       }
     }
 
-
-
+ 
     //die("<pre>" . print_r($insert_custom_data, true));
     //die("<pre>" . print_r($wp_user_meta_data, true));
 
@@ -439,10 +428,14 @@ if(!function_exists('wp_crm_save_user_data')) {
       $insert_data['user_pass'] = wp_hash_password($insert_data['user_pass']);
     }
 
-    //die("<pre>" . print_r($insert_data, true));
- 
-    $user_id = wp_insert_user($insert_data);
- 
+    if(empty($insert_data['role'])) {
+      $insert_data['role'] = $args['default_role'];
+    }
+    
+    
+      //die("<pre>" . print_r($insert_data, true));
+      
+    $user_id = wp_insert_user($insert_data); 
 
     if(is_numeric($user_id)) {
 

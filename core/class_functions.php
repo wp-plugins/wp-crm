@@ -161,8 +161,6 @@ class WP_CRM_F {
 
       $results = $wpdb->get_results($sql);
 
-      //echo $wpdb->last_query; die();
-      //print_r($results);
 
       return $results;
     }
@@ -204,11 +202,6 @@ class WP_CRM_F {
         } else {
             $data[] = $wp_list_table->no_items();
         }
-
-
-      //print_r($wp_list_table->item_pages);      die();
-     // print_r($wp_crm_filter_vars);
-      //print_r($data);
 
 
       return json_encode(array(
@@ -515,11 +508,11 @@ class WP_CRM_F {
         if(!empty($user_object) && is_numeric($user_object)) {
             $user_object = wp_crm_get_user($user_object);
         }
-
+        
         if(!empty($wp_crm['data_structure']) && is_array($wp_crm['data_structure']['attributes'])) {
             $attribute_keys = array_keys($wp_crm['data_structure']['attributes']);
-
             foreach($attribute_keys as $key) {
+
                 if(!empty($user_object[$key]['default'])) {
                   if(is_array($user_object[$key]['default'])) {
                     return $user_object[$key]['default'][0];
@@ -659,6 +652,9 @@ class WP_CRM_F {
       @WP_CRM_F::feature_check();
 
     }
+    
+        
+    //WP_CRM_F::maybe_install_tables();
 
 
     return;
@@ -1024,7 +1020,6 @@ class WP_CRM_F {
          }
       }
 
-      //echo "<pre>";print_r($wp_crm_settings);die();
 
       //* Regenerate possible meta keys */
       $wp_crm_settings['data_structure'] = WP_CRM_F::build_meta_keys( $wp_crm_settings);
@@ -1343,8 +1338,10 @@ class WP_CRM_F {
   function activation() {
     global $current_user, $wp_crm, $wp_roles;
 
-    WP_CRM_F::install_tables();
     WP_CRM_F::manual_activation();
+    
+    
+    WP_CRM_F::maybe_install_tables();
 
 
   }
@@ -1356,7 +1353,7 @@ class WP_CRM_F {
    * @uses $wpdb
    *
     */
-  function install_tables() {
+  function maybe_install_tables() {
     global $wpdb;
 
     // Array to store SQL queries
@@ -1365,6 +1362,7 @@ class WP_CRM_F {
     if(!$wpdb->crm_log) {
       $wpdb->crm_log = $wpdb->prefix . 'crm_log';
     }
+    
     $sql[] = "CREATE TABLE {$wpdb->crm_log} (
       id mediumint(9) NOT NULL AUTO_INCREMENT,
       object_id mediumint(9) NOT NULL,
@@ -1384,28 +1382,7 @@ class WP_CRM_F {
       UNIQUE KEY id (id)
     );";
 
-    // Create {prefix}_crm_metasearch_relations table
-    if (!$wpdb->crm_metasearch_relations) {
-      $wpdb->crm_metasearch_relations = $wpdb->prefix . 'crm_metasearch_relations';
-    }
-    $sql[] = "CREATE TABLE {$wpdb->crm_metasearch_relations} (
-      value_id int(11) NOT NULL,
-      option_id int(11) NOT NULL
-    );";
-
-    // Create {prefix}_crm_metasearch table
-    if (!$wpdb->crm_metasearch) {
-      $wpdb->crm_metasearch = $wpdb->prefix . 'crm_metasearch';
-    }
-
-    $sql[] = "CREATE TABLE {$wpdb->crm_metasearch} (
-      id int(11) NOT NULL AUTO_INCREMENT UNIQUE,
-      user_id mediumint(9) NOT NULL,
-      meta_key VARCHAR(255),
-      meta_type enum('option','value'),
-      meta_value TEXT(1000)
-    );";
-
+  
     require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
     dbDelta( implode(' ', $sql) );
 
@@ -1482,8 +1459,6 @@ class WP_CRM_F {
         'time' => date('Y-m-d H:i:s')        
      );
    
- 
-
 
     $args = wp_parse_args( $args, $defaults );
     
@@ -1495,7 +1470,7 @@ class WP_CRM_F {
     }
     
     $args['time'] = date('Y-m-d H:i:s', $time_stamp);
-    die($args['time']);
+ 
 
     $wpdb->insert($wpdb->prefix . 'crm_log', array(
       'object_id' => $args['object_id'],
@@ -1506,11 +1481,10 @@ class WP_CRM_F {
       'value' => $args['value'],
       'text' => $args['text'],
       'other' => $args['other'],
-      'time' => $time
+      'time' => $args['time']
     ));
 
-//    echo $wpdb->last_query;
-
+ 
     if($args['ajax'] == 'true')  {
       if($wpdb->insert_id)
         return json_encode(array('success' => 'true', 'insert_id' => $wpdb->insert_id));

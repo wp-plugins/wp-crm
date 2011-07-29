@@ -51,7 +51,7 @@ class crm_page_wp_crm_add_new {
     <table class="form-table">
     <?php if(!empty($wp_crm['data_structure']) && is_array($wp_crm['data_structure']['attributes'])) : ?>
       <?php foreach($wp_crm['data_structure']['attributes'] as $slug => $attribute): ?>
-        <?php $class = (is_array($wp_crm['hidden_attributes'][$user_object->user_role[0]['slug']]) && in_array($slug, $wp_crm['hidden_attributes'][$user_object['user_role']['default']])) ? 'hidden' : ''; ?>
+        <?php $class = (is_array($wp_crm['hidden_attributes'][$user_object->role[0]['slug']]) && in_array($slug, $wp_crm['hidden_attributes'][$user_object['role']['default']])) ? 'hidden' : ''; ?>
         <tr class="wp_crm_user_entry_row <?php echo $class . ' ' .  (@$attribute['primary'] == 'true' ? 'primary' : 'not_primary')?> wp_crm_<?php echo $slug; ?>_row">
           <th>
           <?php if(@$attribute['input_type'] != 'checkbox' || isset($attribute['options'])): ?>
@@ -88,17 +88,16 @@ class crm_page_wp_crm_add_new {
    *
    */  
   function special_actions($object) {
-  
+   $user_id = $object['ID']['default'][0];
    
-
-?>
+   ?>
 <div id="minor-publishing">
   <ul>
 
   <li>Add a <b><a href='#' class='wp_crm_toggle_message_entry'>general note</a></b>.</li> 
   
   <?php if(current_user_can( 'edit_users' )): ?>
-  <li><?php _('User Role:'); ?> <select id="wp_crm_user_role" name="wp_crm[user_data][user_role][<?php echo rand(1000,9999); ?>][value]"><option value=""></option><?php wp_dropdown_roles($object['user_role']['default'][0]); ?></select>
+  <li><?php _('User Role:'); ?> <select id="wp_crm_role" name="wp_crm[user_data][role][<?php echo rand(1000,9999); ?>][value]"><option value=""></option><?php wp_dropdown_roles($object['role']['default'][0]); ?></select>
   <?php endif; ?>
   
   <li class="wp_crm_advanced_user_actions">
@@ -126,7 +125,7 @@ class crm_page_wp_crm_add_new {
   <div id="major-publishing-actions">
     <div id="delete-action">
     <?php if(!$object->new): ?>
-    <a href="<?php echo  wp_nonce_url( "users.php?action=delete&amp;user={$object->ID[0][value]}", 'bulk-users' ); ?>" class="submitdelete deletion"><?php _e('Delete'); ?></a>
+    <a href="<?php echo  wp_nonce_url( "admin.php?wp_crm_action=delete_user&page=wp_crm&user_id={$user_id}", 'wp-crm-delete-user-' . $user_id ); ?>" class="submitdelete deletion"><?php _e('Delete'); ?></a>
     <?php endif; ?>
     </div>
 
