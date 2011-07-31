@@ -59,6 +59,11 @@ Visit CRM -> Settings and click on the "Data" tab.  There you will  be able to a
  
 == Changelog ==
 
+= 0.13 =
+* Added option to disable "All" users instead of paginating.
+* Added a wp_crm_add_to_user_log() function for easy user log modification.
+* Improved wp_crm_save_user_data() for better API.
+
 = 0.12 =
 * Fixed some issues with contact form user creation.
 * Fixed issue with user deletion.

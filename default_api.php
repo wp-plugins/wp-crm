@@ -18,7 +18,7 @@ add_filter('wp_crm_display_phone_number', 'wpp_crm_format_phone_number');
 add_filter('wp_crm_display_company', 'wp_crm_display_company', 0,4);
 add_filter('wp_crm_display_user_email', 'wp_crm_display_user_email', 0,4);
 
-add_action('load-crm_page_wp_crm_add_new', 'wp_crm_save_user_data');
+
 
 //add_action('added_user_meta', 'wp_crm_add_user_metasearch', 0,4);
 //add_action('deleted_user_meta', 'wp_crm_delete_user_metasearch', 0,4);
@@ -206,12 +206,7 @@ if(!function_exists('wp_crm_send_notification')) {
       return false;
     }
 
-    // Verify that at minium certain arguments necessary for sending a message out are passed
-     //if(empty($args['user_email'])) return false;
-
     $notifications = WP_CRM_F::get_trigger_action_notification($action);
-
-
 
     if(!$notifications) {
       return false;
@@ -229,8 +224,6 @@ if(!function_exists('wp_crm_send_notification')) {
 
       $headers = "From: {$message[send_from]} \r\n\\";
 
-
-
       wp_mail($message['to'], $message['subject'], $message['message'], $headers);
 
 
@@ -247,12 +240,12 @@ if(!function_exists('wp_crm_save_user_data')) {
    * @hooked_into WP_CRM_Core::admin_head();
    * @since 0.1
    */
-  function wp_crm_save_user_data($passed_data, $args = '') {
+  function wp_crm_save_user_data($user_data, $args = '') {
     global $wpdb, $wp_crm;
 
     $insert_data = array();
     $insert_custom_data = array();
-
+ 
     $defaults = array(
       'use_global_messages' => 'true',
       'match_login' => 'false',
@@ -260,13 +253,6 @@ if(!function_exists('wp_crm_save_user_data')) {
       'default_role' => get_option('default_role')
     );
     $args = wp_parse_args( $args, $defaults );
-
-    // Do nothing if nonce doesn't match
-    if (empty($passed_data) &&
-        (!isset($_REQUEST['wp_crm_update_user']) || !wp_verify_nonce($_REQUEST['wp_crm_update_user'], 'wp_crm_update_user')))
-    {
-      return;
-    }
 
     $wp_insert_user_vars = array(
       'user_pass',
@@ -282,7 +268,6 @@ if(!function_exists('wp_crm_save_user_data')) {
       'nickname'
     );
 
-
     //** Get custom meta attributes */
     $wp_user_meta_data = array();
     if(!empty($wp_crm['data_structure']) && is_array($wp_crm['data_structure']['attributes'])) {
@@ -292,49 +277,89 @@ if(!function_exists('wp_crm_save_user_data')) {
         }
       }
     }
+   
+   $temp_data['user_id'] = WP_CRM_F::get_first_value($user_data['user_id']);
 
-    // Try to get data from passed variable
-    $user_data = (!empty($passed_data) ? $passed_data : $_REQUEST['wp_crm']['user_data']);
+   if(empty($temp_data['user_id'])) {
+       
+      // Determine user_id and if new or old user
+      if ($args['match_login'] == 'true' && (isset($user_data['user_login']) || isset($user_data['user_email']))) {
 
-    // Determine user_id and if new or old user
-    if ($args['match_login'] == 'true' &&
-        !isset($user_data['user_id']) &&
-        (isset($user_data['user_login']) || isset($user_data['user_email'])))
-    {
+        $temp_data['user_login'] = WP_CRM_F::get_first_value($user_data['user_login']);
+        $temp_data['user_email'] = WP_CRM_F::get_first_value($user_data['user_email']);
 
-      $temp_data['user_login'] = WP_CRM_F::get_first_value($user_data['user_login']);
-      $temp_data['user_email'] = WP_CRM_F::get_first_value($user_data['user_email']);
+        //* Try to get ID based on login and email */
+        $insert_data['ID'] = username_exists($temp_data['user_login']);
 
+        // Validate e-mail
+        if(empty($insert_data['ID'])) {
+          $insert_data['ID'] = email_exists($temp_data['user_email']);
+        }
 
-
-
-      //* Try to get ID based on login and email */
-      $insert_data['ID'] = username_exists($temp_data['user_login']);
-
-      // Validate e-mail
-      if(empty($insert_data['ID'])) {
-        $insert_data['ID'] = email_exists($temp_data['user_email']);
+        if(!$insert_data['ID']) {
+          $new_user = true;
+        }
+      
       }
 
-      if(!$insert_data['ID']) {
-        $new_user = true;
-      }
-    } elseif(!empty($_REQUEST['user_id'])) {
-      $insert_data['ID'] = $_REQUEST['user_id'];
     } else {
-      $new_user = true;
+    
+      $insert_data['ID'] = $temp_data['user_id'];    
     }
-
-
+ 
+ 
     // Prepare Data
     foreach($user_data as $meta_key => $values) {
 
-      foreach((array)$values as $temp_key => $data) {
+
+      //** Fix up values if they are not passed in the crazy CRM format */
+      if(!empty($values) && !is_array($values)) {
+        
+        //** Check if Attribute TITLE was passed intead of the slug */
+        foreach($wp_crm['data_structure']['attributes'] as $attribute_slug => $attribute_data) {
+          if($attribute_data['title'] == $meta_key) {
+            
+            //** Actual slug / meta_key found, we overwrite the passed one */
+            $meta_key = $attribute_slug;
+            break;
+          }        
+        }
+                
+        //** Check if this is an option key, and value needs to be convered to 'on' */
+        if($wp_crm['data_structure']['attributes'][$meta_key]['has_options']) {
+          if(in_array($values, $wp_crm['data_structure']['attributes'][$meta_key]['option_labels'] )) {
+
+            //** Get option key from passed option title */
+            
+            $option_key = array_search($values, $wp_crm['data_structure']['attributes'][$meta_key]['option_labels']);
+            //** Restet $values, and update with checkbox friendly data entry */            
+            $values = array(
+              rand(10000, 99999) => array (
+                  'value' => 'on',
+                  'option' => $option_key
+              )
+            ); 
  
+          }
+        } else {
+          //** Handle Regular values */
+            $values = array(
+              rand(10000, 99999) => array (
+                  'value' => $values
+              )
+            ); 
+        
+        }
+ 
+      }      
+ 
+ 
+      foreach((array)$values as $temp_key => $data) {
 
         if(in_array($meta_key, $wp_insert_user_vars)) {
           $insert_data[$meta_key] = $data['value'];
           continue;
+          
         } elseif (in_array($meta_key, $wp_user_meta_data)) {
 
           switch ($wp_crm['data_structure']['attributes'][$meta_key]['input_type']) {
@@ -344,6 +369,7 @@ if(!function_exists('wp_crm_save_user_data')) {
 
                 //** get full meta key of option */
                 $full_meta_key = $wp_crm['data_structure']['attributes'][$meta_key]['option_keys'][$data['option']];
+
 
                 if(empty($full_meta_key)) {
                   $full_meta_key= $meta_key;
@@ -399,10 +425,6 @@ if(!function_exists('wp_crm_save_user_data')) {
       }
     }
 
- 
-    //die("<pre>" . print_r($insert_custom_data, true));
-    //die("<pre>" . print_r($wp_user_meta_data, true));
-
     // Automate Things
     if(empty($insert_data['user_login'])) {
       if(!empty($insert_data['user_email'])) {
@@ -417,7 +439,7 @@ if(!function_exists('wp_crm_save_user_data')) {
       }
     }
 
-    if(empty($insert_data['display_name'])) {
+    if(empty($insert_data['display_name']) && isset($insert_data['user_email'])) {
       $insert_data['display_name'] = $insert_data['user_email'];
     }
 
@@ -431,11 +453,11 @@ if(!function_exists('wp_crm_save_user_data')) {
     if(empty($insert_data['role'])) {
       $insert_data['role'] = $args['default_role'];
     }
-    
-    
-      //die("<pre>" . print_r($insert_data, true));
+        
+//    echo print_r($insert_data, true);echo print_r($insert_custom_data, true);die();
       
-    $user_id = wp_insert_user($insert_data); 
+    $user_id = wp_update_user($insert_data); 
+ 
 
     if(is_numeric($user_id)) {
 
@@ -446,18 +468,15 @@ if(!function_exists('wp_crm_save_user_data')) {
         }
       }
 
-
       //** Add meta values */
       if(is_array($insert_custom_data) && !empty($insert_custom_data)) {
         foreach((array)$insert_custom_data as $meta_key => $meta_value) {
           foreach($meta_value as $single_value) {
            add_user_meta($user_id, $meta_key, $single_value);
-         }
+          }
         }
       }
-
-
-
+      
       $display_name = WP_CRM_F::get_primary_display_value($user_id);
 
       if($display_name) {
@@ -492,101 +511,30 @@ if(!function_exists('wp_crm_save_user_data')) {
     return $user_id;
   }
 }  /* wp_crm_save_user_data */
-
-if(!function_exists('wp_crm_add_user_metasearch')) {
+ 
+ 
+if(!function_exists('wp_crm_add_to_user_log')) {
   /**
-   * Saves user metasearch data
+   * Saves user data
    *
-   * @author AntonKorotkov
-   *
-   * @param int $meta_id
-   * @param int $user_id
-   * @param string $meta_key
-   * @param array $meta_value
+   * @hooked_into WP_CRM_Core::admin_head();
+   * @since 0.1
    */
-  function wp_crm_add_user_metasearch( $meta_id, $user_id, $meta_key, $meta_value=array() ) {
-    global $wp_crm;
-    global $wpdb;
-    // Do we have such attribute
-    if ( $wp_crm['data_structure']['attributes'][ $meta_key ] ) {
-      $table_metasearch           = $wpdb->prefix . 'crm_metasearch';
-      $table_metasearch_relations = $wpdb->prefix . 'crm_metasearch_relations';
-      // Handle multiple arrays
-      foreach ($meta_value as $key => $meta) {
-
-        // Insert options and values into metasearch and make relations
-        if ( !empty($meta) ) {
-          // Store last insert ids to insert them into relations
-          $last_insert_ids = array();
-          foreach ( $meta as $k => $values ) {
-            // Check values type
-            if ( $wp_crm['data_structure']['attributes'][ $meta_key ]['input_type'] == 'checkbox' ) {
-              $wpdb->insert( $table_metasearch, array(
-                'user_id'    => $user_id,
-                'meta_key'   => $meta_key,
-                'meta_type'  => $key,
-                'meta_value' => $values
-              ) );
-            }
-            else {
-              if ( !empty($values) ) {
-                $wpdb->insert( $table_metasearch, array(
-                  'user_id' => $user_id,
-                  'meta_key' => $meta_key,
-                  'meta_type' => $k,
-                  'meta_value' => $values
-                ) );
-                $last_insert_ids[$k] = $wpdb->insert_id;
-              }
-            }
-            // Insert relations if exist (if there are 2 ids)
-            if ( count($last_insert_ids) == 2 ) {
-              $wpdb->insert( $table_metasearch_relations, array(
-                'value_id' => $last_insert_ids['value'],
-                'option_id' => $last_insert_ids['option']
-              ) );
-            }
-          }
-        }
-      }
+  function wp_crm_add_to_user_log($user_id, $message, $time = false) {
+    
+    $insert_data['object_id'] = $user_id;
+    $insert_data['attribute'] = 'note';
+    $insert_data['text'] = $message;
+    
+    if($time) {
+      $insert_data['time'] = $time;
     }
-  }
-}
-if(!function_exists('wp_crm_delete_user_metasearch')) {
-  /**
-   * Deletes user metasearch data
-   *
-   * @author AntonKorotkov
-   *
-   * @param array $meta_id
-   * @param int $user_id
-   * @param string $meta_key
-   * @param unknown $meta_value
-   */
-  function wp_crm_delete_user_metasearch( $meta_id, $user_id, $meta_key, $meta_value = '' ) {
-    global $wp_crm;
-    global $wpdb;
-    // Do we have such attribute
-    if ( $wp_crm['data_structure']['attributes'][ $meta_key ] ) {
-      $table_metasearch           = $wpdb->prefix . 'crm_metasearch';
-      $table_metasearch_relations = $wpdb->prefix . 'crm_metasearch_relations';
-      // Get relation ids to be deleted
-      $relation_ids =
-        $wpdb->get_results("SELECT id FROM {$table_metasearch}
-                            WHERE meta_key = '{$meta_key}'
-                              AND user_id = '{$user_id}'");
-      // Delete relations if exist
-      if ( count($relation_ids) > 1 ) {
-        foreach ($relation_ids as $id) {
-          $wpdb->query("DELETE FROM {$table_metasearch_relations}
-                        WHERE value_id = '{$id->id}'
-                          OR option_id = '{$id->id}'");
-        }
-      }
-      // Delete metasearch data
-      $wpdb->query("DELETE FROM {$table_metasearch}
-                    WHERE user_id = '{$user_id}'
-                      AND meta_key = '{$meta_key}'");
+    
+    if(WP_CRM_F::insert_event($insert_data)) {
+      return true;
     }
+    
+    return false;
   }
+  
 }

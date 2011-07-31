@@ -46,7 +46,7 @@ if($_REQUEST['user_id'])  {
 <?php WP_CRM_F::print_messages(); ?>
 
 <form name="crm_user" action="admin.php?page=wp_crm_add_new<?php echo ($user_id ? "&user_id=$user_id" : ''); ?>" method="post" id="crm_user">
-<input type="hidden" id="user_id" name="user_id" value="<?php echo $user_id; ?>" />
+<input type="hidden" id="user_id" name="wp_crm[user_data][user_id][0][value]" value="<?php echo $user_id; ?>" />
 <?php
 wp_nonce_field( 'meta-box-order', 'meta-box-order-nonce', false );
 wp_nonce_field( 'closedpostboxes', 'closedpostboxesnonce', false );

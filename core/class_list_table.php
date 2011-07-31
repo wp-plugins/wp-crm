@@ -207,19 +207,26 @@
     if(!isset($this->all_items)) {  
       $this->all_items = WP_CRM_F::user_search( $wp_crm_search);
     }
-          
-     //** Do pagination  */      
-    $this->item_pages = array_chunk($this->all_items, $this->_args['per_page']);
-    
-    $total_chunks = count($this->item_pages);
-    
-    //** figure out what page chunk we are on based on iDisplayStart
-    $this_chunk = ($this->_args['iDisplayStart'] / $this->_args['per_page']);
-        
-    //** Get page items */
-    $this->items = $this->item_pages[$this_chunk];
-    
- 
+
+     //** Do pagination  */
+
+
+    if($this->_args['per_page'] != -1) {
+      $this->item_pages = array_chunk($this->all_items, $this->_args['per_page']);
+
+      $total_chunks = count($this->item_pages);
+
+      //** figure out what page chunk we are on based on iDisplayStart
+      $this_chunk = ($this->_args['iDisplayStart'] / $this->_args['per_page']);
+
+      //** Get page items */
+      $this->items = $this->item_pages[$this_chunk];
+
+    } else {
+      $this->items = $this->all_items;
+    }
+
+
   }
   
  

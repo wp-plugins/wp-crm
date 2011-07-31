@@ -448,7 +448,6 @@ class WP_CRM_F {
     }
  
     foreach($wp_crm['notifications'] as $slug => $notification_data){
-
       if(is_array($notification_data['fire_on_action']) && in_array($action, $notification_data['fire_on_action'])) {
         $notifications[$slug] = $notification_data;
       }
@@ -472,7 +471,6 @@ class WP_CRM_F {
 
     if(!is_array($replace_with))
       return;
-
 
 
     $notification_keys = array_keys($notification_data);
@@ -521,9 +519,11 @@ class WP_CRM_F {
                   }
                 } else {
                   //** Default is empty */
-                  foreach($user_object[$key] as $some_value) {
-                    if(!empty($some_value)) {
-                      return $some_value;
+                  if(is_array($user_object[$key])) {
+                    foreach($user_object[$key] as $some_value) {
+                      if(!empty($some_value)) {
+                        return $some_value;
+                      }
                     }
                   }
                 }

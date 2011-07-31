@@ -217,6 +217,7 @@ class WP_CRM_Core {
     // Add columns number to edit page
     add_filter('screen_layout_columns',array('WP_CRM_Core','screen_layout_columns'));
 
+    add_action('load-crm_page_wp_crm_add_new', array('WP_CRM_Core', 'wp_crm_save_user_data_caller'));
     // Add metaboxes
 
     if(is_array($wp_crm['system']['pages'])) {
@@ -278,8 +279,22 @@ class WP_CRM_Core {
     add_filter('admin_title', array('WP_CRM_F', 'admin_title'));
   }
 
-    /**
-     * Sets up sortable columns columns
+  /**
+   * Called before hearder on user editing page
+   *
+   * @since 0.01
+   *
+   */
+  function wp_crm_save_user_data_caller() {
+  
+    if(wp_verify_nonce($_REQUEST['wp_crm_update_user'], 'wp_crm_update_user')) {
+      wp_crm_save_user_data($_REQUEST['wp_crm']['user_data']);
+    }
+  
+  }
+
+  /**
+   * Sets up sortable columns columns
      *
      * @since 0.01
      *
