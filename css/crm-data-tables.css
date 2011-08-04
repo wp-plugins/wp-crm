@@ -10,16 +10,16 @@
 }
 
  
-td.user_card  div.user_avatar {
+td.wp_crm_user_card  div.user_avatar {
   float: left;
 }
 
-td.user_card  ul.user_card_data {
+td.wp_crm_user_card  ul.user_card_data {
   float: left;
   margin-left: 10px;
 }
 
-td.user_card  ul li.primary {
+td.wp_crm_user_card  ul li.primary {
   font-size: 1.2em;
   font-weight: bold;
 }

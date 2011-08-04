@@ -18,10 +18,22 @@ jQuery(document).bind('wp_crm_value_changed', function(event, data) {
 
 jQuery(document).ready(function() {
  
-  //** Verify deletion saving */
-  jQuery('.submitdelete').click(function() {
-  
+ 
+    jQuery('ul.wp-tab-panel-nav  a').click(function(){
     
+    var panel_wrapper = jQuery(this).parents('.wp-tab-panel-wrapper');
+		
+    var t = jQuery(this).attr('href');
+		jQuery(this).parent().addClass('tabs').siblings('li').removeClass('tabs');
+		jQuery('.wp-tab-panel', panel_wrapper).hide();
+		jQuery(t, panel_wrapper).show();
+ 
+		return false;
+	});
+  
+ 
+  //** Verify deletion saving */
+  jQuery('.submitdelete').click(function() {    
     return confirm('Are you sure you want to delete user?');
   });
   
@@ -89,7 +101,7 @@ jQuery(document).ready(function() {
   });
 
   
-  jQuery("#wp_crm_user_role").change(function() {
+  jQuery("#wp_crm_role").change(function() {
   
     jQuery(".wp_crm_user_entry_row").show();
     

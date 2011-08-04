@@ -61,7 +61,6 @@ class WP_CRM_Core {
     /** Loads all the class for handling all plugin tables */
     include_once WP_CRM_Path . '/core/class_list_table.php';
 
-
     wp_register_script('jquery-cookie', WP_CRM_URL. '/third-party/jquery.cookie.js', array('jquery'), '1.7.3' );
     wp_register_script('jquery-position', WP_CRM_URL. '/third-party/jquery.ui.position.min.js', array('jquery-ui-core'));
     wp_register_script('jquery-slider', WP_CRM_URL. '/third-party/jquery.ui.slider.min.js', array('jquery-ui-core'));
@@ -90,7 +89,7 @@ class WP_CRM_Core {
     // Setup pages and overview columns
     add_action("admin_menu", array('WP_CRM_Core', "admin_menu"), 100);
 
-    add_filter("manage_toplevel_page_wp_crm_sortable_columns", array('WP_CRM_Core', "sortable_columns"));
+    //add_filter("manage_toplevel_page_wp_crm_sortable_columns", array('WP_CRM_Core', "sortable_columns"));
     add_filter("admin_body_class", array('WP_CRM_Core', "admin_body_class"));
 
      // Load back-end scripts
@@ -101,6 +100,7 @@ class WP_CRM_Core {
     add_action("wp_ajax_wp_crm_get_user_activity_stream", create_function('',' echo WP_CRM_F::get_user_activity_stream("user_id={$_REQUEST[user_id]}"); die; '));
     add_action("wp_ajax_wp_crm_insert_activity_message", create_function('',' echo WP_CRM_F::insert_event("time={$_REQUEST[time]}&attribute=note&object_id={$_REQUEST[user_id]}&text={$_REQUEST[content]}&ajax=true"); die; '));
 
+    add_action("wp_ajax_wp_crm_display_shortcode_form", create_function('',' WP_CRM_F::display_shortcode_form(array("shortcode" => $_REQUEST["shortcode"], "js_callback_function" =>  $_REQUEST["js_callback_function"])); die(); '));
     add_action("wp_ajax_wp_crm_do_fake_users", create_function('',' echo WP_CRM_F::do_fake_users("number={$_REQUEST[number]}&do_what={$_REQUEST[do_what]}"); die; '));
 
     //* Returns table rows for overview tbale */
@@ -340,12 +340,12 @@ class WP_CRM_Core {
         global $wp_crm;
 
         $columns['cb'] = '<input type="checkbox" />';
-        $columns['user_card'] = 'Information';
+        $columns['wp_crm_user_card'] = 'Information';
 
         if(!empty($wp_crm['data_structure']) && is_array($wp_crm['data_structure']['attributes'])) {
             foreach($wp_crm['data_structure']['attributes'] as $slug => $data) {
                 if(isset($data['overview_column']) && $data['overview_column'] == 'true')
-                $columns[$slug] = $data['title'];
+                $columns['wp_crm_' . $slug] = $data['title'];
             }
         }
 
@@ -467,8 +467,16 @@ class WP_CRM_Core {
         wp_enqueue_script('jquery-ui-sortable');
         wp_enqueue_script('jquery-ui-mouse');
 
-        $contextual['settings'][] = __('<h3>Contact Forms</h3>');
-        $contextual['settings'][] = __('<p>Contact forms are setup here, and then inserted using a shortcode into a page, or a widget. The available contact form attributes are taken from the WP-CRM attributes, and when filled out by a user, are mapped over directly into their profile. User profiles are created based on the e-mail address, if one does not already exist, for keeping track of users. </p>');
+        $contextual['settings'][] = __('<h3>Roles - Hidden Attributes</h3>');
+        $contextual['settings'][] = __('<p>If certain user attributes are not applicable to certain roles, such as "Client Type" to the "Administrator" role, you can elect to hide the unapplicable attributes on profile editing pages.</p>');
+        
+        $contextual['settings'][] = __('<h3>Predefined Values</h3>');
+        $contextual['settings'][] = __('<p>If you want your attributes to have predefiend values, such as in a dropdown, or a checkbox list, enter a comma separated list of values you want to use.  You can also get more advanced by using taxonomies - to load all values from a taxonomy, simply type ine: <b>taxonomy:taxonomy_name</b>.</p>');
+        
+        $contextual['settings'][] = __('<h3>Shortcode Forms</h3>');
+        $contextual['settings'][] = __('<p>Shortcode Forms, which can be used for contact forms, or profile editing, are setup here, and then inserted using a shortcode into a page, or a widget. The available contact form attributes are taken from the WP-CRM attributes, and when filled out by a user, are mapped over directly into their profile. User profiles are created based on the e-mail address, if one does not already exist, for keeping track of users. </p>');
+        $contextual['settings'][] = __('<p>If a new user fills out a form, an account will be created for them based on the specified role.  </p>');
+        
         $contextual['settings'][] = __('<h3>Cellular Notifications</h3>');
         $contextual['settings'][] = __('<p>You can send notifications to cellphone numbers.  Instead of entering an e-mail address, add the receipient\'s number using the following rules:</p><ul><li>AT&T – cellnumber@txt.att.net</li><li>Verizon – cellnumber@vtext.com</li><li>T-Mobile – cellnumber@tmomail.net</li><li>Sprint PCS - cellnumber@messaging.sprintpcs.com</li><li>Virgin Mobile – cellnumber@vmobl.com</li><li>US Cellular – cellnumber@email.uscc.net</li><li>Nextel - cellnumber@messaging.nextel.com</li><li>Boost - cellnumber@myboostmobile.com</li><li>Alltel – cellnumber@message.alltel.com</li></ul>');
 
@@ -535,4 +543,3 @@ class WP_CRM_Core {
     return $links;
   }
 }
-?>

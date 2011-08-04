@@ -59,6 +59,15 @@ Visit CRM -> Settings and click on the "Data" tab.  There you will  be able to a
  
 == Changelog ==
 
+= 0.14 =
+* UI fixes to overview screen (roles are now collapsed too)
+* Ability to build predefined attribute lists from taxonomies.
+* Ability to add JavaScript callback function to shortcode forms.
+* Ability to call shortcode forms via AJAX
+* Few fixes to DataTable sorting.
+* UI improvements to the way checkboxes are displayed.
+* Minor change to collapsible filters UI on overview page.
+
 = 0.13 =
 * Added option to disable "All" users instead of paginating.
 * Added a wp_crm_add_to_user_log() function for easy user log modification.

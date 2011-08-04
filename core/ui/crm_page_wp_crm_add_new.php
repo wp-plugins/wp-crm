@@ -35,8 +35,7 @@ if($_REQUEST['user_id'])  {
   
   var wp_crm_hidden_attributes = {<?php 
   $count = 0; $roles = count($wp_crm['hidden_attributes']); if(is_array($wp_crm['hidden_attributes'])) foreach($wp_crm['hidden_attributes']  as $role => $elements): $count++; ?>
- '<?php echo $role; ?>': ['<?php  echo implode("','", $elements); ?>']<?php echo ($count != $roles ? ',' : ''); ?>  
-  <?php endforeach; ?>};
+ '<?php echo $role; ?>': ['<?php  echo implode("','", $elements); ?>']<?php echo ($count != $roles ? ',' : ''); ?>   <?php endforeach; ?>};
 </script>
 
 

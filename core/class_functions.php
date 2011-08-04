@@ -14,6 +14,19 @@ class WP_CRM_F {
 
 
     /**
+     * Show user creation UI (mostly for ajax calls)
+     *
+     * @since 0.1
+     *
+    */
+    static function display_shortcode_form($args = '') {
+      if(!empty($args['shortcode'])) {
+        echo do_shortcode("[wp_crm_form form={$args['shortcode']} submit_text='Save' js_callback_function={$args['js_callback_function']}]");
+      }
+    }
+
+
+    /**
      * Outputs user options as list.
      *
      * @since 0.1
@@ -222,6 +235,7 @@ class WP_CRM_F {
      *
     */
     static function build_meta_keys($wp_settings = false) {
+      global $wpdb;
 
       if(!$wp_settings) {
         global $wp_crm;
@@ -236,10 +250,27 @@ class WP_CRM_F {
 
         if(!empty($attribute_data['options'])) {
 
-          if(strpos($attribute_data['options'], ',')) {
-            $exploded_array = explode(',', $attribute_data['options']);
+          //** Watch for taxonomy: slug */
+          if(strpos($attribute_data['options'], 'taxonomy:') !== false) {
+            $source_taxonomy = trim(str_replace('taxonomy:', '', $attribute_data['options']));
+
+            //** Load all taxonomy terms.  Cannot use get_terms() because this function is ran before most others run register_taxonomy() */
+            $taxonomy_terms = $wpdb->get_results("SELECT tt.term_id, name, slug, description FROM {$wpdb->prefix}term_taxonomy tt LEFT JOIN {$wpdb->prefix}terms t ON tt.term_id = t.term_id WHERE taxonomy = '{$source_taxonomy}' AND name != ''");
+
+            if($taxonomy_terms) {
+              foreach($taxonomy_terms as $term_data) {
+                 $exploded_array[] = $term_data->name;
+              }
+            }
+
           } else {
-            $exploded_array = array($attribute_data['options']);
+
+            if(strpos($attribute_data['options'], ',')) {
+              $exploded_array = explode(',', $attribute_data['options']);
+            } else {
+              $exploded_array = array($attribute_data['options']);
+            }
+
           }
 
           //** Go through every option and identify what meta_key it will use */
@@ -818,7 +849,7 @@ class WP_CRM_F {
         foreach($values as $rand => $value_data) { ?>
         <div class="wp_crm_input_wrap">
 
-        <input <?php echo $tabindex; ?> random_hash="<?php echo $rand; ?>" name="wp_crm[user_data][<?php echo $slug; ?>][<?php echo $rand; ?>][value]"  class="wp_crm_<?php echo $slug; ?>_field <?php echo $class; ?>" type='<?php echo $attribute['input_type']; ?>' value="<?php echo esc_attr($value_data['value']); ?>" />
+        <input <?php echo $tabindex; ?> random_hash="<?php echo $rand; ?>" name="wp_crm[user_data][<?php echo $slug; ?>][<?php echo $rand; ?>][value]"  class="wp_crm_<?php echo $slug; ?>_field <?php echo $class; ?>" type="<?php echo $attribute['input_type']; ?>" value="<?php echo esc_attr($value_data['value']); ?>" />
 
         <?php if($attribute['has_options']) { ?>
           <select <?php echo $tabindex; ?>  random_hash="<?php echo $rand; ?>" name="wp_crm[user_data][<?php echo $slug; ?>][<?php echo $rand; ?>][option]">
@@ -855,8 +886,8 @@ class WP_CRM_F {
     <?php } break; ?>
 
     <?php case 'checkbox': ?>
-       <div class="wp_crm_input_wrap wp_checkbox_input">
-         <ul>
+       <div class="wp_crm_input_wrap wp_checkbox_input wp-tab-panel">
+         <ul class='wp_crm_checkbox_list'>
          <?php foreach($values as $rand => $value_data) { ?>
 
          <li>

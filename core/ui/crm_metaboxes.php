@@ -46,12 +46,13 @@
 class crm_page_wp_crm_add_new {
   function primary_information($user_object) {
     global $wp_crm;
+    $user_role = WP_CRM_F::get_first_value($user_object['role']);
     
     ?>
     <table class="form-table">
     <?php if(!empty($wp_crm['data_structure']) && is_array($wp_crm['data_structure']['attributes'])) : ?>
       <?php foreach($wp_crm['data_structure']['attributes'] as $slug => $attribute): ?>
-        <?php $class = (is_array($wp_crm['hidden_attributes'][$user_object->role[0]['slug']]) && in_array($slug, $wp_crm['hidden_attributes'][$user_object['role']['default']])) ? 'hidden' : ''; ?>
+        <?php $class = (is_array($wp_crm['hidden_attributes'][$user_role]) && in_array($slug, $wp_crm['hidden_attributes'][$user_role])) ? 'hidden' : ''; ?>
         <tr class="wp_crm_user_entry_row <?php echo $class . ' ' .  (@$attribute['primary'] == 'true' ? 'primary' : 'not_primary')?> wp_crm_<?php echo $slug; ?>_row">
           <th>
           <?php if(@$attribute['input_type'] != 'checkbox' || isset($attribute['options'])): ?>

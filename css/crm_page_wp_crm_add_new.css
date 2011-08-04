@@ -1,5 +1,42 @@
 @import url("wp_crm_global.css");
 
+.wp-tab-panel {
+  height: auto;
+  max-height: 200px;
+}
+
+.wp-tab-panel-nav {
+ margin-bottom: 3px;
+  margin-top: 12px;
+}
+.wp-tab-panel-nav li {
+  display: inline;
+  line-height: 1.35em;
+  border-radius: 3px 3px 0 0;
+  padding: 5px;
+}
+
+
+.wp-tab-panel-nav li.tabs a {
+  color: #333333;
+     text-decoration: none;
+}
+.wp-tab-panel-nav li.tabs {
+  border-color: #DFDFDF;
+  border-style: solid solid none;
+  border-width: 1px 1px 0;
+  margin-bottom: 6px;
+  background-color: #FFFFFF;
+}
+
+#primary_information .wp-tab-panel {
+  width: 90%;
+  background: #F8F8F8;
+  padding:0;
+}
+#primary_information .wp-tab-panel ul.wp_crm_checkbox_list {
+  padding: 10px;
+}
 body.crm_page_wp_crm_add_new  #user_activity_history.postbox .inside,
 body.crm_page_wp_crm_add_new  #primary_information.postbox .inside {
   padding: 0;
@@ -157,7 +194,7 @@ body.crm_page_wp_crm_add_new  input.regular-text {
 }
 /* Autocomplete */
 .input_div textarea {
-  width: 99%;
+  width: 90%;
   padding: 5px;
 }
 
@@ -222,7 +259,7 @@ tr.wp_crm_user_entry_row.primary:last-child  {
 
 tr.wp_crm_user_entry_row.primary input.regular-text{
 	font-size: 1.3em;
-  width: 320px;
+  width: 90%;
   border: 1px solid #CFCFCF;
 
 }

@@ -162,7 +162,8 @@ class CRM_User_List_Table extends WP_CMR_List_Table {
       $r .= "<td {$attributes}>";
       $single_cell = $this->single_cell($column_name,$user_object, $user_id);
 
-      $ajax_cells[] = $single_cell;
+      //** Need to insert some sort of space in there to avoid DataTable error that occures when "null" is returned */
+      $ajax_cells[] = ' ' . $single_cell;
       $r .= $single_cell;
       $r .= "</td>";
 
@@ -178,9 +179,11 @@ class CRM_User_List_Table extends WP_CMR_List_Table {
     return $r;
     }
 
-    function single_cell($column_name,$user_object, $user_id) {
+    function single_cell($full_column_name,$user_object, $user_id) {
     global $wp_crm;
 
+      $column_name = str_replace('wp_crm_', '', $full_column_name);
+      
       switch ( $column_name ) {
 
         case 'cb':
@@ -264,7 +267,7 @@ class CRM_User_List_Table extends WP_CMR_List_Table {
             if($wp_crm['data_structure']['attributes'][$column_name]['has_options']) {
 
               //** Get label and only show when enabled */
-              $visible_options = nl2br(WP_CRM_F::list_options($user_object, $column_name));
+              $visible_options = WP_CRM_F::list_options($user_object, $column_name);
 
             } else {
               //** Regular value, no need to get option title */
@@ -276,6 +279,9 @@ class CRM_User_List_Table extends WP_CMR_List_Table {
         }
 
           if(is_array($visible_options)) {
+            foreach($visible_options as $key => $single_value) {
+              $visible_options[$key] = nl2br($single_value);
+            }
             $r .= '<ul><li>' . implode('</li><li>', $visible_options) . '</li></ul>';
           }
 
@@ -308,11 +314,11 @@ class CRM_User_List_Table extends WP_CMR_List_Table {
         }
 
         echo "<ul class='wp_crm_overview_filters'>\n";
-        echo '<li class="wpp_crm_filter_section_title">Role Lists</li>';
+        echo "<li class='wpp_crm_filter_section_title'>Role Lists<a class='wpp_crm_filter_show'>".__('Show', 'wp_crm')."</a></li>";
 
         if(is_array($views)) {
             foreach ( $views as $class => $view ) {
-                $views[ $class ] = "\t<li class='$class'>$view";
+                $views[ $class ] = "\t<li class='$class wp_crm_checkbox_filter'>$view";
             }
         }
 
@@ -322,7 +328,7 @@ class CRM_User_List_Table extends WP_CMR_List_Table {
         //** Get all fiterable keys - for now just checkboxes */
         if(!empty($wp_crm['data_structure']) && is_array($wp_crm['data_structure']['attributes'])) {
           foreach($wp_crm['data_structure']['attributes'] as $meta_key => $meta_data) {
-            if($meta_data['input_type'] == 'checkbox') {
+            if($meta_data['input_type'] == 'checkbox' || $meta_data['input_type'] == 'dropdown') {
                 $filterable_keys[$meta_key] = $meta_data;
             }
           }

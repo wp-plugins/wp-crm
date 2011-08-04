@@ -1,5 +1,8 @@
 @import url("wp_crm_global.css");
 
+.wp_crm_checkbox_on_left {
+  overflow: auto;
+}
 
 #wp_crm_notification_messages {
 

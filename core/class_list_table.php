@@ -103,7 +103,7 @@
       "sAjaxSource": ajaxurl + '?&action=<?php echo $this->_args['ajax_action']; ?>',
       "fnServerData": function ( sSource, aoData, fnCallback ) {
 
-        // Build Filters
+        
         aoData.push({
           name: 'wp_crm_filter_vars',
           value: jQuery('#wp-crm-filter').serialize()
@@ -137,15 +137,17 @@
 
   //** Check which columns are hidden, and hide data table columns */
   function wp_list_table_do_columns() { 
- 
-    jQuery('.hide-column-tog input').each(function() {
-      
-      var col_slug = jQuery(this).val();
-      var checked = (jQuery(this).attr('checked') ? true : false);
 
-      column_id = wp_table_column_ids[col_slug];
-      wp_list_table.fnSetColumnVis( column_id, checked );
+    // Hide any "hidden" columns from table
+    
+    var visible_columns = jQuery('.hide-column-tog').filter(':checked').map(function() { return jQuery(this).val(); });    
+    var hidden_columns = jQuery('.hide-column-tog').filter(':not(:checked)').map(function() { return jQuery(this).val(); });
+      
+    
+    jQuery.each(hidden_columns, function(key, row_class) {    
+      jQuery('#wp-list-table .' + row_class).hide();
     });
+        
  
   }
 
@@ -346,14 +348,16 @@
 
       $r .= "<td {$attributes}>";
       $single_cell = $this->single_cell($column_name,$object, $object_id);
- 
 
-      $ajax_cells[] = $single_cell;
+      //** Need to insert some sort of space in there to avoid DataTable error that occures when "null" is returned */
+      $ajax_cells[] = ' ' . $single_cell;
+      
       $r .= $single_cell;
       $r .= "</td>";
     }
-    
+
     $r .= '</tr>';
+
 
     if($this->_args['ajax']) {
       return $ajax_cells;
@@ -368,11 +372,13 @@
    * Keep it simple here.  Mostly to be either replaced by child classes, or hookd into
    *
    */
-  function single_cell($column_name,$object, $object_id) {
+  function single_cell($full_column_name,$object, $object_id) {
     global $wp_crm;
-    
+
     $object = (array) $object;
 
+    $column_name = str_replace('wp_crm_', '', $full_column_name);
+          
     $cell_data = array(
       'table_scope' => $this->_args['table_scope'],
       'column_name' => $column_name,
