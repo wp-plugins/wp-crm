@@ -13,12 +13,12 @@ add_action('wp_crm_init', array('class_contact_messages', 'init'));
  * class_contact_messages Class
  *
  *
- * Copyright 2010 Andy Potanin, Usability Dynamics, Inc.  <andy.potanin@twincitiestech.com>
+ * Copyright 2011 Andy Potanin, Usability Dynamics, Inc.  <andy.potanin@usabilitydynamics.com>
  *
  * @version 1.0
- * @author Andy Potanin <andy.potanin@twincitiestech.com>
+ * @author Andy Potanin <andy.potanin@usabilitydynamics.com>
  * @package WP-CRM
- * @subpackage Email Synchronizer
+ * @subpackage Contact Forms
  */
 class class_contact_messages {
 
@@ -26,7 +26,7 @@ class class_contact_messages {
    * Init level functions for email syncronziation management
    *
    * @version 1.0
-   * Copyright 2010 Andy Potanin, Usability Dynamics, Inc.  <andy.potanin@twincitiestech.com>
+   * Copyright 2011 Andy Potanin, Usability Dynamics, Inc.  <andy.potanin@usabilitydynamics.com>
    */
   function init() {
 
@@ -325,8 +325,11 @@ class class_contact_messages {
     $a = shortcode_atts( array(
       'js_callback_function' => false,
       'form' => false,
+      'use_current_user' => false,
+      'success_message' => __('Your message has been sent. Thank you.'),
       'submit_text' => __('Submit')
     ), $atts );
+ 
  
 
     if(!$a['form']) {
@@ -345,8 +348,13 @@ class class_contact_messages {
 
     $form_vars = array(
       'form_slug' => $form_slug,  
+      'success_message' => $a['success_message'],  
       'submit_text' => $a['submit_text']
     );
+    
+    if(isset($a['use_current_user'])) {
+      $form_vars['use_current_user'] = true;
+    }
      
     if($a['js_callback_function']) {
       $form_vars['js_callback_function']  = $a['js_callback_function'];
@@ -374,17 +382,28 @@ class class_contact_messages {
    *
    * @todo add provision to not display fields that no longer exist
    * @version 1.0
-   * Copyright 2010 Andy Potanin, Usability Dynamics, Inc.  <andy.potanin@twincitiestech.com>
+   * Copyright 2011 Andy Potanin, Usability Dynamics, Inc.  <andy.potanin@usabilitydynamics.com>
    */
   function draw_form($form_settings) {
     global $wp_crm;
 
-    extract($form_settings);
+     extract($form_settings);
 
     $form = $wp_crm['wp_crm_contact_system_data'][$form_slug];
 
     $wp_crm_nonce = md5(NONCE_KEY);
-
+    
+    //** Load user object if passed */
+    if($use_current_user) {
+      $current_user = wp_get_current_user();
+      
+      if ( 0 == $current_user->ID ) {
+        $user_data = false;        
+      } else {
+        $user_data = wp_crm_get_user($current_user->ID);
+      }
+    }
+ 
   ?>
   <form id="<?php echo md5($wp_crm_nonce . '_form'); ?>" class="wp_crm_contact_form">
   <ul class="wp_crm_contact_form">
@@ -396,29 +415,41 @@ class class_contact_messages {
         <input type="text" name="name" />
         <input type="text" name="url" />
         <input type="text" name="comment" />
+        <input type="hidden" name="wp_crm[success_message]" value="<?php echo esc_attr($success_message); ?>" />
+        <?php if($user_data) { ?>
+        <input type="hidden" name="wp_crm[user_id]" value="<?php echo $current_user->ID; ?>" />
+        <?php } ?>
       <?php /* Span Prevention */ ?>
     </li>
   <?php
     $tabindex = 1;
+ 
     foreach($form['fields'] as $field) {
     $this_attribute = $wp_crm['data_structure']['attributes'][$field];
     $this_attribute['autocomplete'] = 'false';
+       
+    if($user_data && $user_data[$field]) {      
+      $values = $user_data[$field];
+    } else {
+      $values = false;
+    }
+    
     ?>
-    <li class="wp_crm_form_element">
+    <li class="wp_crm_form_element <?php echo ($this_attribute['required'] == 'true' ? 'wp_crm_required_field' : ''); ?>">
       <label class="wp_crm_input_label"><?php echo $this_attribute['title']; ?></label>
       <div class="wp_crm_input_wrapper">
-      <?php echo WP_CRM_F::user_input_field($field, false, $this_attribute, false, "tabindex=$tabindex"); ?>
+      <?php echo WP_CRM_F::user_input_field($field, $values, $this_attribute, false, "tabindex=$tabindex"); ?>
       </div>
     </li>
   <?php $tabindex++; } ?>
 
-  <?php  if($form['message_field'] == 'on'): ?>
+  <?php  if($form['message_field'] == 'on') { ?>
   <li class="wp_crm_form_element wp_crm_message_field ">
       <div class="wp_crm_input_wrapper">
         <?php echo WP_CRM_F::user_input_field('message_field', false,  array('input_type' => 'textarea'),false, "tabindex=$tabindex"); ?>
     </div>
   </li>
-  <?php endif; ?>
+  <?php } ?>
     <li class="wp_crm_form_response" style="display:none;"><div></div></li>
     <li class="wp_crm_submit_row">
       <div class="wp_crm_input_wrapper">
@@ -445,6 +476,28 @@ class class_contact_messages {
     });
 
     function submit_<?php echo md5($wp_crm_nonce . '_form'); ?>() {
+    
+      var validation_error = false;
+      var form = jQuery("#<?php echo md5($wp_crm_nonce . '_form'); ?> ");
+      
+      jQuery("*", form).removeClass(form).removeClass("wp_crm_input_error");
+      
+      <?php /* Front End validation */ ?>
+      jQuery("li.wp_crm_required_field", form).each(function() {
+      
+        var wrapper = this;
+        
+        if(jQuery("input.regular-text:first", wrapper).val() == '') {
+          validation_error = true;
+          jQuery("input.regular-text", wrapper).addClass("wp_crm_input_error");
+        }
+      
+      });
+      
+      if(validation_error) {
+        return false;
+      }
+      
       jQuery("#<?php echo md5($wp_crm_nonce . '_form'); ?> .wp_crm_form_response").show();
       jQuery("#<?php echo md5($wp_crm_nonce . '_form'); ?> .wp_crm_form_response div").removeClass();
       jQuery("#<?php echo md5($wp_crm_nonce . '_form'); ?> .wp_crm_form_response div").text("<?php _e("Processing..."); ?>");
@@ -478,7 +531,7 @@ class class_contact_messages {
    * Insert message into log
    *
    * @version 1.0
-   * Copyright 2010 Andy Potanin, Usability Dynamics, Inc.  <andy.potanin@twincitiestech.com>
+   * Copyright 2011 Andy Potanin, Usability Dynamics, Inc.  <andy.potanin@usabilitydynamics.com>
    */
   function insert_message($user_id, $message, $form_slug) {
       $insert_id = WP_CRM_F::insert_event("object_id={$user_id}&user_id={$user_id}&attribute=contact_form_message&text={$message}&value=new&other={$form_slug}");
@@ -490,13 +543,13 @@ class class_contact_messages {
    *
    * @todo add security precautions to filter out potential SQL injections or bad data (such as account escalation)
    * @version 1.0
-   * Copyright 2010 Andy Potanin, Usability Dynamics, Inc.  <andy.potanin@twincitiestech.com>
+   * Copyright 2011 Andy Potanin, Usability Dynamics, Inc.  <andy.potanin@usabilitydynamics.com>
    */
   function process_crm_message() {
     global $wp_crm;
 
     //** Server seems to return nothing somethines, adding space in beginning seems to solve */
-    echo ' ';
+    /** This needs to be removed - it causes a warning when the header items are set later in the code, when then causes the form NOT to work echo ' '; */
     
     //** watch for spam */
     if(!empty($_REQUEST['comment']) ||
@@ -511,12 +564,17 @@ class class_contact_messages {
     if(empty($data)) {
       die();
     }
+    
+    //** Some other security */
+    if(isset($data['user_data']['user_id'])) {
+      //** Fail - user_id will never be passed in this manner unless somebody is screwing around */
+      die(json_encode(array('success' => 'false', 'message' => __('Form could not be submitted.','wp_crm'))));
+    }
 
     $md5_form_slug = $_REQUEST['form_slug'];
+    
     foreach($wp_crm['wp_crm_contact_system_data'] as $form_slug => $form_data) {
-
-      if($md5_form_slug == md5($form_slug)) {
- 
+      if($md5_form_slug == md5($form_slug)) { 
         $confirmed_form_slug = $form_slug;
         $confirmed_form_data = $form_data;
         continue;
@@ -526,8 +584,22 @@ class class_contact_messages {
     if(!$confirmed_form_slug) {
       die();
     }
- 
-    $user_id = wp_crm_save_user_data($_REQUEST['wp_crm']['user_data'], 'default_role='.$wp_crm['configuration']['new_contact_role'].'&use_global_messages=false&match_login=true');
+    
+    if(isset($data['user_id'])) {
+      //** User ID was passsed. Verify that current user is logged in */
+     $current_user = wp_get_current_user();
+      
+      if ( 0 == $current_user->ID || $data['user_id'] != $current_user->ID) {
+        //** User ID not found, or passed doesn't match. Either way, fail with ambigous messages. 
+        die(json_encode(array('success' => 'false', 'message' => __('Form could not be submitted.','wp_crm'))));
+      } else {
+        //** We have User ID, we are updating an existing profile */
+        $data['user_data']['user_id']['default'][] = $current_user->ID;
+      }
+    
+    }
+
+    $user_id = @wp_crm_save_user_data($data['user_data'], 'default_role='.$wp_crm['configuration']['new_contact_role'].'&use_global_messages=false&match_login=true&no_redirect=true');
  
     if(!$user_id) {
       if($confirmed_form_data['message_field'] == 'on') {
@@ -543,17 +615,18 @@ class class_contact_messages {
 
     if(empty($message)) {
       //** No message submitted */
-
+    } else {
+      //** Message is submitted. Do stuff. */
+      $message_id = class_contact_messages::insert_message($user_id, $message, $confirmed_form_slug);
+   
+      $notification_info = (array) wp_crm_get_user($user_id);
+      $notification_info['message_content'] = stripslashes($message);
+      $notification_info['profile_link'] = admin_url("admin.php?page=wp_crm_add_new&user_id=$user_id");
+      wp_crm_send_notification($confirmed_form_slug,$notification_info);
+      
     }
-    $message_id = class_contact_messages::insert_message($user_id, $message, $confirmed_form_slug);
- 
-    $notification_info = (array) wp_crm_get_user($user_id);
-    $notification_info['message_content'] = stripslashes($message);
-    $notification_info['profile_link'] = admin_url("admin.php?page=wp_crm_add_new&user_id=$user_id");
-
-    wp_crm_send_notification($confirmed_form_slug,$notification_info);
-
-    $result = array('success' => 'true','message' => __('Your message has been sent. Thank you.','wp_crm'));
+    
+    $result = array('success' => 'true','message' => $data['success_message']);
     
     if( current_user_can('manage_options') ) {
       $result['user_id'] = $user_id;
@@ -568,7 +641,7 @@ class class_contact_messages {
    * Adds content to the Messages tab on the settings page
    *
    * @version 1.0
-   * Copyright 2010 Andy Potanin, Usability Dynamics, Inc.  <andy.potanin@twincitiestech.com>
+   * Copyright 2011 Andy Potanin, Usability Dynamics, Inc.  <andy.potanin@usabilitydynamics.com>
    */
   function settings_page_tab_content($wp_crm) {
 
@@ -591,7 +664,6 @@ class class_contact_messages {
     });
   </script>
   <div class="wp_crm_inner_tab">
-
 
       <p>
         <?php _e('Use this section to add and configure new contact forms.', 'wp_crm'); ?>
@@ -636,6 +708,7 @@ class class_contact_messages {
                 <input <?php checked($data['message_field'], 'on'); ?> id="message_<?php echo $row_hash; ?>" type="checkbox"  name="wp_crm[wp_crm_contact_system_data][<?php echo $contact_form_slug; ?>][message_field]"  value="on"  value="<?php echo $data['message_field']; ?>" />
                 <label for="message_<?php echo $row_hash; ?>"><?php _e('Display textarea for custom message.', 'wp_crm'); ?></label>
               </li>
+ 
 
             </ul>
           </td>
@@ -728,7 +801,7 @@ class class_contact_messages {
    * Ad contact message specific capabilities
    *
    * @version 1.0
-   * Copyright 2010 Andy Potanin, Usability Dynamics, Inc.  <andy.potanin@twincitiestech.com>
+   * Copyright 2011 Andy Potanin, Usability Dynamics, Inc.  <andy.potanin@usabilitydynamics.com>
    */
   function add_capabilities() {
     global $wp_crm;
@@ -742,7 +815,7 @@ class class_contact_messages {
    * Modify admin navigational menu to include link(s) for contact message viewing.
    *
    * @version 1.0
-   * Copyright 2010 Andy Potanin, Usability Dynamics, Inc.  <andy.potanin@twincitiestech.com>
+   * Copyright 2011 Andy Potanin, Usability Dynamics, Inc.  <andy.potanin@usabilitydynamics.com>
    */
   function admin_menu() {
     global $wp_crm;
@@ -811,7 +884,7 @@ class class_contact_messages {
    * Contact for the contact message overview page
    *
    * @version 1.0
-   * Copyright 2010 Andy Potanin, Usability Dynamics, Inc.  <andy.potanin@twincitiestech.com>
+   * Copyright 2011 Andy Potanin, Usability Dynamics, Inc.  <andy.potanin@usabilitydynamics.com>
    */
   function crm_page_wp_crm_contact_messages() {
     global $current_screen, $wp_crm;
@@ -871,7 +944,7 @@ class class_contact_messages {
    * Main function to query messages from log
    *
    * @version 1.0
-   * Copyright 2010 Andy Potanin, Usability Dynamics, Inc.  <andy.potanin@twincitiestech.com>
+   * Copyright 2011 Andy Potanin, Usability Dynamics, Inc.  <andy.potanin@usabilitydynamics.com>
    */
   function get_messages($args = false) {
     global $wpdb;

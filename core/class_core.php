@@ -61,7 +61,10 @@ class WP_CRM_Core {
     /** Loads all the class for handling all plugin tables */
     include_once WP_CRM_Path . '/core/class_list_table.php';
 
-    wp_register_script('jquery-cookie', WP_CRM_URL. '/third-party/jquery.cookie.js', array('jquery'), '1.7.3' );
+
+    wp_register_script('jquery-cookie', WP_CRM_URL. '/third-party/jquery.smookie.js', array('jquery'), '1.7.3' );
+    wp_register_script('swfobject', WP_CRM_URL. '/third-party/swfobject.js', array('jquery'));
+    wp_register_script('jquery-uploadify', WP_CRM_URL. '/third-party/uploadify/jquery.uploadify.v2.1.4.min.js', array('jquery'));
     wp_register_script('jquery-position', WP_CRM_URL. '/third-party/jquery.ui.position.min.js', array('jquery-ui-core'));
     wp_register_script('jquery-slider', WP_CRM_URL. '/third-party/jquery.ui.slider.min.js', array('jquery-ui-core'));
     wp_register_script('jquery-widget', WP_CRM_URL. '/third-party/jquery.ui.widget.min.js', array('jquery-ui-core'));
@@ -74,8 +77,14 @@ class WP_CRM_Core {
     // Find and register theme-specific style if a custom wp_properties.css does not exist in theme
     $theme_slug = get_option('stylesheet');
     if(file_exists( WP_CRM_Templates . "/theme-specific/{$theme_slug}.css")) {
-      wp_register_style('wp-crm-theme-specific', WP_CRM_URL . "/templates/theme-specific/{$theme_slug}.css",  array(),WPP_Version);
+      wp_register_style('wp-crm-theme-specific', WP_CRM_URL . "/templates/theme-specific/{$theme_slug}.css",  array('wp-crm-default-styles'),WPP_Version);
     }
+    
+    //** Load default styles */
+    if(file_exists( WP_CRM_Path . "/templates/wp-crm-default-styles.css")) {
+      wp_register_style('wp-crm-default-styles', WP_CRM_URL . "/templates/wp-crm-default-styles.css",  array(),WPP_Version);
+    }
+    
 
     if(file_exists( WP_CRM_Path . "/css/wp_crm_global.css")) {
       wp_register_style('wp_crm_global', WP_CRM_URL . "/css/wp_crm_global.css",  array(),WPP_Version);
@@ -93,7 +102,7 @@ class WP_CRM_Core {
     add_filter("admin_body_class", array('WP_CRM_Core', "admin_body_class"));
 
      // Load back-end scripts
-    add_action("admin_enqueue_scripts", array('WP_CRM_Core', "admin_enqueue_scripts"));
+    add_action("admin_enqueue_scripts", array('WP_CRM_Core', "admin_enqueue_scripts"));  
 
     add_action("wp_ajax_wp_crm_user_object", create_function('',' echo "CRM Object Report: \n" . print_r(wp_crm_get_user($_REQUEST[user_id]), true) . "\nRaw Meta Report: \n" .  print_r(WP_CRM_F::show_user_meta_report($_REQUEST[user_id]), true); '));
     add_action("wp_ajax_wp_crm_show_meta_report", create_function('',' die(print_r(WP_CRM_F::show_user_meta_report(), true)); '));
@@ -101,6 +110,7 @@ class WP_CRM_Core {
     add_action("wp_ajax_wp_crm_insert_activity_message", create_function('',' echo WP_CRM_F::insert_event("time={$_REQUEST[time]}&attribute=note&object_id={$_REQUEST[user_id]}&text={$_REQUEST[content]}&ajax=true"); die; '));
 
     add_action("wp_ajax_wp_crm_display_shortcode_form", create_function('',' WP_CRM_F::display_shortcode_form(array("shortcode" => $_REQUEST["shortcode"], "js_callback_function" =>  $_REQUEST["js_callback_function"])); die(); '));
+    
     add_action("wp_ajax_wp_crm_do_fake_users", create_function('',' echo WP_CRM_F::do_fake_users("number={$_REQUEST[number]}&do_what={$_REQUEST[do_what]}"); die; '));
 
     //* Returns table rows for overview tbale */
@@ -146,12 +156,30 @@ class WP_CRM_Core {
   function template_redirect() {
       global $post, $wp, $wp_query, $wp_styles;
 
-      if(!strpos($post->post_content, "wp_crm_form"))
+      if(!strpos($post->post_content, "wp_crm_form")) {
         return;
+      }
+      
+    //** Print front-end styles */
+    add_action("wp_print_styles", array('WP_CRM_Core', "wp_print_styles"));
+ 
+  }
+  
+  
+  /**
+   * Loads front-end styles
+   *
+   * Only ran when wp_crm_form shortcode is present in content.
+   * @since 0.1
+   *
+   */
+  function wp_print_styles() {
+    global $post, $wp, $wp_query, $wp_styles;
 
-       // Load theme-specific stylesheet if it exists
-      wp_enqueue_script('jquery');
-      wp_enqueue_style('wp-crm-theme-specific');
+     // Load theme-specific stylesheet if it exists
+    wp_enqueue_script('jquery');
+    wp_enqueue_style('wp-crm-theme-specific');
+    wp_enqueue_style('wp-crm-default-styles');
   }
 
     /**
@@ -205,9 +233,10 @@ class WP_CRM_Core {
    */
   function admin_init() {
     global $wp_rewrite, $wp_roles, $wp_crm;
+    
+    WP_CRM_F::maybe_load_profile();
 
     do_action('wp_crm_metaboxes');
-
 
     // Add overview table rows. Static because admin_menu is not loaded on ajax calls.
     add_filter("manage_toplevel_page_wp_crm_columns", array('WP_CRM_Core', "overview_columns"));
@@ -383,16 +412,18 @@ class WP_CRM_Core {
 
       //print_r($menu);print_r($submenu['users.php']);      die();
 
-      foreach($submenu['users.php'] as $sub_key => $sub_pages_data) {
+      if(is_array($submenu['users.php'])) {
+        foreach($submenu['users.php'] as $sub_key => $sub_pages_data) {
 
-        if(in_array($sub_key, $wp_crm_excluded_sub_pages)) {
-          continue;
+          if(in_array($sub_key, $wp_crm_excluded_sub_pages)) {
+            continue;
+          }
+
+          //** Fix links (there may be a better way) */
+          $sub_pages_data[2] = 'admin.php?page=' . $sub_pages_data[2];
+
+          $submenu['wp_crm'][$sub_key] = $sub_pages_data;
         }
-
-        //** Fix links (there may be a better way) */
-        $sub_pages_data[2] = 'admin.php?page=' . $sub_pages_data[2];
-
-        $submenu['wp_crm'][$sub_key] = $sub_pages_data;
       }
 
 
@@ -421,7 +452,7 @@ class WP_CRM_Core {
    * @since 0.01
    */
   function page_loader() {
-    global $wp_crm, $screen_layout_columns, $current_screen, $wpdb, $crm_messages, $user_ID;
+    global $wp_crm, $screen_layout_columns, $current_screen, $wpdb, $crm_messages, $user_ID, $wp_crm_user;
 
     //** echo "<script type='text/javascript'>console.log('screen id: {$current_screen->base}');</script>"; */
 

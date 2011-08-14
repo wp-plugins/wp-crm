@@ -9,7 +9,14 @@ jQuery(document).ready(function() {
   jQuery('.wp_crm_message_quick_action').live('click',function() {
     var action = jQuery(this).attr('wp_crm_action');
     var object_id = jQuery(this).attr('object_id');
+    
     var parent_element = jQuery(this).parents('tr');
+    
+    if(jQuery(this).attr('verify_action')) {
+      if(!confirm('Are you sure?')) {
+        return false;
+      }
+    }
     
     jQuery.post(ajaxurl, {action: 'wp_crm_quick_action', wp_crm_quick_action: action, object_id: object_id}, function(result) {
       if(result.success = 'true') {
@@ -176,18 +183,13 @@ jQuery(document).ready(function() {
     })
 
  
-    jQuery('.wpp_crm_filter_show').click(function(){
-  
-      var parent = jQuery(this).parents('.wp_crm_overview_filters');
-      jQuery(' .wp_crm_checkbox_filter', parent).show();
+    jQuery('.wpp_crm_filter_section_title').click(function(){
         
-      jQuery('.wpp_crm_filter_show', parent).hide();
- 
-
-    
-    });
-    
-    
+      var parent = jQuery(this).parents('.wp_crm_overview_filters');
+      jQuery(' .wp_crm_checkbox_filter', parent).toggle();        
+      jQuery('.wpp_crm_filter_show', parent).toggle();
+      
+    });   
     
   });
 

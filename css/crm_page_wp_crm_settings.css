@@ -1,7 +1,19 @@
 @import url("wp_crm_global.css");
 
+span.wp_crm_show_advanced {
+  margin-left: 29px;
+}
+
+li.wp_crm_advanced_configuration {
+  display:none;
+}
+
 .wp_crm_checkbox_on_left {
   overflow: auto;
+}
+
+ul.wp_crm_notification_main_configuration .wp_crm_checkbox_on_left {
+  padding-left: 80px;
 }
 
 #wp_crm_notification_messages {
@@ -45,7 +57,7 @@
 }
 
 #wp_crm_attribute_fields .wp_crm_attribute_col {
-  width: 200px;
+  width: 225px;
 }
 
 #wp_crm_attribute_fields .wp_crm_settings_col {

@@ -1,5 +1,14 @@
 jQuery(document).ready(function() {
 
+  jQuery(".wp_crm_show_advanced").live("click", function() {
+    
+    var wrapper = jQuery(this).parents('tr.wp_crm_dynamic_table_row');
+    
+    jQuery('li.wp_crm_advanced_configuration', wrapper).toggle();
+  
+  });
+  
+  
   jQuery("#wp_crm_attribute_fields tbody").sortable();
 
   jQuery("#wp_crm_attribute_fields tbody tr").live("mouseover", function() {

@@ -1,3 +1,5 @@
+var wpp_crm_form_stop = false;
+
 jQuery(document).bind('wp_crm_value_changed', function(event, data) {
 
   var object = data.object;
@@ -17,6 +19,12 @@ jQuery(document).bind('wp_crm_value_changed', function(event, data) {
 
 
 jQuery(document).ready(function() {
+ 
+  jQuery('.wp_crm_attribute_uneditable').each(function() {
+  
+    jQuery('input, textarea, select', this).attr('disabled', true);
+  
+  });
  
  
     jQuery('ul.wp-tab-panel-nav  a').click(function(){
@@ -232,12 +240,42 @@ jQuery(document).ready(function() {
   }
 
   /**
-   * Contact history and messages for a user
+   * Function ran before form is saved.
    *
    *
    */
   function wp_crm_save_user_form(form) {
-  
+
+    var form = jQuery("#crm_user");
+    var stop_form = false;
+
+    jQuery("*", form).removeClass("wp_crm_input_error");
+
+    /* Cycle Through all Requires fields */
+    jQuery(".wp_crm_attribute_required", form).each(function()  {
+
+      var meta_key = jQuery(this).attr('meta_key');
+      var input_type = jQuery(this).attr('wp_crm_input_type');
+
+      if(input_type == 'text' && jQuery("input.regular-text:first", this).val() == '') {
+        jQuery("input.regular-text:first", this).addClass('wp_crm_input_error');
+        jQuery("input.regular-text:first", this).focus();
+        stop_form = true;
+      }
+      
+      if(input_type == 'dropdown' && jQuery("select:first", this).val() == '') {
+        jQuery("select:first", this).addClass('wp_crm_input_error');
+        jQuery("select:first", this).focus();
+        stop_form = true;
+      }
+
+    });
+    
+    if(stop_form) {
+      return false;
+    }
+
+
     var password_1 = jQuery("#wp_crm_password_1").val();
     var password_2 = jQuery("#wp_crm_password_2").val();
     
@@ -248,8 +286,14 @@ jQuery(document).ready(function() {
         jQuery(".wp_crm_advanced_user_actions").show();
         jQuery("#wp_crm_password_1").focus();
         return false;
-      }
+      }    
+    } 
+ 
+    jQuery(document).trigger('wp_crm_user_profile_save', {object: this, action: 'option_mousedown'});
     
+    if(wpp_crm_form_stop) {
+      return false;
     }
+    
     return true;
   }

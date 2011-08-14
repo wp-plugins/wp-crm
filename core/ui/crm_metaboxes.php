@@ -52,14 +52,24 @@ class crm_page_wp_crm_add_new {
     <table class="form-table">
     <?php if(!empty($wp_crm['data_structure']) && is_array($wp_crm['data_structure']['attributes'])) : ?>
       <?php foreach($wp_crm['data_structure']['attributes'] as $slug => $attribute): ?>
-        <?php $class = (is_array($wp_crm['hidden_attributes'][$user_role]) && in_array($slug, $wp_crm['hidden_attributes'][$user_role])) ? 'hidden' : ''; ?>
-        <tr class="wp_crm_user_entry_row <?php echo $class . ' ' .  (@$attribute['primary'] == 'true' ? 'primary' : 'not_primary')?> wp_crm_<?php echo $slug; ?>_row">
+        <?php 
+        unset($row_classes);
+        
+        $row_classes[] = 'wp_crm_user_entry_row'; 
+        $row_classes[] = "wp_crm_{$slug}_row";        
+        $row_classes[] = (@$attribute['uneditable'] == 'true' ? 'wp_crm_attribute_uneditable' : ''); 
+        $row_classes[] = (@$attribute['required'] == 'true' ? 'wp_crm_attribute_required' : ''); 
+        $row_classes[] = (@$attribute['primary'] == 'true' ? 'primary' : 'not_primary');
+        $row_classes[] = ((is_array($wp_crm['hidden_attributes'][$user_role]) && in_array($slug, $wp_crm['hidden_attributes'][$user_role])) ? 'hidden' : '');        
+        ?>
+        <tr meta_key="<?php echo esc_attr($slug); ?>" wp_crm_input_type="<?php echo esc_attr($attribute['input_type']); ?>" class="<?php echo implode(' ', $row_classes); ?>">
           <th>
           <?php if(@$attribute['input_type'] != 'checkbox' || isset($attribute['options'])): ?>
             <?php ob_start();?>
             <label for="wp_crm_<?php echo $slug; ?>_field">
               <?php echo $attribute['title']; ?>
             </label>
+            <div class="wp_crm_description"><?php echo $attribute['description']; ?></div>
             <?php $label = ob_get_contents(); ob_end_clean(); ?>
             <?php echo apply_filters('wp_crm_user_input_label', $label, $slug, $attribute, $user_object); ?>
           <?php endif; ?>

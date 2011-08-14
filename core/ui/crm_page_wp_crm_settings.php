@@ -218,16 +218,28 @@ if(empty($wp_crm['data_structure']['attributes'])) {
         <tr class="wp_crm_dynamic_table_row" slug="<?php echo $slug; ?>"  new_row='false'>
         <th class="wp_crm_draggable_handle">&nbsp;</th>
 
-        <td >
+        <td>
           <ul>
           <li>
-          <label><?php _e('Title'); ?></label>
+          <label><?php _e('Title:'); ?></label>
           <input class="slug_setter" type="text" name="wp_crm[data_structure][attributes][<?php echo $slug; ?>][title]" value="<?php echo $data['title']; ?>" />
+          </li>          
+
+          <li class="wp_crm_advanced_configuration">
+            <label><?php _e('Note:'); ?></label>
+             <input type="text" name="wp_crm[data_structure][attributes][<?php echo $slug; ?>][description]" value="<?php echo $data['description']; ?>" />
           </li>
+
+          
+          <li class="wp_crm_advanced_configuration">
+            <label><?php _e('Slug:'); ?></label>
+            <input type="text" class="slug" readonly='readonly' value="<?php echo $slug; ?>" />
+          </li>
+
           <li>
-          <label><?php _e('Slug'); ?> </label>
-          <input type="text" class="slug" readonly='readonly' value="<?php echo $slug; ?>" />
-          </li>
+            <span class="wp_crm_show_advanced wp_crm_subtle_link"><?php _e('Toggle Advanced'); ?></span>
+          </li>          
+          
           </ul>
         </td>
         <td>
@@ -240,12 +252,24 @@ if(empty($wp_crm['data_structure']['attributes'])) {
             <input  id="<?php echo $row_hash; ?>_overview_column"  value='true' type="checkbox"  <?php checked($wp_crm['data_structure']['attributes'][$slug]['overview_column'], 'true'); ?> name="wp_crm[data_structure][attributes][<?php echo $slug; ?>][overview_column]" />
             <label for="<?php echo $row_hash; ?>_overview_column" ><?php _e('Overview Column', 'wp_crm'); ?></label>
         </li>
+        
+          
+          <li class="wp_crm_advanced_configuration">
+            <input id="<?php echo $row_hash; ?>_required" value='true' type="checkbox"  <?php checked($wp_crm['data_structure']['attributes'][$slug]['required'], 'true'); ?> name="wp_crm[data_structure][attributes][<?php echo $slug; ?>][required]" />
+            <label for="<?php echo $row_hash; ?>_required" ><?php _e('Required', 'wp_crm'); ?></label>
+          </li>        
+                  
+          <li class="wp_crm_advanced_configuration">
+            <input id="<?php echo $row_hash; ?>_no_edit" value='true' type="checkbox"  <?php checked($wp_crm['data_structure']['attributes'][$slug]['uneditable'], 'true'); ?> name="wp_crm[data_structure][attributes][<?php echo $slug; ?>][uneditable]" />
+            <label for="<?php echo $row_hash; ?>_no_edit" ><?php _e('Uneditable', 'wp_crm'); ?></label>
+          </li>        
+        
+        <?php /*
         <li>
             <input  id="<?php echo $row_hash; ?>_allow_multiple"  value='true' type="checkbox"  <?php checked($wp_crm['data_structure']['attributes'][$slug]['allow_multiple'], 'true'); ?> name="wp_crm[data_structure][attributes][<?php echo $slug; ?>][allow_multiple]" />
             <label  for="<?php echo $row_hash; ?>_allow_multiple"  ><?php _e('Allow Multiple', 'wp_crm'); ?></label>
         </li>
         
-        <?php /*
         <li>
             <input  id="<?php echo $row_hash; ?>_autocomplete"  value='true' type="checkbox"  <?php checked($wp_crm['data_structure']['attributes'][$slug]['autocomplete'], 'true'); ?> name="wp_crm[data_structure][attributes][<?php echo $slug; ?>][autocomplete]" />
             <label  for="<?php echo $row_hash; ?>_autocomplete"  ><?php _e('Autocomplete Field', 'wp_crm'); ?></label>

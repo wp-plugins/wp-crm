@@ -1,4 +1,6 @@
 <?php
+ 
+  
 if(!empty($wp_crm['data_structure']) && is_array($wp_crm['data_structure']['attributes'])) {
     $attribute_keys = array_keys($wp_crm['data_structure']['attributes']);
 } else {
@@ -11,10 +13,9 @@ if(!empty($wp_crm['data_structure']) && is_array($wp_crm['data_structure']['attr
   WP_CRM_F::add_message(__('User updated.'));
 }
 
-if($_REQUEST['user_id'])  {
+if($wp_crm_user)  {
 	$user_id = $_REQUEST['user_id'];
-	$object = wp_crm_get_user($user_id);
-  
+	$object = $wp_crm_user;  
 	$title =  WP_CRM_F::get_primary_display_value($object);
 } else {
 	$object = array();
@@ -44,7 +45,7 @@ if($_REQUEST['user_id'])  {
 <h2><?php echo $title; ?></h2>
 <?php WP_CRM_F::print_messages(); ?>
 
-<form name="crm_user" action="admin.php?page=wp_crm_add_new<?php echo ($user_id ? "&user_id=$user_id" : ''); ?>" method="post" id="crm_user">
+<form enctype="multipart/form-data"  name="crm_user" action="admin.php?page=wp_crm_add_new<?php echo ($user_id ? "&user_id=$user_id" : ''); ?>" method="post" id="crm_user">
 <input type="hidden" id="user_id" name="wp_crm[user_data][user_id][0][value]" value="<?php echo $user_id; ?>" />
 <?php
 wp_nonce_field( 'meta-box-order', 'meta-box-order-nonce', false );

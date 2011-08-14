@@ -196,7 +196,9 @@ if(!function_exists('wp_crm_send_notification')) {
       return false;
     }
 
-    $defaults = array();
+    $defaults = array(
+      'force' => false
+    );
 
     if(!is_array($args)) {
       $args = wp_parse_args( $args, $defaults );
@@ -206,7 +208,7 @@ if(!function_exists('wp_crm_send_notification')) {
       return false;
     }
 
-    $notifications = WP_CRM_F::get_trigger_action_notification($action);
+    $notifications = WP_CRM_F::get_trigger_action_notification($action, $args['force']);
 
     if(!$notifications) {
       return false;
@@ -251,7 +253,8 @@ if(!function_exists('wp_crm_save_user_data')) {
       'use_global_messages' => 'true',
       'match_login' => 'false',
       'no_errors' => 'false',
-      'default_role' => get_option('default_role')
+      'default_role' => get_option('default_role'),
+      'no_redirect' => 'false'
     );
     $args = wp_parse_args( $args, $defaults );
 
@@ -356,20 +359,20 @@ if(!function_exists('wp_crm_save_user_data')) {
 
             case 'dropdown':
 
-              if(!empty($data['option'])) {
+              //** get full meta key of option */
+              $full_meta_key = $wp_crm['data_structure']['attributes'][$meta_key]['option_keys'][$data['option']];
 
-                //** get full meta key of option */
-                $full_meta_key = $wp_crm['data_structure']['attributes'][$meta_key]['option_keys'][$data['option']];
-
-                if(empty($full_meta_key)) {
-                  $full_meta_key= $meta_key;
-                }
-
-                $insert_custom_data[$full_meta_key][] = 'on';
-
+              if(empty($full_meta_key)) {
+                $full_meta_key= $meta_key;
               }
-            break;
 
+              if(!empty($data['option'])) {
+                $insert_custom_data[$full_meta_key][] = 'on';
+              }
+
+
+            break;
+  
             default:
 
               //* if element exists but no value was passed, continue */
@@ -429,13 +432,13 @@ if(!function_exists('wp_crm_save_user_data')) {
     if(empty($insert_data['ID'])) {
       $new_user = true;
     }
-        
 
- 
-    
-    // Automate things of ID is not passed and this is a new user
-    if($new_user || !isset($insert_data['user_login'])) {
- 
+
+
+
+    //** Set user_login from user_email or a guessed value if this is a new usr and user_login is not passed */
+    if($new_user && !isset($insert_data['user_login'])) {
+
       if(empty($insert_data['user_login'])) {
         if(!empty($insert_data['user_email'])) {
           $insert_data['user_login'] = $insert_data['user_email'];
@@ -460,22 +463,24 @@ if(!function_exists('wp_crm_save_user_data')) {
       //** Unset password to prevent it being cleared out */
       unset($insert_data['user_pass']);
     } else {
-      $insert_data['user_pass'] = wp_hash_password($insert_data['user_pass']);
+      if($new_user) {
+        $insert_data['user_pass'] = wp_hash_password($insert_data['user_pass']);
+      }
     }
 
     //** Set default role if no role set and this isn't a new user */
     if(empty($insert_data['role']) && !isset($insert_data['ID'])) {
       $insert_data['role'] = $args['default_role'];
     }
-
-
+    
+     //echo "<pre>" . print_r($user_id, true) . print_r($insert_data, true) . print_r($insert_custom_data, true). print_r($_REQUEST, true);die();
+    
     if($new_user) {
-      $user_id = wp_insert_user($insert_data);    
+      $user_id = wp_insert_user($insert_data);
     } else {
       $user_id = wp_update_user($insert_data);
     }
 
-    //echo print_r($user_id, true) . print_r($insert_data, true) . print_r($insert_custom_data, true);die();
     
 
     if(is_numeric($user_id)) {
@@ -485,7 +490,20 @@ if(!function_exists('wp_crm_save_user_data')) {
         foreach($wp_crm['data_structure']['meta_keys'] as $meta_key => $meta_label) {
 
           if(isset($insert_custom_data[$meta_key])) {
+
+          //echo "$meta_key is set deleting <br />";
             delete_user_meta($user_id, $meta_key);
+          }
+
+          //** Delete old option meta keys for this meta_key  */
+          if($wp_crm['data_structure']['attributes'][$meta_key]['has_options']) {
+            
+            //** Delete "holder" meta key (this may not be necessary */
+            delete_user_meta($user_id, $meta_key);
+            foreach($wp_crm['data_structure']['attributes'][$meta_key]['option_keys'] as $old_meta_key) {
+              //** Delete individual long (optional) meta keys */
+              delete_user_meta($user_id, $old_meta_key);
+            }
           }
 
         }
@@ -518,13 +536,22 @@ if(!function_exists('wp_crm_save_user_data')) {
       }
 
       // Don't redirect if data was passed
-      if(!$passed_data && $args['no_redirect'] != 'true') {
+      if($args['no_redirect'] != 'true') {
         wp_redirect(admin_url("admin.php?page=wp_crm_add_new&user_id=$user_id&message=" . ($new_user ? 'created' : 'updated')));
       }
 
     } else {
       if($args['use_global_messages'] == 'true') {
-        WP_CRM_F::add_message(sprintf(__('Error saving user: %s', 'wp_crm'), $user_id->get_error_message()), 'bad');
+        switch($user_id->get_error_code()) {
+          case 'existing_user_email':
+            $existing_id = email_exists($insert_data['user_email']);
+            WP_CRM_F::add_message(sprintf(__('Error saving user: %s', 'wp_crm'), $user_id->get_error_message() . ' <a href="' . admin_url("admin.php?page=wp_crm_add_new&user_id={$existing_id}"). '">'. ('Go to user profile') . '</a>'), 'bad');
+          break;
+
+          default:
+            WP_CRM_F::add_message(sprintf(__('Error saving user: %s', 'wp_crm'), $user_id->get_error_message()), 'bad');
+          break;
+        }
       }
     }
 

@@ -1,4 +1,10 @@
 
+.wp_crm_message_quick_action.wp_crm_subtle_link {
+  background: none;
+  border:0;
+  padding:0;
+}
+
 .wp_crm_message_quick_action {
   background: none repeat scroll 0 0 #EFEFEF;
   margin-right: 5px;
@@ -35,6 +41,17 @@
  
 pre {
   background: yellow;
+}
+
+.wp_crm_subtle_link {
+  color: #ADADAD;
+  cursor: pointer;
+  font-size: 0.9em;
+    
+}
+
+.wp_crm_subtle_link:hover {
+    color: #555555;
 }
 
 .wp_crm_link {
