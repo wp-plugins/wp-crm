@@ -9,14 +9,17 @@ Stable tag: trunk
 
 == Description ==
 
-This plugin is in beta stages.  However, we are very interested in hearing any feedback you may have, feel free to suggest ideas on our [feedback site](http://feedback.twincitiestech.com/) or by visiting our [forums](http://forums.twincitiestech.com/).
+This plugin is intended to significantly improve user management, easily create contact forms, and keep track of incoming contact form messages.
 
-This plugin is intended to improve user management, easily create contact forms, and keep track of incoming contact form messages.
+WordPress already comes with some basic user management functions - WP-CRM expands on those functionalities by allowing you to organize your users using custom attributes, find them using filters, and keep track of correspondence.
+
+Your WP control panel can effectively be used to manage all your customers, vendors, partners, affiliates, etc.
 
 = Core Features =
 * Excellent user organization, filtering and editing.
 * Ability to easily add new user data attributes (i.e. Company Name).
 * Form Creation.
+* User CSV Exporting.
 * Contact Message Management.
 * Keep track of customer, client and vendor notes.
 
@@ -58,6 +61,11 @@ Visit CRM -> Settings and click on the "Data" tab.  There you will  be able to a
 * Initial public release.
  
 == Changelog ==
+
+= 0.16 =
+* User CSV Export.
+* WP-Invoice items can be viewed on the user's CRM profile page.
+* Minor UI Improvements.
 
 = 0.15 =
 * Renamed jquery.cookies.js to jquery.smookie.js to avoid issues with certain hosts that blocks files with the word 'cookie' in the name.

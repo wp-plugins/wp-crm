@@ -13,38 +13,132 @@
 class WP_CRM_F {
 
 
-    /**
-     * Loads currently requested user into global variable
-     *
-     * Ran on admin_init. Currently only applicable to the user profile page in order to load metaboxes early based on available user data.
-     *
-     * @since 0.1
-     *
-    */
-    static function maybe_load_profile($args = '') {
-      global $wp_crm_user;
+/**
+   * Loads currently requested user into global variable
+   *
+   * Ran on admin_init. Currently only applicable to the user profile page in order to load metaboxes early based on available user data.
+   *
+   * @since 0.1
+   *
+   */
+    static function get_notification_template($slug = '') {
+      global $wp_crm;
       
-      if($_GET['page'] == 'wp_crm_add_new' && !empty($_REQUEST['user_id']))  {
-        $maybe_user = wp_crm_get_user($_REQUEST['user_id']);  
-        
-        if($maybe_user) {
-          $wp_crm_user = $maybe_user;
-        } else {
-          $wp_crm_user = false;        
-        }
+      if(!empty($wp_crm['notifications'][$slug])) {
+        return json_encode($wp_crm['notifications'][$slug]);;
+      } else {
+        return json_encode(array('error' => __('Notification template not found.')));
       }
+    }
+    
+    
+    
+/**
+   * Loads currently requested user into global variable
+   *
+   * Ran on admin_init. Currently only applicable to the user profile page in order to load metaboxes early based on available user data.
+   *
+   * @since 0.1
+   *
+   */
+    static function csv_export($wp_crm_search = '') {
+      global $wpdb, $wp_crm;
+
+      $file_name = "wp-crm-export-".date("Y-m-d").".csv";
+
+      $meta_keys = $wp_crm['data_structure']['meta_keys'];
+
+      $primary_columns = $wpdb->get_col("SHOW COLUMNS FROM {$wpdb->users}");
+            
+      $results = WP_CRM_F::user_search($wp_crm_search); 
+
+      foreach($results as $result) {
+      
+        $primary = $wpdb->get_row("SELECT * FROM {$wpdb->users} WHERE ID = {$result->ID}", ARRAY_A);
+
+        foreach($meta_keys as $meta_key => $meta_label) {
+        
+          $meta_key_labels[] = $meta_label;
+          
+          if(in_array($meta_key, $primary_columns)) {
+            $value = $primary[$meta_key];
+          } else {        
+            $value = get_user_meta($result->ID, $meta_key, true);
+          }
+          
+          if(!empty($value)) {
+            $display_columns[$meta_key] = $meta_label;
+          }
+            
+          $user[trim($meta_key)] = trim($value);
+          
+        }
+
+        $users[] = $user;
+
+      }      
+ 
+      header("Content-type: application/csv");
+      header("Content-Disposition: attachment; filename=$file_name");
+      header("Pragma: no-cache");
+      header("Expires: 0");
+ 
+      echo implode(',', $display_columns) . "\n";
+      
+      foreach($users as $user) {
+        unset($this_row);
+        foreach($display_columns as $meta_key => $meta_label) {
+          $this_row[] = '"' . $user[$meta_key] . '"';
+        }
+        echo implode(",", $this_row) . "\n";
+      }   
+      
+ 
+
     }
 
 
-    /**
-     * Show user creation UI (mostly for ajax calls)
-     *
-     * @since 0.1
-     *
+
+
+/**
+   * Loads currently requested user into global variable
+   *
+   * Ran on admin_init. Currently only applicable to the user profile page in order to load metaboxes early based on available user data.
+   *
+   * @since 0.1
+   *
+   */
+    static function maybe_load_profile($args = '') {
+      global $wp_crm_user;
+
+      if($_GET['page'] == 'wp_crm_add_new' && !empty($_REQUEST['user_id']))  {
+        $maybe_user = wp_crm_get_user($_REQUEST['user_id']);
+
+        if($maybe_user) {
+          $wp_crm_user = $maybe_user;
+          do_action('wp_crm_user_loaded', $wp_crm_user);
+        } else {
+          $wp_crm_user = false;
+        }
+        
+      }
+      
+    }
+
+
+ /**
+    * Show user creation UI (mostly for ajax calls)
+    *
+    * @todo Prone to breaking because of the way values are passed.
+    * @since 0.1
+    *
     */
     static function display_shortcode_form($args = '') {
+
       if(!empty($args['shortcode'])) {
-        echo do_shortcode("[wp_crm_form form={$args['shortcode']} submit_text='Save' js_callback_function={$args['js_callback_function']}]");
+        $atts = $args['atts'];
+
+        echo do_shortcode("[{$args['shortcode']} {$atts}]");
       }
     }
 
@@ -223,10 +317,12 @@ class WP_CRM_F {
       parse_str($_REQUEST['wp_crm_filter_vars'], $wp_crm_filter_vars);
       $wp_crm_search = $wp_crm_filter_vars['wp_crm_search'];
 
+
       //* Init table object */
       $wp_list_table = new CRM_User_List_Table("ajax=true&per_page={$per_page}&iDisplayStart={$iDisplayStart}&iColumns={$iColumns}");
 
       $wp_list_table->prepare_items($wp_crm_search);
+
 
       	if ( $wp_list_table->has_items() ) {
 
@@ -244,6 +340,8 @@ class WP_CRM_F {
         'sEcho' => $sEcho,
         'iTotalRecords' => count($wp_list_table->all_items),
         'iTotalDisplayRecords' =>count($wp_list_table->all_items),
+        'user_ids' => $wp_list_table->user_ids,
+        'page_user_ids' => $wp_list_table->page_user_ids,
         'aaData' => $data
         ));
 
@@ -395,7 +493,7 @@ class WP_CRM_F {
 
 
       case 'delete_log_entry':
-      
+
         do_action('wp_crm_delete_log_entry', $object_id);
 
         if($wpdb->query("DELETE FROM {$wpdb->prefix}crm_log WHERE id = {$object_id}")) {
@@ -434,8 +532,8 @@ class WP_CRM_F {
 
 
     }
-    
- 
+
+
 
     if(is_array($return)) {
       return json_encode($return);
@@ -514,7 +612,7 @@ class WP_CRM_F {
     if(!$action) {
       return;
     }
- 
+
     foreach($wp_crm['notifications'] as $slug => $notification_data){
       if(is_array($notification_data['fire_on_action']) && in_array($action, $notification_data['fire_on_action']) || $force) {
         $notifications[$slug] = $notification_data;
@@ -528,6 +626,42 @@ class WP_CRM_F {
 
 
    /**
+   * Returns user values in an array by keys set in the WP_CRM meta keys (data tab)
+   *
+   * @since 0.16
+   *
+   */
+   function get_user_replacable_values($user_id = false) {
+    global $wp_crm, $wpdb;    
+ 
+    $meta_keys = $wp_crm['data_structure']['meta_keys'];
+
+    $primary_columns = $wpdb->get_col("SHOW COLUMNS FROM {$wpdb->users}");
+            
+    $primary = $wpdb->get_row("SELECT * FROM {$wpdb->users} WHERE ID = {$user_id}", ARRAY_A);
+
+    foreach($meta_keys as $meta_key => $meta_label) {    
+       
+      if(in_array($meta_key, $primary_columns)) {
+        $value = $primary[$meta_key];
+      } else {        
+        $value = get_user_meta($user_id, $meta_key, true);
+      }
+      
+      if(!empty($value)) {
+        $display_columns[$meta_key] = $meta_label;
+      }
+        
+      $user[trim($meta_key)] = trim($value);
+      
+    }
+
+    return $user;
+    
+   
+   }
+
+   /**
    * Replaced notification variables with actual values
    *
    *
@@ -537,12 +671,11 @@ class WP_CRM_F {
    function replace_notification_values($notification_data = false, $replace_with = false) {
     global $wp_crm;
 
-    if(!is_array($replace_with))
+    if(!is_array($replace_with)) {
       return;
-
+    }
 
     $notification_keys = array_keys($notification_data);
-
 
     foreach($replace_with as $key => $value) {
 
@@ -949,14 +1082,14 @@ class WP_CRM_F {
       </select>
 
       </div>
-   <?php }  break;  
-   
+   <?php }  break;
+
     default:
-      do_action('wp_crm_render_input',  array('values' => $values, 'attribute' => $attribute, 'user_object' => $user_object, 'args' => $args)); 
+      do_action('wp_crm_render_input',  array('values' => $values, 'attribute' => $attribute, 'user_object' => $user_object, 'args' => $args));
     break;
 
  }
- 
+
   //** API Access for data after the field *'
   do_action("wp_crm_after_{$slug}_input", array('values' => $values, 'attribute' => $attribute, 'user_object' => $user_object, 'args' => $args));
  ?>
@@ -1479,19 +1612,35 @@ class WP_CRM_F {
 
     $args = wp_parse_args( $args, $defaults );
 
-    if(empty($args['user_id']))
+    if(empty($args['user_id'])) {
       return;
+    }
 
     $result = WP_CRM_F::get_events('object_id=' . $args['user_id']);
 
-    if(!$result)
+    
+    
+    if(!$result) {
       return;
+    }
 
     $result = stripslashes_deep($result);
 
-    foreach($result as $entry): ?>
+    foreach($result as $entry): 
+    
+    //echo "<pre>";print_r($entry);echo "<pre>";
+    
+    $entry_classes[] = $entry->attribute;
+    $entry_classes[] = $entry->object_type;
+    $entry_classes[] = $entry->action;
+    
+    $entry_classes = apply_filters('wp_crm_entry_classes', $entry_classes, $entry);
+    
+    $entry_type = apply_filters('wp_crm_entry_type_label', $entry->attribute, $entry);
+    
+    ?>
     <?php $left_by = $wpdb->get_var("SELECT display_name FROM {$wpdb->users} WHERE ID = '{$entry->user_id}'"); ?>
-    <tr class="wp_crm_activity_single">
+    <tr class="wp_crm_activity_single <?php echo @implode(' ', $entry_classes); ?>">
 
     <td class="left">
       <ul class='message_meta'>
@@ -1499,17 +1648,16 @@ class WP_CRM_F {
           <span class='time'><?php echo date(get_option('time_format'), strtotime($entry->time)); ?></span>
           <span class='date'><?php echo date(get_option('date_format'), strtotime($entry->time)); ?></span>
         </li>
-        <?php if($left_by): ?>
-        <li class='by_user'>by <?php echo $left_by; ?> </li>
-        <?php endif; ?>
+        <?php if($entry_type): ?><li class='entry_type'><?php echo $entry_type; ?> </li><?php endif; ?>
+        <?php if($left_by): ?><li class='by_user'>by <?php echo $left_by; ?> </li><?php endif; ?>
         <li class="wp_crm_log_actions">
-          <span verify_action="true" class="wp_crm_message_quick_action wp_crm_subtle_link" object_id="<?php echo $entry->id; ?>" wp_crm_action="delete_log_entry"><?php _e('Delete'); ?></span>
+          <span verify_action="true" instant_hide="true" class="wp_crm_message_quick_action wp_crm_subtle_link" object_id="<?php echo $entry->id; ?>" wp_crm_action="delete_log_entry"><?php _e('Delete'); ?></span>
         </li>
       </ul>
     </td>
 
     <td class="right">
-      <p><?php echo apply_filters('wp_crm_activity_single_content', nl2br($entry->text), array('entry' => $entry, 'args' => $args)); ?></p>
+      <p class="wp_crm_entry_content"><?php echo apply_filters('wp_crm_activity_single_content', nl2br($entry->text), array('entry' => $entry, 'args' => $args)); ?></p>
     </td>
 
 
@@ -1529,9 +1677,10 @@ class WP_CRM_F {
   function insert_event($args = '') {
     global $wpdb, $current_user;
 
+ 
     $defaults = array(
         'object_type' => 'user',
-        'user_id' => $current_user->ID,
+        'user_id' => $current_user->data->ID,
         'attribute' => 'general_message',
         'action' => 'insert',
         'ajax' => 'false',
@@ -1539,7 +1688,12 @@ class WP_CRM_F {
      );
 
 
-    $args = wp_parse_args( $args, $defaults );
+    if(is_array($args)) {
+      $args = array_merge($defaults, $args);
+    } else {
+      $args = wp_parse_args( $args, $defaults );
+    }
+   
 
     //** Convert time - just in case */
     if(empty($args['time'])) {
@@ -1558,6 +1712,8 @@ class WP_CRM_F {
       'attribute' => $args['attribute'],
       'action' => $args['action'],
       'value' => $args['value'],
+      'email_from' => $args['email_from'],
+      'email_to' => $args['email_to'],
       'text' => $args['text'],
       'other' => $args['other'],
       'time' => $args['time']
@@ -1591,14 +1747,15 @@ class WP_CRM_F {
         'import_count' => '10',
         'get_count' => 'false',
      );
+         
 
     $args = wp_parse_args( $args, $defaults );
 
     if($args['import_count'])
       $limit = " LIMIT {$args[start]}, {$args[import_count]} ";
 
-   if($args['object_id'])
-      $query[] = " object_id = '{$args['object_id']}' ";
+    if($args['object_id'])
+      $query[] = " (object_id = '{$args['object_id']}') ";
 
     if($args['object_type'])
       $query[] = " object_type = '{$args['object_type']}' ";
@@ -1609,11 +1766,11 @@ class WP_CRM_F {
     if($args['order_by'])
       $order_by = " ORDER BY {$args[order_by]} DESC ";
 
-     $results = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}crm_log $query $order_by $limit");
+    $results = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}crm_log $query $order_by $limit");
 
-     if($args['get_count'] == 'true')
+    if($args['get_count'] == 'true') {
       return count($results);
-
+    }
 
     return $results;
 
@@ -1667,9 +1824,12 @@ class WP_CRM_F {
     */
     function print_messages() {
         global $wp_crm_messages;
+        
+        echo '<div class="wp_crm_ajax_update_message"></div>';
 
-        if (count($wp_crm_messages) < 1)
+        if (count($wp_crm_messages) < 1) {
             return;
+        }
 
         $update_messages = array();
         $warning_messages = array();

@@ -80,6 +80,7 @@
   <script type="text/javascript">
 
     var wp_list_table;
+    var wp_list_counts = {};
     var wp_table_column_ids = {}
     <?php foreach($this->column_ids as $col_id => $col_slug) { ?>
     wp_table_column_ids['<?php echo $col_slug; ?>'] = '<?php echo $col_id; ?>';
@@ -102,8 +103,7 @@
       "aoColumnDefs": [<?php echo implode(',', $this->aoColumnDefs); ?>],
       "sAjaxSource": ajaxurl + '?&action=<?php echo $this->_args['ajax_action']; ?>',
       "fnServerData": function ( sSource, aoData, fnCallback ) {
-
-        
+      
         aoData.push({
           name: 'wp_crm_filter_vars',
           value: jQuery('#wp-crm-filter').serialize()
@@ -114,12 +114,22 @@
           "type": "POST",
           "url": sSource,
           "data": aoData,
-          "success": fnCallback
+          "success": function(data, textStatus, jqXHR) { 
+            wp_list_counts.user_ids = data.user_ids;
+            fnCallback(data, textStatus, jqXHR); 
+          }
         });
+        
+        
+        
+        
        },
 
       "aoColumns": [<?php echo implode(",", $this->aoColumns); ?>],
-      "fnDrawCallback": function() {wp_list_table_do_columns();}
+      "fnDrawCallback": function(data) {
+        wp_list_table_do_columns();
+                
+      }
     });
 
     jQuery("#wp-crm-filter").submit(function(event) {  
@@ -200,7 +210,7 @@
   /**
    * Get search results based on query.
    *
-   * @todo Needs to be updated to handle the AJAX requests.
+   * @todo user_search() should be removed from here since this is a "general" function
    *
    */
   function prepare_items($wp_crm_search = false) {

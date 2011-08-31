@@ -60,6 +60,51 @@ class CRM_User_List_Table extends WP_CMR_List_Table {
   }
 
 
+  /**
+   * Get search results based on query.
+   *
+   * @todo Needs to be updated to handle the AJAX requests.
+   *
+   */
+  function prepare_items($wp_crm_search = false) {
+    global $role, $usersearch;
+
+    if(!isset($this->all_items)) {
+      $this->all_items = WP_CRM_F::user_search( $wp_crm_search);
+    }
+
+    //** Get User IDs */
+    foreach($this->all_items as $object) {
+      $this->user_ids[] = $object->ID;
+    }
+
+     //** Do pagination  */
+
+
+    if($this->_args['per_page'] != -1) {
+      $this->item_pages = array_chunk($this->all_items, $this->_args['per_page']);
+
+      $total_chunks = count($this->item_pages);
+
+      //** figure out what page chunk we are on based on iDisplayStart
+      $this_chunk = ($this->_args['iDisplayStart'] / $this->_args['per_page']);
+
+      //** Get page items */
+      $this->items = $this->item_pages[$this_chunk];
+
+      if(is_array($this->items)) {
+        foreach($this->items as $object) {
+          $this->page_user_ids[] = $object->ID;
+        }
+      }
+
+    } else {
+      $this->items = $this->all_items;
+    }
+
+
+  }
+
 
   /**
    * Display the search box.
@@ -183,7 +228,7 @@ class CRM_User_List_Table extends WP_CMR_List_Table {
     global $wp_crm;
 
       $column_name = str_replace('wp_crm_', '', $full_column_name);
-      
+
       switch ( $column_name ) {
 
         case 'cb':
@@ -207,15 +252,15 @@ class CRM_User_List_Table extends WP_CMR_List_Table {
               <?php foreach($wp_crm['configuration']['overview_table_options']['main_view'] as $key) { ?>
                 <li class="<?php echo $key; ?>">
                   <?php
- 
+
                     unset($visible_options);
 
                     if($wp_crm['data_structure']['attributes'][$key]['has_options']) {
                       $visible_options = WP_CRM_F::list_options($user_object, $key);
                     } else {
-                      
+
                       $visible_options[] = apply_filters('wp_crm_display_' . $key, WP_CRM_F::get_first_value($user_object[$key]),$user_id, $user_object,  'user_card');
-                    }              
+                    }
 
                     if(is_array($visible_options)) {
                       foreach($visible_options as $this_key => $option) {

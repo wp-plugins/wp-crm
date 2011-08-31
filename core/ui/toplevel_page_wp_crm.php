@@ -15,6 +15,7 @@
 
 
 <div class="wp_crm_overview_wrapper wrap">
+<div class="wp_crm_ajax_result"></div>
     <?php screen_icon(); ?>
     <h2><?php _e('CRM - All People'); ?> <a href="<?php echo admin_url('admin.php?page=wp_crm_add_new'); ?>" class="button add-new-h2"><?php _e('Add New'); ?></a></h2>
     <?php WP_CRM_F::print_messages(); ?>

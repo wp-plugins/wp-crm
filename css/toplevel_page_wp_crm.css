@@ -1,5 +1,6 @@
 @import url("wp_crm_global.css");
 
+
 .major-publishing-actions {
   border-top: medium none;
   clear: both;
@@ -9,6 +10,22 @@
 #actions.postbox  .inside {
   padding: 0;
   margin:0;
+}
+
+#actions.postbox  .search-box {
+  margin-bottom: 10px;
+  margin-left: -4px;
+}
+
+#actions.postbox  .search-box input {
+  width: 100%;
+}
+
+#actions.postbox  .inside .wp_crm_user_actions {
+  background: none repeat scroll 0 0 #4E4E4D;
+  border-top: 3px solid #3A3939;
+  color: #FFFFFF;
+  padding: 10px;
 }
 
 #actions.postbox  .inside .publishing-action {
@@ -22,6 +39,9 @@
   margin:0;
 }
 
+td.wp_crm_user_card div.user_avatar {
+  margin: 4px 0 0 3px;
+} 
 
 .tablenav .wp_crm_bulk {
   display:none;

@@ -16,7 +16,7 @@ jQuery(document).bind('wp_crm_value_changed', function(event, data) {
   }
   
 });
-
+ 
 
 jQuery(document).ready(function() {
  
@@ -30,14 +30,14 @@ jQuery(document).ready(function() {
     jQuery('ul.wp-tab-panel-nav  a').click(function(){
     
     var panel_wrapper = jQuery(this).parents('.wp-tab-panel-wrapper');
-		
+    
     var t = jQuery(this).attr('href');
-		jQuery(this).parent().addClass('tabs').siblings('li').removeClass('tabs');
-		jQuery('.wp-tab-panel', panel_wrapper).hide();
-		jQuery(t, panel_wrapper).show();
+    jQuery(this).parent().addClass('tabs').siblings('li').removeClass('tabs');
+    jQuery('.wp-tab-panel', panel_wrapper).hide();
+    jQuery(t, panel_wrapper).show();
  
-		return false;
-	});
+    return false;
+  });
   
  
   //** Verify deletion saving */
@@ -141,11 +141,14 @@ jQuery(document).ready(function() {
       }, function(response) {
 
         if(response.success == 'true') {
+          jQuery('#wp_crm_user_activity_stream').slideUp('fast');
           wp_crm_update_activity_stream();
           
           // Clear out message
           jQuery('#wp_crm_message_content').val('');
-          jQuery('.wp_crm_new_message').hide();
+          
+          jQuery('.wp_crm_new_message').slideUp('fast');
+          
           
         } else {
 
@@ -235,6 +238,7 @@ jQuery(document).ready(function() {
  
     jQuery.post(ajaxurl, {action: 'wp_crm_get_user_activity_stream', user_id: user_id}, function(response) {
       jQuery("#wp_crm_user_activity_stream tbody").html(response);
+      jQuery('#wp_crm_user_activity_stream').slideDown("fast");
     });
 
   }

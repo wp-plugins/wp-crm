@@ -19,6 +19,14 @@ add_filter('wp_crm_display_company', 'wp_crm_display_company', 0,4);
 add_filter('wp_crm_display_user_email', 'wp_crm_display_user_email', 0,4);
 
 
+add_action('wp_crm_pre_load', 'wp_crm_load_connections');
+
+function wp_crm_load_connections() {
+  if(class_exists('WPI_Core')) {
+    include_once WP_CRM_Path . '/core/connections/wp-invoice.php';
+  }
+}
+
 
 //add_action('added_user_meta', 'wp_crm_add_user_metasearch', 0,4);
 //add_action('deleted_user_meta', 'wp_crm_delete_user_metasearch', 0,4);
@@ -223,12 +231,13 @@ if(!function_exists('wp_crm_send_notification')) {
       if(!$message) {
         continue;
       }
- 
+
       $headers = "From: {$message[send_from]} \r\n\\";
 
       add_filter('wp_mail_content_type',create_function('', 'return "text/html"; '));
+      
       $result = wp_mail($message['to'], $message['subject'], $message['message'], $headers, ($args['attachments'] ? $args['attachments'] : false));
- 
+
 
      }
 
@@ -288,6 +297,7 @@ if(!function_exists('wp_crm_save_user_data')) {
     // Prepare Data
     foreach($user_data as $meta_key => $values) {
 
+ 
 
       //** Fix up values if they are not passed in the crazy CRM format */
       if(!empty($values) && !is_array($values)) {
@@ -339,7 +349,7 @@ if(!function_exists('wp_crm_save_user_data')) {
 
         } elseif (in_array($meta_key, $wp_user_meta_data)) {
           //** If the attribute is a meta key created  by WP-CRM, we store it here */
-
+                    
           switch ($wp_crm['data_structure']['attributes'][$meta_key]['input_type']) {
 
             case 'checkbox':
@@ -401,8 +411,7 @@ if(!function_exists('wp_crm_save_user_data')) {
         }
       }
     }
-
-    
+ 
 
    if(empty($temp_data['user_id'])) {
       // Determine user_id and if new or old user
@@ -426,8 +435,8 @@ if(!function_exists('wp_crm_save_user_data')) {
       //** User ID was passed */
       $insert_data['ID'] = $temp_data['user_id'];
 
-    }   
- 
+    }
+
 
     if(empty($insert_data['ID'])) {
       $new_user = true;
@@ -481,7 +490,7 @@ if(!function_exists('wp_crm_save_user_data')) {
       $user_id = wp_update_user($insert_data);
     }
 
-    
+
 
     if(is_numeric($user_id)) {
 
@@ -512,11 +521,12 @@ if(!function_exists('wp_crm_save_user_data')) {
       //** Add meta values */
       if(is_array($insert_custom_data) && !empty($insert_custom_data)) {
         foreach((array)$insert_custom_data as $meta_key => $meta_value) {
-          foreach($meta_value as $single_value) {
+          foreach($meta_value as $single_value)  {
            add_user_meta($user_id, $meta_key, $single_value);
           }
         }
       }
+      
 
 
       $display_name = WP_CRM_F::get_primary_display_value($user_id);

@@ -152,11 +152,16 @@ body.crm_page_wp_crm_add_new  input.regular-text {
 }
 
 
+.wp_crm_activity_single .entry_type,
 .wp_crm_activity_single .by_user,
 .wp_crm_activity_single .timestamp {
      color: #939393;
     font-size: 11px;
     margin-top: 5px;
+}
+
+.wp_crm_activity_single td.right p.wp_crm_entry_content  {
+  padding-right: 10px;
 }
 
 .wp_crm_activity_single .truncated {

@@ -113,8 +113,9 @@ class class_contact_messages {
     ?>
     <div class="misc-pub-section">
 
-      <?php if(is_array($contact_forms)) {  ?>
       <ul class="wp_crm_overview_filters">
+      <?php do_action('wp_crm_messages_metabox_filter_before'); ?>
+      <?php if(is_array($contact_forms)) {  ?>
         <li class="wpp_crm_filter_section_title"><?php _e('Originating Form'); ?></li>
       <?php foreach($contact_forms as $form_slug => $form_data) { ?>
 
@@ -124,8 +125,9 @@ class class_contact_messages {
         </li>
 
       <?php } ?>
-      </ul>
       <?php }  ?>
+      <?php do_action('wp_crm_messages_metabox_filter_after'); ?>
+      </ul>
 
 
 
@@ -325,7 +327,7 @@ class class_contact_messages {
     $a = shortcode_atts( array(
       'js_callback_function' => false,
       'form' => false,
-      'use_current_user' => false,
+      'use_current_user' => 'true',
       'success_message' => __('Your message has been sent. Thank you.'),
       'submit_text' => __('Submit')
     ), $atts );
@@ -353,7 +355,7 @@ class class_contact_messages {
     );
     
     if(isset($a['use_current_user'])) {
-      $form_vars['use_current_user'] = true;
+      $form_vars['use_current_user'] = $a['use_current_user'];
     }
      
     if($a['js_callback_function']) {
@@ -394,7 +396,7 @@ class class_contact_messages {
     $wp_crm_nonce = md5(NONCE_KEY);
     
     //** Load user object if passed */
-    if($use_current_user) {
+    if($use_current_user == 'true') {
       $current_user = wp_get_current_user();
       
       if ( 0 == $current_user->ID ) {
@@ -863,7 +865,7 @@ class class_contact_messages {
   function page_loader() {
     global $wp_crm, $screen_layout_columns, $current_screen, $wpdb, $crm_messages, $user_ID;
 
-    echo "<script type='text/javascript'>console.log('screen id: {$current_screen->id}');</script>";
+   // echo "<script type='text/javascript'>console.log('screen id: {$current_screen->id}');</script>";
 
     // Figure out what object we are working with
     $object_slug = $current_screen->base;
@@ -906,6 +908,8 @@ class class_contact_messages {
     if(count($wp_crm['wp_crm_contact_system_data']) > 1) {
       $show_filter = true;
     }
+    
+    $show_filter = apply_filters('wp_crm_messages_show_filter', $show_filter);
 
     ?>
 
@@ -983,7 +987,6 @@ class class_contact_messages {
     $iDisplayStart = $_REQUEST['iDisplayStart'];
     $iColumns = $_REQUEST['iColumns'];
 
-
     //* Init table object */
     $wp_list_table = new WP_CMR_List_Table("current_screen=crm_page_wp_crm_contact_messages&table_scope=wp_crm_contact_messages&ajax=true&per_page={$per_page}&iDisplayStart={$iDisplayStart}&iColumns={$iColumns}");
 
@@ -992,23 +995,22 @@ class class_contact_messages {
 
     $wp_list_table->prepare_items();
 
-      if ( $wp_list_table->has_items() ) {
+    if ( $wp_list_table->has_items() ) {
 
-
-        foreach ( $wp_list_table->items as $count => $item ) {
-          $data[] = $wp_list_table->single_row( $item );
-        }
-
-      } else {
-          $data[] = $wp_list_table->no_items();
+      foreach ( $wp_list_table->items as $count => $item ) {
+        $data[] = $wp_list_table->single_row( $item );
       }
+
+    } else {
+        $data[] = $wp_list_table->no_items();
+    }
 
     return json_encode(array(
       'sEcho' => $sEcho,
       'iTotalRecords' => count($wp_list_table->all_items),
       'iTotalDisplayRecords' =>count($wp_list_table->all_items),
       'aaData' => $data
-      ));
+    ));
 
   }
 

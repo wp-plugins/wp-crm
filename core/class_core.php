@@ -104,12 +104,16 @@ class WP_CRM_Core {
      // Load back-end scripts
     add_action("admin_enqueue_scripts", array('WP_CRM_Core', "admin_enqueue_scripts"));  
 
+    add_action("wp_ajax_wp_crm_csv_export", create_function('',' WP_CRM_F::csv_export($_REQUEST["wp_crm_search"]); die();'));
+    
     add_action("wp_ajax_wp_crm_user_object", create_function('',' echo "CRM Object Report: \n" . print_r(wp_crm_get_user($_REQUEST[user_id]), true) . "\nRaw Meta Report: \n" .  print_r(WP_CRM_F::show_user_meta_report($_REQUEST[user_id]), true); '));
     add_action("wp_ajax_wp_crm_show_meta_report", create_function('',' die(print_r(WP_CRM_F::show_user_meta_report(), true)); '));
     add_action("wp_ajax_wp_crm_get_user_activity_stream", create_function('',' echo WP_CRM_F::get_user_activity_stream("user_id={$_REQUEST[user_id]}"); die; '));
     add_action("wp_ajax_wp_crm_insert_activity_message", create_function('',' echo WP_CRM_F::insert_event("time={$_REQUEST[time]}&attribute=note&object_id={$_REQUEST[user_id]}&text={$_REQUEST[content]}&ajax=true"); die; '));
+    
+    add_action("wp_ajax_wp_crm_get_notification_template", create_function('',' echo WP_CRM_F::get_notification_template($_REQUEST["template_slug"]); die; '));
 
-    add_action("wp_ajax_wp_crm_display_shortcode_form", create_function('',' WP_CRM_F::display_shortcode_form(array("shortcode" => $_REQUEST["shortcode"], "js_callback_function" =>  $_REQUEST["js_callback_function"])); die(); '));
+    add_action("wp_ajax_wp_crm_display_shortcode_form", create_function('',' WP_CRM_F::display_shortcode_form(array("shortcode" => $_REQUEST["shortcode"], "atts" =>  $_REQUEST["atts"])); die(); '));
     
     add_action("wp_ajax_wp_crm_do_fake_users", create_function('',' echo WP_CRM_F::do_fake_users("number={$_REQUEST[number]}&do_what={$_REQUEST[do_what]}"); die; '));
 
@@ -368,7 +372,7 @@ class WP_CRM_Core {
     function overview_columns($columns = false) {
         global $wp_crm;
 
-        $columns['cb'] = '<input type="checkbox" />';
+        //$columns['cb'] = '<input type="checkbox" />';
         $columns['wp_crm_user_card'] = 'Information';
 
         if(!empty($wp_crm['data_structure']) && is_array($wp_crm['data_structure']['attributes'])) {
@@ -444,11 +448,11 @@ class WP_CRM_Core {
   }
 
 
-   /**
+/**
    * Used for loading back-end UI
-    *
-    * All back-end pages call this function, which then determines that UI to load below the headers.
-    *
+   *
+   * All back-end pages call this function, which then determines that UI to load below the headers.
+   *
    * @since 0.01
    */
   function page_loader() {
@@ -485,6 +489,17 @@ class WP_CRM_Core {
       case 'toplevel_page_wp_crm':
         wp_enqueue_script('wp-crm-data-tables');
         wp_enqueue_style('wp-crm-data-tables');
+        
+        $contextual_help[] = __('<h3>General</h3>');
+        $contextual_help[] = __('<p>This page is used to filter and find various users. Visit the Settings page to select which attributes to show on the overview.</p>');        
+        
+        $contextual_help[] = __('<h3>Exporting</h3>');
+        $contextual_help[] = __('<p>Once you narrow down the user results to the ones you want to export, click "Show Actions" and then "Export to CSV" to generate a comma separated flle.</p>');        
+        $contextual_help[] = __('<p>The CSV export will only include the user data as defined in Data tab, on the Settings page.</p>');        
+
+        $contextual_help = apply_filters('wp_crm_contextual_help', array('page' => $current_screen->id, 'content' => $contextual_help));
+        add_contextual_help($current_screen->id, implode("\n", $contextual_help['content']));
+
        break;
 
       case 'crm_page_wp_crm_add_new':
@@ -498,20 +513,21 @@ class WP_CRM_Core {
         wp_enqueue_script('jquery-ui-sortable');
         wp_enqueue_script('jquery-ui-mouse');
 
-        $contextual['settings'][] = __('<h3>Roles - Hidden Attributes</h3>');
-        $contextual['settings'][] = __('<p>If certain user attributes are not applicable to certain roles, such as "Client Type" to the "Administrator" role, you can elect to hide the unapplicable attributes on profile editing pages.</p>');
+        $contextual_help[] = __('<h3>Roles - Hidden Attributes</h3>');
+        $contextual_help[] = __('<p>If certain user attributes are not applicable to certain roles, such as "Client Type" to the "Administrator" role, you can elect to hide the unapplicable attributes on profile editing pages.</p>');
         
-        $contextual['settings'][] = __('<h3>Predefined Values</h3>');
-        $contextual['settings'][] = __('<p>If you want your attributes to have predefiend values, such as in a dropdown, or a checkbox list, enter a comma separated list of values you want to use.  You can also get more advanced by using taxonomies - to load all values from a taxonomy, simply type ine: <b>taxonomy:taxonomy_name</b>.</p>');
+        $contextual_help[] = __('<h3>Predefined Values</h3>');
+        $contextual_help[] = __('<p>If you want your attributes to have predefiend values, such as in a dropdown, or a checkbox list, enter a comma separated list of values you want to use.  You can also get more advanced by using taxonomies - to load all values from a taxonomy, simply type ine: <b>taxonomy:taxonomy_name</b>.</p>');
         
-        $contextual['settings'][] = __('<h3>Shortcode Forms</h3>');
-        $contextual['settings'][] = __('<p>Shortcode Forms, which can be used for contact forms, or profile editing, are setup here, and then inserted using a shortcode into a page, or a widget. The available contact form attributes are taken from the WP-CRM attributes, and when filled out by a user, are mapped over directly into their profile. User profiles are created based on the e-mail address, if one does not already exist, for keeping track of users. </p>');
-        $contextual['settings'][] = __('<p>If a new user fills out a form, an account will be created for them based on the specified role.  </p>');
+        $contextual_help[] = __('<h3>Shortcode Forms</h3>');
+        $contextual_help[] = __('<p>Shortcode Forms, which can be used for contact forms, or profile editing, are setup here, and then inserted using a shortcode into a page, or a widget. The available contact form attributes are taken from the WP-CRM attributes, and when filled out by a user, are mapped over directly into their profile. User profiles are created based on the e-mail address, if one does not already exist, for keeping track of users. </p>');
+        $contextual_help[] = __('<p>If a new user fills out a form, an account will be created for them based on the specified role.  </p>');
         
-        $contextual['settings'][] = __('<h3>Cellular Notifications</h3>');
-        $contextual['settings'][] = __('<p>You can send notifications to cellphone numbers.  Instead of entering an e-mail address, add the receipient\'s number using the following rules:</p><ul><li>AT&T – cellnumber@txt.att.net</li><li>Verizon – cellnumber@vtext.com</li><li>T-Mobile – cellnumber@tmomail.net</li><li>Sprint PCS - cellnumber@messaging.sprintpcs.com</li><li>Virgin Mobile – cellnumber@vmobl.com</li><li>US Cellular – cellnumber@email.uscc.net</li><li>Nextel - cellnumber@messaging.nextel.com</li><li>Boost - cellnumber@myboostmobile.com</li><li>Alltel – cellnumber@message.alltel.com</li></ul>');
+        $contextual_help[] = __('<h3>Cellular Notifications</h3>');
+        $contextual_help[] = __('<p>You can send notifications to cellphone numbers.  Instead of entering an e-mail address, add the receipient\'s number using the following rules:</p><ul><li>AT&T – cellnumber@txt.att.net</li><li>Verizon – cellnumber@vtext.com</li><li>T-Mobile – cellnumber@tmomail.net</li><li>Sprint PCS - cellnumber@messaging.sprintpcs.com</li><li>Virgin Mobile – cellnumber@vmobl.com</li><li>US Cellular – cellnumber@email.uscc.net</li><li>Nextel - cellnumber@messaging.nextel.com</li><li>Boost - cellnumber@myboostmobile.com</li><li>Alltel – cellnumber@message.alltel.com</li></ul>');
 
-        add_contextual_help($current_screen->id, implode("\n", $contextual['settings']));
+        $contextual_help = apply_filters('wp_crm_contextual_help', array('page' => $current_screen->id, 'content' => $contextual_help));
+        add_contextual_help($current_screen->id, implode("\n", $contextual_help['content']));
       break;
 
     }

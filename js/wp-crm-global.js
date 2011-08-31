@@ -6,9 +6,16 @@
 */
 jQuery(document).ready(function() {
   
+  jQuery('.wp_crm_toggle').live('click',function() {
+    var toggle_what = jQuery(this).attr('toggle');
+    
+    jQuery("." + toggle_what).toggle();
+  });
+  
   jQuery('.wp_crm_message_quick_action').live('click',function() {
     var action = jQuery(this).attr('wp_crm_action');
     var object_id = jQuery(this).attr('object_id');
+    var instant_hide = jQuery(this).attr('instant_hide');
     
     var parent_element = jQuery(this).parents('tr');
     
@@ -18,14 +25,17 @@ jQuery(document).ready(function() {
       }
     }
     
+    if(instant_hide == "true") {
+      jQuery(parent_element).hide();
+    }
+    
     jQuery.post(ajaxurl, {action: 'wp_crm_quick_action', wp_crm_quick_action: action, object_id: object_id}, function(result) {
       if(result.success = 'true') {
       
       }
       
       switch(result.action) {
-        case 'hide_element':
- 
+        case 'hide_element': 
           jQuery(parent_element).hide();
         break;
       }
