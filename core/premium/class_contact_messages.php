@@ -1,9 +1,11 @@
 <?php
 /*
-Name: Contact Messages
+Name: Shortcode Contact Forms
 Class: class_contact_messages
 Version: 0.1
-Description: Syncronize e-mails from multiple e-mail accounts.
+Minimum WPC Version: 0.16
+Description: Create contact forms using shortcodes and keep track of messages in your dashboard.
+Feature ID: 12
 */
 
 add_action('wp_crm_init', array('class_contact_messages', 'init'));

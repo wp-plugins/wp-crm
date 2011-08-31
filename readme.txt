@@ -62,6 +62,10 @@ Visit CRM -> Settings and click on the "Data" tab.  There you will  be able to a
  
 == Changelog ==
 
+= 0.16.1 =
+* Added ability to force download premium features.
+* Styiling fixes to Settings page "Plugin" tab.
+
 = 0.16 =
 * User CSV Export.
 * WP-Invoice items can be viewed on the user's CRM profile page.

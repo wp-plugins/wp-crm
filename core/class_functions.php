@@ -1352,16 +1352,20 @@ class WP_CRM_F {
     * @since 0.01
    *
     */
-  function feature_check($return = false) {
+  static function feature_check($return = false) {
+    global $wp_crm;
+ 
     $blogname = get_bloginfo('url');
     $blogname = urlencode(str_replace(array('http://', 'https://'), '', $blogname));
     $system = 'wp_crm';
+    $wp_crm_version = get_option( "wp_crm_version" );
 
-    $check_url = "http://updates.twincitiestech.com/?system=$system&site=$blogname";
+    $check_url = "http://updates.usabilitydynamics.com/?system=$system&site=$blogname&system_version=$wp_crm_version";
     $response = @wp_remote_get($check_url);
 
-     if(!$response)
+     if(!$response) {
       return;
+    }
 
     // Check for errors
     if(is_object($response) && !empty($response->errors)) {
@@ -1371,35 +1375,34 @@ class WP_CRM_F {
         CRM_UD_F::log("Feature Update Error: " . $error_string);
       }
 
-      if($return)
+      if($return) {
         return sprintf(__('An error occured during premium feature check: <b> %s </b>.','wp_crm'), $error_string);
+      }
 
       return;
     }
 
     // Quit if failture
-    if($response[response][code] != '200')
+    if($response['response']['code'] != '200') {
       return;
+    }
 
+   $response = @json_decode($response['body']);
 
-     $response = @json_decode($response[body]);
-
-
-    if(is_object($response->available_features)):
+    if(is_object($response->available_features)) {
 
       $response->available_features = CRM_UD_F::objectToArray($response->available_features);
 
-
       // Updata database
       $wp_crm_settings = get_option('wp_crm_settings');
-      $wp_crm_settings[available_features] =  CRM_UD_F::objectToArray($response->available_features);
+      $wp_crm_settings['available_features'] =  CRM_UD_F::objectToArray($response->available_features);
        update_option('wp_crm_settings', $wp_crm_settings);
 
 
-    endif;// available_features
+    } // available_features
 
 
-    if($response->features == 'eligible') {
+    if($response->features == 'eligible' && $wp_crm['configuration']['disable_automatic_feature_update'] != 'true') {
 
       // Try to create directory if it doesn't exist
       if(!is_dir(WP_CRM_Premium)) {
@@ -1407,18 +1410,15 @@ class WP_CRM_F {
       }
 
       // If didn't work, we quit
-      if(!is_dir(WP_CRM_Premium))
+      if(!is_dir(WP_CRM_Premium)) {
         continue;
-
-
-
+      }
+      
       // Save code
       if(is_object($response->code)) {
         foreach($response->code as $code) {
 
-
-
-           $filename = $code->filename;
+          $filename = $code->filename;
           $php_code = $code->code;
           $version = $code->version;
 
@@ -1433,18 +1433,20 @@ class WP_CRM_F {
           $current_file = @get_file_data( WP_CRM_Premium . "/" . $filename, $default_headers, 'plugin' );
           //echo "$filename - new version: $version , old version:$current_file[Version] |  " .  @version_compare($current_file[Version], $version) . "<br />";
 
-          if(@version_compare($current_file[Version], $version) == '-1') {
+          if(@version_compare($current_file['Version'], $version) == '-1') {
             $this_file = WP_CRM_Premium . "/" . $filename;
-            $fh = @fopen($this_file, 'w');
-            fwrite($fh, $php_code);
-            fclose($fh);
+            $fh = @fopen($this_file, 'w');            
+            if($fh) {
+              fwrite($fh, $php_code);
+              fclose($fh);
 
-            if($current_file[Version])
-              CRM_UD_F::log(sprintf(__('WP-CRM Premium Feature: %s updated to version %s from %s.','wp_crm'), $code->name, $version, $current_file[Version]));
-            else
-              CRM_UD_F::log(sprintf(__('WP-CRM Premium Feature: %s updated to version %s.','wp_crm'), $code->name, $version));
+              if($current_file[Version])
+                CRM_UD_F::log(sprintf(__('WP-CRM Premium Feature: %s updated to version %s from %s.','wp_crm'), $code->name, $version, $current_file['Version']));
+              else
+                CRM_UD_F::log(sprintf(__('WP-CRM Premium Feature: %s updated to version %s.','wp_crm'), $code->name, $version));
 
-            $updated_features[] = $code->name;
+              $updated_features[] = $code->name;
+            }
           } else {
 
           }
@@ -1457,8 +1459,13 @@ class WP_CRM_F {
     // Update settings
     WP_CRM_F::settings_action(true);
 
-    if($return)
+
+    if($return && $wp_crm['configuration']['disable_automatic_feature_update'] == 'true') {
+      return __('Update ran successfully but no features were downloaded because the setting is disabled.','wp_crm');
+
+    } elseif($return) {
       return __('Update ran successfully.','wp_crm');
+    } 
   }
 
 

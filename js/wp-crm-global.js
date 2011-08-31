@@ -145,6 +145,11 @@ jQuery(document).ready(function() {
     
     // Cycle through labels too
       jQuery('label', this_row).each(function(element) {
+      
+      if(!jQuery(this).attr('for')) {
+        return;
+      }
+
       var old_for = jQuery(this).attr('for');
       var new_for =  old_for.replace(old_slug,new_slug);
       

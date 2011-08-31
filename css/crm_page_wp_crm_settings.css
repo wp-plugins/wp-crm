@@ -80,8 +80,16 @@ ul.wp_crm_notification_main_configuration .wp_crm_checkbox_on_left {
 }
 
   
-  #wp_crm_settings_tabs div.wp_crm_settings_block {
-	background: none repeat scroll 0 0 #F7F7F7;
+#wp_crm_settings_tabs #tab_plugins div.wp_crm_settings_block {
+  padding-right: 200px;
+}
+
+#wp_crm_settings_tabs div.wp_crm_settings_block.wp_crm_main_block {
+  background-color: #FFFDF2;
+}
+
+#wp_crm_settings_tabs div.wp_crm_settings_block {
+	background-color: #F7F7F7;
 	border: 1px solid #E7E7E7;
 	margin-bottom: 10px;
 	overflow: auto;
