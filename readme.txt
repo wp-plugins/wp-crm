@@ -62,9 +62,13 @@ Visit CRM -> Settings and click on the "Data" tab.  There you will  be able to a
  
 == Changelog ==
 
+= 0.16.2 =
+* When a user is deleted their posts and pages are kept by being reassigned to the user doing the deleting action, and then being trashed.
+* Invoices from WP-Invoice are displayed in a metabox in the CRM profile.
+
 = 0.16.1 =
 * Added ability to force download premium features.
-* Styiling fixes to Settings page "Plugin" tab.
+* Styling fixes to Settings page "Plugin" tab.
 
 = 0.16 =
 * User CSV Export.

@@ -25,6 +25,7 @@ function wp_crm_load_connections() {
   if(class_exists('WPI_Core')) {
     include_once WP_CRM_Path . '/core/connections/wp-invoice.php';
   }
+  include_once WP_CRM_Path . '/core/connections/bb_press.php';
 }
 
 
@@ -236,6 +237,7 @@ if(!function_exists('wp_crm_send_notification')) {
 
       add_filter('wp_mail_content_type',create_function('', 'return "text/html"; '));
       
+      $message['message'] = nl2br($message['message']);
       $result = wp_mail($message['to'], $message['subject'], $message['message'], $headers, ($args['attachments'] ? $args['attachments'] : false));
 
 

@@ -1,7 +1,7 @@
  <?php
  
   if($_REQUEST['message'] == 'user_deleted') {
-    WP_CRM_F::add_message(__('User has been deleted.'));
+    WP_CRM_F::add_message(__('User has been deleted and all associatd posts have been trashed.'));
   }
 
   include WP_CRM_Path . '/core/class_user_list_table.php';

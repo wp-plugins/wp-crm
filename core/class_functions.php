@@ -279,7 +279,7 @@ class WP_CRM_F {
             $sql .= " AND (1";
             foreach($key_terms as $single_term) {
               $meta_key = $wp_crm['data_structure']['attributes'][$primary_key]['option_keys'][$single_term];
-              $sql .= " AND u.ID IN (SELECT user_id FROM {$wpdb->prefix}usermeta WHERE meta_key = '$meta_key' AND meta_value = 'on')";
+              $sql .= " AND u.ID IN (SELECT user_id FROM {$wpdb->prefix}usermeta WHERE meta_key = '$meta_key' AND (meta_value = 'on' OR meta_value = 'true'))";
             }
             $sql .= ")";
           }

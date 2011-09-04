@@ -238,7 +238,7 @@ class WP_CRM_Core {
    *
    */
   function admin_init() {
-    global $wp_rewrite, $wp_roles, $wp_crm;
+    global $wp_rewrite, $wp_roles, $wp_crm, $wpdb, $current_user;
     
     WP_CRM_F::maybe_load_profile();
 
@@ -300,7 +300,19 @@ class WP_CRM_Core {
           $user_id = $_REQUEST['user_id'];
 
           if(wp_verify_nonce($_wpnonce, 'wp-crm-delete-user-' . $user_id)) {
-            if(wp_delete_user($user_id)) {
+            //** Get IDs of users posts */
+            $post_ids = $wpdb->get_col( $wpdb->prepare("SELECT ID FROM $wpdb->posts WHERE post_author = %d", $user_id) );
+              
+            //** Delete user and reassign all their posts to the current user */
+            if(wp_delete_user($user_id, $current_user->data->ID)) {
+            
+              //** Trash all posts */
+              if(is_array($post_ids)) {
+                foreach($post_ids as $trash_post) {
+                  wp_trash_post($trash_post);
+                }
+              }
+              
               wp_redirect(admin_url('admin.php?page=wp_crm&message=user_deleted'));
             }
           }
