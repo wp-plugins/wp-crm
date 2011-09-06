@@ -14,6 +14,43 @@ class WP_CRM_F {
 
 
 /**
+   * Handle version-specific updates
+   *
+   * Ran if version in DB is older than version of THIS code right before the DB version is updated.
+   *
+   * @since 0.1
+   *
+   */
+   function handle_update($old_version) {
+    global $wp_roles;
+
+
+    if($old_version < 0.17) {
+        /*
+          Version prior to 0.17 used poorly labeled and structured capabilities.
+          We remove all old capabilities
+        */
+
+        $roles = $wp_roles->get_names();
+
+        foreach($roles as $role => $role_label) {
+          $wp_roles->remove_cap( $role, 'wp_crm_manage_settings' );
+          $wp_roles->remove_cap( $role, 'wp_crm_add_prospects' );
+          $wp_roles->remove_cap( $role, 'wp_crm_view_main_overview' );
+          $wp_roles->remove_cap( $role, 'wp_crm_manage_settings' );
+          $wp_roles->remove_cap( $role, 'wp_crm_view_messages' );
+          $wp_roles->remove_cap( $role, 'wp_crm_add_users' );
+          $wp_roles->remove_cap( $role, 'wp_crm_Manage Settings' );
+
+
+        }
+
+      }
+
+   }
+
+
+/**
    * Loads currently requested user into global variable
    *
    * Ran on admin_init. Currently only applicable to the user profile page in order to load metaboxes early based on available user data.
@@ -825,18 +862,29 @@ class WP_CRM_F {
   /**
    * Run manually when a version mismatch is detected.
    *
-   * Holds official current version designation.
-   * Called in admin_init hook.
+   * Called in admin_init and on activation hook.
    *
    * @since 0.1
    *
     */
-  static function manual_activation() {
+  static function manual_activation( $args = '' ) {
     global $wp_crm, $wp_roles;
+
+    $defaults = array(
+      'auto_redirect' => 'true'
+    );
+
+    $args = wp_parse_args( $args, $defaults );
 
     $installed_ver = get_option( "wp_crm_version" );
 
+
     if(@version_compare($installed_ver, WP_CRM_Version) == '-1') {
+
+      if(!empty($installed_ver)) {
+        //** Handle any updates related to version changes */
+        WP_CRM_F::handle_update($installed_ver);
+      }
 
       // Unschedule event
       $timestamp = wp_next_scheduled( 'wp_crm_premium_feature_check' );
@@ -849,13 +897,24 @@ class WP_CRM_F {
       // Update option to latest version so this isn't run on next admin page load
       update_option( "wp_crm_version", WP_CRM_Version );
 
-      // Get premium features on activation
+      //** Get premium features on activation */
       @WP_CRM_F::feature_check();
 
+      //** Add capabilities */
+      if(is_array($wp_crm['capabilities']) && $wp_roles) {
+        foreach($wp_crm['capabilities'] as $capability => $description) {
+          $wp_roles->add_cap('administrator','WP-CRM: ' . $capability,true);
+        }
+      }
+
+      if($args['auto_redirect'] == 'true') {         
+        //** Redirect to overview page so all updates take affect on page reload. Not done on activation() */
+        wp_redirect(admin_url('admin.php?page=wp_crm&message=plugin_updated'));
+        die();
+      }
+
+
     }
-
-
-    //WP_CRM_F::maybe_install_tables();
 
 
     return;
@@ -1546,19 +1605,15 @@ class WP_CRM_F {
   /**
    * Installs tables and runs WP_CRM_F::manual_activation() which actually handles the upgrades
    *
-   * Adds permissions to administrator.
-   *
    * @since 0.01
    *
     */
   function activation() {
     global $current_user, $wp_crm, $wp_roles;
 
-    WP_CRM_F::manual_activation();
-
+    //WP_CRM_F::manual_activation('auto_redirect=false');
 
     WP_CRM_F::maybe_install_tables();
-
 
   }
 

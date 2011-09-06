@@ -810,7 +810,7 @@ class class_contact_messages {
   function add_capabilities() {
     global $wp_crm;
 
-    $wp_crm['capabilities']['view_messages'] = __('View messages from contact forms.', 'wp_crm');
+    $wp_crm['capabilities']['View Messages'] = __('View messages from contact forms.', 'wp_crm');
 
   }
 
@@ -830,7 +830,7 @@ class class_contact_messages {
 
     //** Only show message section if messages exist */
     if($message_count) {
-      $wp_crm['pages']['contact_messages']['overview'] = add_submenu_page('wp_crm','Messages', 'Messages', 'wp_crm_view_messages', 'wp_crm_contact_messages', array('class_contact_messages', 'page_loader'), '', 30);
+      $wp_crm['pages']['contact_messages']['overview'] = add_submenu_page('wp_crm','Messages', 'Messages', 'WP-CRM: View Messages', 'wp_crm_contact_messages', array('class_contact_messages', 'page_loader'), '', 30);
     }
 
     // Add columns to overview page

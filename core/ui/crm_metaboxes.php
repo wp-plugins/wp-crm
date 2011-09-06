@@ -115,11 +115,15 @@ class crm_page_wp_crm_add_new {
 <div id="minor-publishing">
   <ul>
 
-  <li>Add a <b><a href='#' class='wp_crm_toggle_message_entry'>general note</a></b>.</li>
+  <?php if(current_user_can( 'WP-CRM: Add User Messages' )) { ?>
+    <li><?php _e('Add a <b><a href="#" class="wp_crm_toggle_message_entry">general note</a></b>.', 'wp_crm'); ?></li>
+  <?php } else { ?>
+    
+  <?php } ?>
 
-  <?php if(current_user_can( 'edit_users' )): ?>
+  <?php if(current_user_can( 'edit_users' )) { ?>
   <li><?php _('User Role:'); ?> <select id="wp_crm_role" name="wp_crm[user_data][role][<?php echo rand(1000,9999); ?>][value]"><option value=""></option><?php wp_dropdown_roles($object['role']['default'][0]); ?></select>
-  <?php endif; ?>
+  
 
   <li class="wp_crm_advanced_user_actions">
     <div class="wp_crm_toggle_advanced_user_actions wp_crm_link"><?php _e('Toggle Advanced User Settings'); ?></div>
@@ -139,22 +143,31 @@ class crm_page_wp_crm_add_new {
     </ul>
     </div>
   </li>
+  <?php } ?>
 
   </ul>
-  <?php do_action('wp_crm_metabox_special_actions'); ?>
+  <?php if(current_user_can( 'edit_users' ))  { do_action('wp_crm_metabox_special_actions'); } ?>
 </div>
+  
   <div id="major-publishing-actions">
+  <?php if(current_user_can( 'remove_users' ) || current_user_can( 'delete_users' )) { ?>
     <div id="delete-action">
-    <?php if(!$object->new): ?>
+    <?php if(!$object['new']): ?>
     <a href="<?php echo  wp_nonce_url( "admin.php?wp_crm_action=delete_user&page=wp_crm&user_id={$user_id}", 'wp-crm-delete-user-' . $user_id ); ?>" class="submitdelete deletion"><?php _e('Delete'); ?></a>
     <?php endif; ?>
     </div>
+  <?php } ?>
 
-<div id="publishing-action">
-<img alt="" id="ajax-loading" class="ajax-loading" src="http://development.twincitiestech.com/wp-crm/wp-admin/images/wpspin_light.gif">
-    <input type="hidden" value="Publish" id="original_publish" name="original_publish">
-    <input type="submit" accesskey="p" tabindex="5" value="Save" class="button-primary" id="publish" name="publish"></div>
-<div class="clear"></div>
+  <div id="publishing-action">  
+      <input type="hidden" value="Publish" id="original_publish" name="original_publish">
+      <?php if(current_user_can( 'edit_users' ) || (current_user_can('add_users') && $object['new'])) { ?>
+      <input type="submit" accesskey="p" tabindex="5" value="<?php echo ($object['new'] ? __('Save', 'wpp_crm') : __('Update', 'wpp_crm')); ?>" class="button-primary" id="publish" name="publish">
+      <?php } else { ?>
+      <input type="submit" accesskey="p" tabindex="5" value="<?php echo ($object['new'] ? __('Save', 'wpp_crm') : __('Update', 'wpp_crm')); ?>" class="button-primary" id="publish" name="publish" disabled="true">
+      <?php } ?>
+    </div>
+  <div class="clear"></div>
+    
 </div>
 <?php
 
@@ -177,10 +190,12 @@ class crm_page_wp_crm_add_new {
     $user_id = WP_CRM_F::get_first_value($object['ID']);
 
     ?>
+  <?php if(current_user_can('WP-CRM: Add User Messages')) { ?>
   <div class="wp_crm_activity_top">
     <input class='wp_crm_toggle_message_entry button' type='button' value='<?php _e('Add Message'); ?>' />
     <?php do_action('wp_crm_user_activity_history_top', $object); ?>
   </div>
+  <?php } ?>
 
   <div class="wp_crm_new_message hidden">
     <textarea id='wp_crm_message_content'></textarea>

@@ -2,6 +2,10 @@
  
   if($_REQUEST['message'] == 'user_deleted') {
     WP_CRM_F::add_message(__('User has been deleted and all associatd posts have been trashed.'));
+  } 
+  
+  if($_REQUEST['message'] == 'plugin_updated') {
+    WP_CRM_F::add_message(__('WP-CRM has been updated, and any premium features your domain qualifies for have been downloaded.'));
   }
 
   include WP_CRM_Path . '/core/class_user_list_table.php';
@@ -17,7 +21,8 @@
 <div class="wp_crm_overview_wrapper wrap">
 <div class="wp_crm_ajax_result"></div>
     <?php screen_icon(); ?>
-    <h2><?php _e('CRM - All People'); ?> <a href="<?php echo admin_url('admin.php?page=wp_crm_add_new'); ?>" class="button add-new-h2"><?php _e('Add New'); ?></a></h2>
+    <h2><?php _e('CRM - All People'); ?> <?php if(current_user_can('WP-CRM: View Profiles') && (current_user_can('create_users') || current_user_can('add_users'))) { ?><a href="<?php echo admin_url('admin.php?page=wp_crm_add_new'); ?>" class="button add-new-h2"><?php _e('Add New'); ?></a><?php } ?></h2>
+    
     <?php WP_CRM_F::print_messages(); ?>
     
     <div id="poststuff" class="<?php echo $current_screen->id; ?>_table metabox-holder has-right-sidebar">

@@ -44,10 +44,14 @@
  
   /*
     Permissions to be utilized through the plugin. 
+    These are automatically added to admin in WPP_C::init();
   */
   $wp_crm['capabilities'] = array(
-    'manage_settings' => __('View and edit plugin settings.', 'wp_crm'),
-    'view_main_overview' => __('View individual prospects and the overview page.', 'wp_crm')
+    'Manage Settings' => __('View and edit plugin settings.', 'wp_crm'),
+    'View Overview' => __('View individual prospects and the overview page.', 'wp_crm'),
+    'View Profiles' => __('View a user\'s profile.', 'wp_crm'),
+    'Add User Messages' => __('Add to correspondence thread on a user\'s profile.', 'wp_crm'),
+    'Send Group Message' => __('Send a group message to users.', 'wp_crm')
   );
 
 

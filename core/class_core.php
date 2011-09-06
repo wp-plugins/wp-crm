@@ -139,13 +139,7 @@ class WP_CRM_Core {
     add_action("template_redirect", array('WP_CRM_Core', "template_redirect"));
     add_action("deleted_user", array('WP_CRM_F', "deleted_user"));
 
-
-    //** Add capabilities */
-    if(is_array($wp_crm['capabilities']) && $wp_roles) {
-      foreach($wp_crm['capabilities'] as $capability => $description) {
-        $wp_roles->add_cap('administrator','wp_crm_' . $capability,true);
-      }
-    }
+     
 
     // Filers are applied
     $wp_crm['configuration']       = apply_filters('wp_crm_configuration', $wp_crm['configuration']);
@@ -240,8 +234,12 @@ class WP_CRM_Core {
   function admin_init() {
     global $wp_rewrite, $wp_roles, $wp_crm, $wpdb, $current_user;
     
+    //** Check if installed DB version is older than THIS version */
+    WP_CRM_F::manual_activation(); 
+    
+    //** Check if current page is profile page, and load global variable */
     WP_CRM_F::maybe_load_profile();
-
+    
     do_action('wp_crm_metaboxes');
 
     // Add overview table rows. Static because admin_menu is not loaded on ajax calls.
@@ -287,7 +285,7 @@ class WP_CRM_Core {
       }
     }
 
-    WP_CRM_F::manual_activation();
+
 
     //** Handle actions */
     if(isset($_REQUEST['wp_crm_action'])) {
@@ -416,12 +414,12 @@ class WP_CRM_Core {
     $position = ($wp_crm['configuration']['replace_default_user_page'] == 'true' ? '70' : '33');
 
     // Setup main overview page
-    $wp_crm['system']['pages']['core'] = add_menu_page('CRM', 'CRM', 'wp_crm_view_main_overview', 'wp_crm', array('WP_CRM_Core', 'page_loader'), '', $position);
+    $wp_crm['system']['pages']['core'] = add_menu_page('CRM', 'CRM', 'WP-CRM: View Overview', 'wp_crm', array('WP_CRM_Core', 'page_loader'), '', $position);
 
     // Setup child pages (first one is used to be loaded in place of 'CRM'
-    $wp_crm['system']['pages']['overview'] = add_submenu_page('wp_crm', 'All People', 'All People', 'wp_crm_view_main_overview', 'wp_crm', array('WP_CRM_Core', 'page_loader'));
-    $wp_crm['system']['pages']['add_new'] = add_submenu_page('wp_crm', 'New Person', 'New Person', 'add_users', 'wp_crm_add_new', array('WP_CRM_Core', 'page_loader'));
-    $wp_crm['system']['pages']['settings'] = add_submenu_page('wp_crm', 'Settings', 'Settings', 'wp_crm_manage_settings', 'wp_crm_settings', array('WP_CRM_Core', 'page_loader'));
+    $wp_crm['system']['pages']['overview'] = add_submenu_page('wp_crm', 'All People', 'All People', 'WP-CRM: View Overview', 'wp_crm', array('WP_CRM_Core', 'page_loader'));
+    $wp_crm['system']['pages']['add_new'] = add_submenu_page('wp_crm', 'New Person', 'New Person', 'WP-CRM: View Profiles', 'wp_crm_add_new', array('WP_CRM_Core', 'page_loader'));
+    $wp_crm['system']['pages']['settings'] = add_submenu_page('wp_crm', 'Settings', 'Settings', 'WP-CRM: Manage Settings', 'wp_crm_settings', array('WP_CRM_Core', 'page_loader'));
 
     //** Migrate any pages that are under default user page */
     if($wp_crm['configuration']['replace_default_user_page'] == 'true') {

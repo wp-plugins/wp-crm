@@ -242,12 +242,19 @@ class CRM_User_List_Table extends WP_CMR_List_Table {
           ?>
 
             <div class='user_avatar'>
-              <a href='<?php echo admin_url("admin.php?page=wp_crm_add_new&user_id=$user_id"); ?>'><?php echo  get_avatar( $user_id, 50 ); ?></a>
+              <?php if(current_user_can('WP-CRM: View Profiles')) { ?>
+                <a href='<?php echo admin_url("admin.php?page=wp_crm_add_new&user_id=$user_id"); ?>'><?php echo  get_avatar( $user_id, 50 ); ?></a>
+              <?php } else { ?>
+                <?php echo  get_avatar( $user_id, 50 ); ?>
+              <?php } ?> 
             </div>
             <ul class="user_card_data">
               <li class='primary'>
-              <a href='<?php echo  admin_url("admin.php?page=wp_crm_add_new&user_id=$user_id"); ?>'>
-              <?php echo WP_CRM_F::get_primary_display_value($user_object); ?></a>
+                <?php if(current_user_can('WP-CRM: View Profiles')) { ?>
+                <a href='<?php echo  admin_url("admin.php?page=wp_crm_add_new&user_id=$user_id"); ?>'><?php echo WP_CRM_F::get_primary_display_value($user_object); ?></a>
+                <?php } else { ?>
+                <?php echo WP_CRM_F::get_primary_display_value($user_object); ?>
+                <?php } ?> 
               </li>
               <?php foreach($wp_crm['configuration']['overview_table_options']['main_view'] as $key) { ?>
                 <li class="<?php echo $key; ?>">

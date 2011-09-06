@@ -62,6 +62,10 @@ Visit CRM -> Settings and click on the "Data" tab.  There you will  be able to a
  
 == Changelog ==
 
+= 0.17 =
+* Much improved capability management. New capabilities: View Profiles, View Overview, Manage Settings, Add User Messages, Send Group Message (premium)
+* Fixed issue with capabilities not being added automatically on plugin activation (a refresh was necessary before
+
 = 0.16.2 =
 * When a user is deleted their posts and pages are kept by being reassigned to the user doing the deleting action, and then being trashed.
 * Invoices from WP-Invoice are displayed in a metabox in the CRM profile.
