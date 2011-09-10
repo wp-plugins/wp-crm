@@ -40,8 +40,10 @@ class WP_CRM_Core {
     WP_CRM_F::load_premium();
 
     add_action('init', array('WP_CRM_Core', 'init'));
-
+    
+      
   }
+ 
 
   /**
    * Primary init of WP_CRM_Core, gets called by after_setup_theme.
@@ -60,8 +62,7 @@ class WP_CRM_Core {
 
     /** Loads all the class for handling all plugin tables */
     include_once WP_CRM_Path . '/core/class_list_table.php';
-
-
+        
     wp_register_script('jquery-cookie', WP_CRM_URL. '/third-party/jquery.smookie.js', array('jquery'), '1.7.3' );
     wp_register_script('swfobject', WP_CRM_URL. '/third-party/swfobject.js', array('jquery'));
     wp_register_script('jquery-uploadify', WP_CRM_URL. '/third-party/uploadify/jquery.uploadify.v2.1.4.min.js', array('jquery'));
@@ -388,9 +389,10 @@ class WP_CRM_Core {
         $columns['wp_crm_user_card'] = 'Information';
 
         if(!empty($wp_crm['data_structure']) && is_array($wp_crm['data_structure']['attributes'])) {
-            foreach($wp_crm['data_structure']['attributes'] as $slug => $data) {
-                if(isset($data['overview_column']) && $data['overview_column'] == 'true')
-                $columns['wp_crm_' . $slug] = $data['title'];
+            foreach(apply_filters('wp_crm_overview_columns', $wp_crm['data_structure']['attributes']) as $slug => $data) {
+                if(isset($data['overview_column']) && $data['overview_column'] == 'true') {
+                  $columns['wp_crm_' . $slug] = $data['title'];
+                }
             }
         }
 

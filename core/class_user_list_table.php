@@ -256,7 +256,7 @@ class CRM_User_List_Table extends WP_CMR_List_Table {
                 <?php echo WP_CRM_F::get_primary_display_value($user_object); ?>
                 <?php } ?> 
               </li>
-              <?php foreach($wp_crm['configuration']['overview_table_options']['main_view'] as $key) { ?>
+              <?php if(is_array($wp_crm['configuration']['overview_table_options']['main_view'])) { foreach($wp_crm['configuration']['overview_table_options']['main_view'] as $key) { ?>
                 <li class="<?php echo $key; ?>">
                   <?php
 
@@ -284,7 +284,7 @@ class CRM_User_List_Table extends WP_CMR_List_Table {
 
 
                   ?></li>
-              <?php } ?>
+              <?php } } ?>
             </ul>
 
           <?php
@@ -336,6 +336,9 @@ class CRM_User_List_Table extends WP_CMR_List_Table {
             }
             $r .= '<ul><li>' . implode('</li><li>', $visible_options) . '</li></ul>';
           }
+          
+          $r = apply_filters('wp_crm_overview_cell', $r, array('column_name' => $column_name, 'user_object' => $user_object, 'user_id' => $user_id));
+          
 
         break;
       }

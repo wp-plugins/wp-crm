@@ -62,6 +62,11 @@ Visit CRM -> Settings and click on the "Data" tab.  There you will  be able to a
  
 == Changelog ==
 
+= 0.18 =
+* Added check to prevent self-deletion. 
+* Added hook to check if bbPress exists, and display user statistics in their CRM profile.
+* Improved connection with WPI where "Total Sales" can not be seen for users from overview screen.
+
 = 0.17 =
 * Much improved capability management. New capabilities: View Profiles, View Overview, Manage Settings, Add User Messages, Send Group Message (premium)
 * Fixed issue with capabilities not being added automatically on plugin activation (a refresh was necessary before

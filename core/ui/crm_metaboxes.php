@@ -109,8 +109,11 @@ class crm_page_wp_crm_add_new {
    *
    */
   function special_actions($object) {
+    global $current_user;
+    
    $user_id = $object['ID']['default'][0];
 
+   
    ?>
 <div id="minor-publishing">
   <ul>
@@ -152,7 +155,7 @@ class crm_page_wp_crm_add_new {
   <div id="major-publishing-actions">
   <?php if(current_user_can( 'remove_users' ) || current_user_can( 'delete_users' )) { ?>
     <div id="delete-action">
-    <?php if(!$object['new']): ?>
+    <?php if(!$object['new'] && $user_id != $current_user->ID): ?>
     <a href="<?php echo  wp_nonce_url( "admin.php?wp_crm_action=delete_user&page=wp_crm&user_id={$user_id}", 'wp-crm-delete-user-' . $user_id ); ?>" class="submitdelete deletion"><?php _e('Delete'); ?></a>
     <?php endif; ?>
     </div>

@@ -4,7 +4,7 @@ Plugin Name: WP-CRM - Customer Relationship Management
 Plugin URI: http://twincitiestech.com/plugins/
 Description: Integrated Customer Relationship Management for WordPress. 
 Author: Usability Dynamics, Inc.
-Version: 0.17
+Version: 0.18
 Author URI: http://twincitiestech.com
 
 Copyright 2010  Usability Dynamics, Inc.    (email : andy.potanin@twincitiestech.com)
@@ -25,6 +25,8 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
+/** Plugin Version */
+define('WP_CRM_Version', '0.18');
 
 /** Path for Includes */
 define('WP_CRM_Path', WP_PLUGIN_DIR . '/wp-crm');
@@ -34,9 +36,6 @@ define('WP_CRM_Templates', WP_CRM_Path . '/templates');
 
 /** Path for front-end links */
 define('WP_CRM_URL', WP_PLUGIN_URL . '/wp-crm');
-
-/** Plugin Version */
-define('WP_CRM_Version', '0.17');
 
 /** Directory path for include_onces of template files  */
 define('WP_CRM_Premium', WP_PLUGIN_DIR . '/wp-crm/core/premium');
