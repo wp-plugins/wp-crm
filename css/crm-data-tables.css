@@ -13,6 +13,7 @@
 td.wp_crm_user_card  {
   min-height: 60px;
   display: block;
+  min-width: 320px;
 }
 
 td.wp_crm_user_card  div.user_avatar {

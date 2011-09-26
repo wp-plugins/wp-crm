@@ -40,10 +40,10 @@ class WP_CRM_Core {
     WP_CRM_F::load_premium();
 
     add_action('init', array('WP_CRM_Core', 'init'));
-    
-      
+
+
   }
- 
+
 
   /**
    * Primary init of WP_CRM_Core, gets called by after_setup_theme.
@@ -62,7 +62,8 @@ class WP_CRM_Core {
 
     /** Loads all the class for handling all plugin tables */
     include_once WP_CRM_Path . '/core/class_list_table.php';
-        
+
+    wp_register_script('google-jsapi', 'https://www.google.com/jsapi');
     wp_register_script('jquery-cookie', WP_CRM_URL. '/third-party/jquery.smookie.js', array('jquery'), '1.7.3' );
     wp_register_script('swfobject', WP_CRM_URL. '/third-party/swfobject.js', array('jquery'));
     wp_register_script('jquery-uploadify', WP_CRM_URL. '/third-party/uploadify/jquery.uploadify.v2.1.4.min.js', array('jquery'));
@@ -71,7 +72,7 @@ class WP_CRM_Core {
     wp_register_script('jquery-widget', WP_CRM_URL. '/third-party/jquery.ui.widget.min.js', array('jquery-ui-core'));
     wp_register_script('jquery-datepicker', WP_CRM_URL. '/third-party/jquery.ui.datepicker.js', array('jquery-ui-core'));
     wp_register_script('jquery-autocomplete', WP_CRM_URL. '/third-party/jquery.ui.autocomplete.min.js', array('jquery-widget','jquery-position'));
-    wp_register_script('wp-crm-global', WP_CRM_URL. '/js/wp-crm-global.js', array('jquery'));
+    wp_register_script('wp_crm_global', WP_CRM_URL. '/js/wp_crm_global.js', array('jquery'));
 
     wp_register_script('wp-crm-data-tables', WP_CRM_URL. '/third-party/dataTables/jquery.dataTables.min.js', array('jquery'));
 
@@ -80,12 +81,12 @@ class WP_CRM_Core {
     if(file_exists( WP_CRM_Templates . "/theme-specific/{$theme_slug}.css")) {
       wp_register_style('wp-crm-theme-specific', WP_CRM_URL . "/templates/theme-specific/{$theme_slug}.css",  array('wp-crm-default-styles'),WPP_Version);
     }
-    
+
     //** Load default styles */
     if(file_exists( WP_CRM_Path . "/templates/wp-crm-default-styles.css")) {
       wp_register_style('wp-crm-default-styles', WP_CRM_URL . "/templates/wp-crm-default-styles.css",  array(),WPP_Version);
     }
-    
+
 
     if(file_exists( WP_CRM_Path . "/css/wp_crm_global.css")) {
       wp_register_style('wp_crm_global', WP_CRM_URL . "/css/wp_crm_global.css",  array(),WPP_Version);
@@ -103,21 +104,22 @@ class WP_CRM_Core {
     add_filter("admin_body_class", array('WP_CRM_Core', "admin_body_class"));
 
      // Load back-end scripts
-    add_action("admin_enqueue_scripts", array('WP_CRM_Core', "admin_enqueue_scripts"));  
+    add_action("admin_enqueue_scripts", array('WP_CRM_Core', "admin_enqueue_scripts"));
 
     add_action("wp_ajax_wp_crm_csv_export", create_function('',' WP_CRM_F::csv_export($_REQUEST["wp_crm_search"]); die();'));
-    
+    add_action("wp_ajax_wp_crm_visualize_results", create_function('',' WP_CRM_F::visualize_results($_REQUEST["filters"]); die();'));
+
     add_action('wp_ajax_wp_crm_check_plugin_updates', create_function("",'  echo WP_CRM_F::check_plugin_updates(); die();'));
-    
+
     add_action("wp_ajax_wp_crm_user_object", create_function('',' echo "CRM Object Report: \n" . print_r(wp_crm_get_user($_REQUEST[user_id]), true) . "\nRaw Meta Report: \n" .  print_r(WP_CRM_F::show_user_meta_report($_REQUEST[user_id]), true); '));
     add_action("wp_ajax_wp_crm_show_meta_report", create_function('',' die(print_r(WP_CRM_F::show_user_meta_report(), true)); '));
     add_action("wp_ajax_wp_crm_get_user_activity_stream", create_function('',' echo WP_CRM_F::get_user_activity_stream("user_id={$_REQUEST[user_id]}"); die; '));
     add_action("wp_ajax_wp_crm_insert_activity_message", create_function('',' echo WP_CRM_F::insert_event("time={$_REQUEST[time]}&attribute=note&object_id={$_REQUEST[user_id]}&text={$_REQUEST[content]}&ajax=true"); die; '));
-    
+
     add_action("wp_ajax_wp_crm_get_notification_template", create_function('',' echo WP_CRM_F::get_notification_template($_REQUEST["template_slug"]); die; '));
 
     add_action("wp_ajax_wp_crm_display_shortcode_form", create_function('',' WP_CRM_F::display_shortcode_form(array("shortcode" => $_REQUEST["shortcode"], "atts" =>  $_REQUEST["atts"])); die(); '));
-    
+
     add_action("wp_ajax_wp_crm_do_fake_users", create_function('',' echo WP_CRM_F::do_fake_users("number={$_REQUEST[number]}&do_what={$_REQUEST[do_what]}"); die; '));
 
     //* Returns table rows for overview tbale */
@@ -140,7 +142,16 @@ class WP_CRM_Core {
     add_action("template_redirect", array('WP_CRM_Core', "template_redirect"));
     add_action("deleted_user", array('WP_CRM_F', "deleted_user"));
 
-     
+
+
+    //** Check if installed DB version is older than THIS version */
+    if(!get_option('wp_crm_caps_set')) {
+      WP_CRM_F::manual_activation('update_caps=true&auto_redirect=true');
+    }
+
+    //** Load defaults */
+    WP_CRM_F::manual_activation();
+
 
     // Filers are applied
     $wp_crm['configuration']       = apply_filters('wp_crm_configuration', $wp_crm['configuration']);
@@ -160,13 +171,13 @@ class WP_CRM_Core {
       if(!strpos($post->post_content, "wp_crm_form")) {
         return;
       }
-      
+
     //** Print front-end styles */
     add_action("wp_print_styles", array('WP_CRM_Core', "wp_print_styles"));
- 
+
   }
-  
-  
+
+
   /**
    * Loads front-end styles
    *
@@ -234,13 +245,12 @@ class WP_CRM_Core {
    */
   function admin_init() {
     global $wp_rewrite, $wp_roles, $wp_crm, $wpdb, $current_user;
-    
-    //** Check if installed DB version is older than THIS version */
-    WP_CRM_F::manual_activation(); 
-    
+
+
+
     //** Check if current page is profile page, and load global variable */
     WP_CRM_F::maybe_load_profile();
-    
+
     do_action('wp_crm_metaboxes');
 
     // Add overview table rows. Static because admin_menu is not loaded on ajax calls.
@@ -269,7 +279,7 @@ class WP_CRM_Core {
 
           $context = 'normal';
 
-          if(strpos($box, "side_") === 0) {
+          if(strpos($box, "side_") === 0 || $box == 'special_actions') {
             $context = 'side';
           }
 
@@ -301,17 +311,17 @@ class WP_CRM_Core {
           if(wp_verify_nonce($_wpnonce, 'wp-crm-delete-user-' . $user_id)) {
             //** Get IDs of users posts */
             $post_ids = $wpdb->get_col( $wpdb->prepare("SELECT ID FROM $wpdb->posts WHERE post_author = %d", $user_id) );
-              
+
             //** Delete user and reassign all their posts to the current user */
             if(wp_delete_user($user_id, $current_user->data->ID)) {
-            
+
               //** Trash all posts */
               if(is_array($post_ids)) {
                 foreach($post_ids as $trash_post) {
                   wp_trash_post($trash_post);
                 }
               }
-              
+
               wp_redirect(admin_url('admin.php?page=wp_crm&message=user_deleted'));
             }
           }
@@ -332,11 +342,11 @@ class WP_CRM_Core {
    *
    */
   function wp_crm_save_user_data_caller() {
-  
+
     if(wp_verify_nonce($_REQUEST['wp_crm_update_user'], 'wp_crm_update_user')) {
-      wp_crm_save_user_data($_REQUEST['wp_crm']['user_data']);
+      wp_crm_save_user_data($_REQUEST['wp_crm']['user_data'], $_REQUEST['wp_crm']['args']);
     }
-  
+
   }
 
   /**
@@ -370,6 +380,7 @@ class WP_CRM_Core {
    */
     function admin_head() {
       global $current_screen;
+
 
       do_action("wp_crm_header_{$current_screen->id}", $current_screen->id);
 
@@ -502,14 +513,15 @@ class WP_CRM_Core {
 
       case 'toplevel_page_wp_crm':
         wp_enqueue_script('wp-crm-data-tables');
+        wp_enqueue_script('google-jsapi');
         wp_enqueue_style('wp-crm-data-tables');
-        
-        $contextual_help[] = __('<h3>General</h3>');
-        $contextual_help[] = __('<p>This page is used to filter and find various users. Visit the Settings page to select which attributes to show on the overview.</p>');        
-        
-        $contextual_help[] = __('<h3>Exporting</h3>');
-        $contextual_help[] = __('<p>Once you narrow down the user results to the ones you want to export, click "Show Actions" and then "Export to CSV" to generate a comma separated flle.</p>');        
-        $contextual_help[] = __('<p>The CSV export will only include the user data as defined in Data tab, on the Settings page.</p>');        
+
+        $contextual_help[] = __('<h3>General</h3>', 'wp_crm');
+        $contextual_help[] = __('<p>This page is used to filter and find various users. Visit the Settings page to select which attributes to show on the overview.</p>', 'wp_crm');
+
+        $contextual_help[] = __('<h3>Exporting</h3>', 'wp_crm');
+        $contextual_help[] = __('<p>Once you narrow down the user results to the ones you want to export, click "Show Actions" and then "Export to CSV" to generate a comma separated flle.</p>', 'wp_crm');
+        $contextual_help[] = __('<p>The CSV export will only include the user data as defined in Data tab, on the Settings page.</p>', 'wp_crm');
 
         $contextual_help = apply_filters('wp_crm_contextual_help', array('page' => $current_screen->id, 'content' => $contextual_help));
         add_contextual_help($current_screen->id, implode("\n", $contextual_help['content']));
@@ -520,6 +532,17 @@ class WP_CRM_Core {
         wp_enqueue_script('post');
         wp_enqueue_script('jquery-autocomplete');
         wp_enqueue_script('jquery-datepicker');
+        
+        $contextual_help[] = __('<h3>User Editing</h3>', 'wp_crm');
+        $contextual_help[] = __('<p>Please visit the WP-CRM Settings page to determine which fields to display on the editing page.</p>', 'wp_crm');
+        
+        $contextual_help[] = __('<h3>User Activity History</h3>', 'wp_crm');
+        $contextual_help[] = __('<p>The activity history can be used to log notes regarding a user, and will display any incoming messages generated by the user when using a WP-CRM contact form.</p>', 'wp_crm');
+
+        $contextual_help = apply_filters('wp_crm_contextual_help', array('page' => $current_screen->id, 'content' => $contextual_help));
+        add_contextual_help($current_screen->id, implode("\n", $contextual_help['content']));
+
+        
       break;
 
       case 'crm_page_wp_crm_settings':
@@ -527,18 +550,23 @@ class WP_CRM_Core {
         wp_enqueue_script('jquery-ui-sortable');
         wp_enqueue_script('jquery-ui-mouse');
 
-        $contextual_help[] = __('<h3>Roles - Hidden Attributes</h3>');
-        $contextual_help[] = __('<p>If certain user attributes are not applicable to certain roles, such as "Client Type" to the "Administrator" role, you can elect to hide the unapplicable attributes on profile editing pages.</p>');
-        
-        $contextual_help[] = __('<h3>Predefined Values</h3>');
-        $contextual_help[] = __('<p>If you want your attributes to have predefiend values, such as in a dropdown, or a checkbox list, enter a comma separated list of values you want to use.  You can also get more advanced by using taxonomies - to load all values from a taxonomy, simply type ine: <b>taxonomy:taxonomy_name</b>.</p>');
-        
-        $contextual_help[] = __('<h3>Shortcode Forms</h3>');
-        $contextual_help[] = __('<p>Shortcode Forms, which can be used for contact forms, or profile editing, are setup here, and then inserted using a shortcode into a page, or a widget. The available contact form attributes are taken from the WP-CRM attributes, and when filled out by a user, are mapped over directly into their profile. User profiles are created based on the e-mail address, if one does not already exist, for keeping track of users. </p>');
-        $contextual_help[] = __('<p>If a new user fills out a form, an account will be created for them based on the specified role.  </p>');
-        
-        $contextual_help[] = __('<h3>Cellular Notifications</h3>');
-        $contextual_help[] = __('<p>You can send notifications to cellphone numbers.  Instead of entering an e-mail address, add the receipient\'s number using the following rules:</p><ul><li>AT&T – cellnumber@txt.att.net</li><li>Verizon – cellnumber@vtext.com</li><li>T-Mobile – cellnumber@tmomail.net</li><li>Sprint PCS - cellnumber@messaging.sprintpcs.com</li><li>Virgin Mobile – cellnumber@vmobl.com</li><li>US Cellular – cellnumber@email.uscc.net</li><li>Nextel - cellnumber@messaging.nextel.com</li><li>Boost - cellnumber@myboostmobile.com</li><li>Alltel – cellnumber@message.alltel.com</li></ul>');
+        $contextual_help[] = __('<h3>Roles - Hidden Attributes</h3>', 'wp_crm');
+        $contextual_help[] = __('<p>If certain user attributes are not applicable to certain roles, such as "Client Type" to the "Administrator" role, you can elect to hide the unapplicable attributes on profile editing pages.</p>', 'wp_crm');
+
+        $contextual_help[] = __('<h3>Predefined Values</h3>', 'wp_crm');
+        $contextual_help[] = __('<p>If you want your attributes to have predefiend values, such as in a dropdown, or a checkbox list, enter a comma separated list of values you want to use.  You can also get more advanced by using taxonomies - to load all values from a taxonomy, simply type ine: <b>taxonomy:taxonomy_name</b>.</p>', 'wp_crm');
+
+        $contextual_help[] = __('<h3>Shortcode Forms</h3>', 'wp_crm');
+        $contextual_help[] = __('<p>Shortcode Forms, which can be used for contact forms, or profile editing, are setup here, and then inserted using a shortcode into a page, or a widget. The available contact form attributes are taken from the WP-CRM attributes, and when filled out by a user, are mapped over directly into their profile. User profiles are created based on the e-mail address, if one does not already exist, for keeping track of users. </p>', 'wp_crm');
+        $contextual_help[] = __('<p>If a new user fills out a form, an account will be created for them based on the specified role.  </p>', 'wp_crm');
+
+        $contextual_help[] = __('<h3>Notifications and Trigger Actions</h3>', 'wp_crm');
+        $contextual_help[] = __('<p>Notification messages can be fired off when certain events, such as contact form submission, are executed.  Multiple notification events can be attached to a single <b>trigger action</b>. Multiple tags, such as [user_email] and [display_name], are available to be used as dynamically replaceable tags when setting up notifications.</p>', 'wp_crm');
+        $contextual_help[] = __('<p>Which tags are available depend on the trigger event, but in most cases all user data slugs can be used.  On a contact form message, <b>[message_content]</b>, <b>[profile_link]</b> and <b>[trigger_action]</b> variables are also available.</p>', 'wp_crm');
+
+
+        $contextual_help[] = __('<h3>Cellular Notifications</h3>', 'wp_crm');
+        $contextual_help[] = __('<p>You can send notifications to cellphone numbers.  Instead of entering an e-mail address, add the receipient\'s number using the following rules:</p><ul><li>AT&T – cellnumber@txt.att.net</li><li>Verizon – cellnumber@vtext.com</li><li>T-Mobile – cellnumber@tmomail.net</li><li>Sprint PCS - cellnumber@messaging.sprintpcs.com</li><li>Virgin Mobile – cellnumber@vmobl.com</li><li>US Cellular – cellnumber@email.uscc.net</li><li>Nextel - cellnumber@messaging.nextel.com</li><li>Boost - cellnumber@myboostmobile.com</li><li>Alltel – cellnumber@message.alltel.com</li></ul>', 'wp_crm');
 
         $contextual_help = apply_filters('wp_crm_contextual_help', array('page' => $current_screen->id, 'content' => $contextual_help));
         add_contextual_help($current_screen->id, implode("\n", $contextual_help['content']));
@@ -549,7 +577,9 @@ class WP_CRM_Core {
     // Load our scripts after the third-party scripts
 
     // Include on all pages
-    wp_enqueue_script('wp-crm-global');
+    wp_enqueue_script('wp_crm_global');
+    wp_enqueue_style('wp_crm_global');
+
 
     // Automatically insert styles sheet if one exists with $current_screen->ID name
     if(file_exists(WP_CRM_Path . "/css/{$current_screen->id}.css")) {

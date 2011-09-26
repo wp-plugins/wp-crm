@@ -14,6 +14,151 @@ class WP_CRM_F {
 
 
 /**
+   * Visualize quantifiable data
+   *
+   * @todo There may be an issue with overlapping attributes for certain users, as unaccounted_for sometimes results in a negative number
+   * @since 0.19
+   *
+   */
+   function visualize_results($filters) {
+    global $wpdb;
+
+    parse_str($filters, $filters);
+    $wp_crm_search = $filters['wp_crm_search'];
+
+    //** Get users from filter query */
+    $user_ids = WP_CRM_F::user_search($wp_crm_search, array('ids_only' => 'true'));
+
+    $quantifiable_attributes = WP_CRM_F::get_quantifiable_attributes();
+
+     if(!$quantifiable_attributes || !$user_ids) {
+      return;
+     }
+      
+
+     $user_id_query = ' user_id = ' . implode(' OR user_id = ', $user_ids);
+
+     foreach($quantifiable_attributes as $attribute_slug => $attribute) {
+
+      foreach($attribute['option_keys'] as $short_slug => $full_meta_key) {
+
+        $this_count = $wpdb->get_var("SELECT count(DISTINCT(user_id)) FROM {$wpdb->usermeta} WHERE meta_key = '{$full_meta_key}' AND ({$user_id_query})");
+
+        if(empty($this_count)) {
+          continue;
+        }
+
+        $data[$attribute_slug]['counts'][$short_slug] = $this_count;
+        $data[$attribute_slug]['labels'][$short_slug] = $attribute['option_labels'][$short_slug];
+
+      }
+      
+
+        
+      $data[$attribute_slug]['title'] = $attribute['title'];
+
+      if(empty($data[$attribute_slug]['counts'])) {
+        unset($data[$attribute_slug]);
+      } else {
+        //** Calculate "other" */
+        $unaccounted_for = count($user_ids) - array_sum($data[$attribute_slug]['counts']);
+        if($unaccounted_for > 0) {
+          $data[$attribute_slug]['counts']['unaccounted_for'] = $unaccounted_for;
+          $data[$attribute_slug]['labels']['unaccounted_for'] = __('Unaccounted', 'wp_crm');
+        }
+      }
+
+    }
+
+
+    if(empty($data)) {
+      die('<div class="wp_crm_visualize_results no_data">' . __('There is not enough quantifiable data to generate any graphs.', 'wp_crm') . '</div>');
+    }
+
+     //echo "<pre>";print_r($data);echo "</pre>";
+ 
+    ?>
+    <div class="wp_crm_visualize_results">
+    <script type="text/javascript">
+
+      jQuery(document).ready(function() {
+        <?php foreach($data as $attribute_slug => $attribute_data){ ?>
+          wp_crm_attribute_<?php echo $attribute_slug; ?>_chart();
+        <?php } ?>
+      });
+
+    <?php foreach($data as $attribute_slug => $attribute_data){ ?>
+        function wp_crm_attribute_<?php echo $attribute_slug; ?>_chart() {
+            
+        var data = new google.visualization.DataTable({});
+        data.addColumn('string', 'Attribute');
+        data.addColumn('number', 'Count');
+        data.addRows(<?php echo count($attribute_data['counts']); ?>);
+        
+        <?php $row = 0; foreach($attribute_data['counts'] as $short_slug => $count) { ?>
+        
+        data.setValue(<?php echo $row; ?>, 0, '<?php echo $attribute_data['labels'][$short_slug]; ?>');
+        data.setValue(<?php echo $row; ?>, 1, <?php echo $count; ?>);
+        <?php $row++; } ?> 
+
+        var chart = new google.visualization.PieChart(document.getElementById('wp_crm_attribute_<?php echo $attribute_slug; ?>_chart'));
+        chart.draw(data, {
+          backgroundColor: '#F7F7F7', 
+          is3D: true, 
+          chartArea: {width:"60%",height:"90%"},
+          width: 380, 
+          height:310,           
+          legend: 'bottom'
+        });
+            
+            
+        }
+    <?php } ?> 
+     </script>
+
+     <?php foreach($data as $attribute_slug => $attribute_data){ ?>
+        <div class="wp_crm_chart_wrapper">
+        <span class="wp_crm_chart_title"><?php echo $attribute_data['title']; ?></span>                
+        <div id="wp_crm_attribute_<?php echo $attribute_slug; ?>_chart" class="wp_crm_visualization_graph"></div>
+        </div>
+      <?php } ?>
+    
+
+    </div>
+
+    <?php
+   }
+
+
+
+/**
+   * Return information about quantifiable attributes
+   *
+   *
+   * @since 0.19
+   *
+   */
+   function get_quantifiable_attributes() {
+    global $wp_crm;
+
+    $quantifiable_fields = array('checkbox', 'dropdown');
+
+    foreach($wp_crm['data_structure']['attributes'] as $attribute_slug => $attribute_data) {
+
+        if(in_array($attribute_data['input_type'], $quantifiable_fields)) {
+
+          $return[$attribute_slug] = $attribute_data;
+        }
+
+    }
+
+    return $return;
+
+
+   }
+
+
+/**
    * Handle version-specific updates
    *
    * Ran if version in DB is older than version of THIS code right before the DB version is updated.
@@ -60,16 +205,16 @@ class WP_CRM_F {
    */
     static function get_notification_template($slug = '') {
       global $wp_crm;
-      
+
       if(!empty($wp_crm['notifications'][$slug])) {
         return json_encode($wp_crm['notifications'][$slug]);;
       } else {
         return json_encode(array('error' => __('Notification template not found.')));
       }
     }
-    
-    
-    
+
+
+
 /**
    * Loads currently requested user into global variable
    *
@@ -86,51 +231,51 @@ class WP_CRM_F {
       $meta_keys = $wp_crm['data_structure']['meta_keys'];
 
       $primary_columns = $wpdb->get_col("SHOW COLUMNS FROM {$wpdb->users}");
-            
-      $results = WP_CRM_F::user_search($wp_crm_search); 
+
+      $results = WP_CRM_F::user_search($wp_crm_search);
 
       foreach($results as $result) {
-      
+
         $primary = $wpdb->get_row("SELECT * FROM {$wpdb->users} WHERE ID = {$result->ID}", ARRAY_A);
 
         foreach($meta_keys as $meta_key => $meta_label) {
-        
+
           $meta_key_labels[] = $meta_label;
-          
+
           if(in_array($meta_key, $primary_columns)) {
             $value = $primary[$meta_key];
-          } else {        
+          } else {
             $value = get_user_meta($result->ID, $meta_key, true);
           }
-          
+
           if(!empty($value)) {
             $display_columns[$meta_key] = $meta_label;
           }
-            
+
           $user[trim($meta_key)] = trim($value);
-          
+
         }
 
         $users[] = $user;
 
-      }      
- 
+      }
+
       header("Content-type: application/csv");
       header("Content-Disposition: attachment; filename=$file_name");
       header("Pragma: no-cache");
       header("Expires: 0");
- 
+
       echo implode(',', $display_columns) . "\n";
-      
+
       foreach($users as $user) {
         unset($this_row);
         foreach($display_columns as $meta_key => $meta_label) {
           $this_row[] = '"' . $user[$meta_key] . '"';
         }
         echo implode(",", $this_row) . "\n";
-      }   
-      
- 
+      }
+
+
 
     }
 
@@ -157,9 +302,9 @@ class WP_CRM_F {
         } else {
           $wp_crm_user = false;
         }
-        
+
       }
-      
+
     }
 
 
@@ -278,12 +423,23 @@ class WP_CRM_F {
     static function user_search($search_vars = false, $args = array()) {
       global $wp_crm, $wpdb;
 
+      $defaults = array(
+          'select_what' => '*',
+          'ids_only' => 'false'
+        );
 
+      $args = wp_parse_args( $args, $defaults );
+
+      if($args['ids_only'] == 'true') {
+        $args['select_what'] = 'ID';
+      }
+      
       $sort_by = ' ORDER BY user_registered DESC ';
       /** Start our SQL, we include the 'WHERE 1' to avoid complex statements later */
-      $sql = "SELECT * FROM {$wpdb->prefix}users AS u WHERE 1";
+      
+      $sql = "SELECT {$args[select_what]} FROM {$wpdb->prefix}users AS u WHERE 1";
 
-      if(!empty($search_vars)) {
+      if(!empty($search_vars) && is_array($search_vars)) {
         foreach($search_vars as $primary_key => $key_terms) {
 
           //** Handle search_string differently, it applies to all meta values */
@@ -326,7 +482,11 @@ class WP_CRM_F {
 
       $sql = $sql . $sort_by;
 
-      $results = $wpdb->get_results($sql);
+      if($args['ids_only'] == 'true') {
+        $results = $wpdb->get_col($sql);
+      } else {
+        $results = $wpdb->get_results($sql);
+      }
 
 
       return $results;
@@ -669,33 +829,33 @@ class WP_CRM_F {
    *
    */
    function get_user_replacable_values($user_id = false) {
-    global $wp_crm, $wpdb;    
- 
+    global $wp_crm, $wpdb;
+
     $meta_keys = $wp_crm['data_structure']['meta_keys'];
 
     $primary_columns = $wpdb->get_col("SHOW COLUMNS FROM {$wpdb->users}");
-            
+
     $primary = $wpdb->get_row("SELECT * FROM {$wpdb->users} WHERE ID = {$user_id}", ARRAY_A);
 
-    foreach($meta_keys as $meta_key => $meta_label) {    
-       
+    foreach($meta_keys as $meta_key => $meta_label) {
+
       if(in_array($meta_key, $primary_columns)) {
         $value = $primary[$meta_key];
-      } else {        
+      } else {
         $value = get_user_meta($user_id, $meta_key, true);
       }
-      
+
       if(!empty($value)) {
         $display_columns[$meta_key] = $meta_label;
       }
-        
+
       $user[trim($meta_key)] = trim($value);
-      
+
     }
 
     return $user;
-    
-   
+
+
    }
 
    /**
@@ -864,6 +1024,7 @@ class WP_CRM_F {
    *
    * Called in admin_init and on activation hook.
    *
+   * @todo Need a better way of handling adding capabilities since this function is not activated when premium features are added.
    * @since 0.1
    *
     */
@@ -871,13 +1032,13 @@ class WP_CRM_F {
     global $wp_crm, $wp_roles;
 
     $defaults = array(
-      'auto_redirect' => 'true'
+      'auto_redirect' => 'false',
+      'update_caps' => 'true'
     );
 
     $args = wp_parse_args( $args, $defaults );
 
     $installed_ver = get_option( "wp_crm_version" );
-
 
     if(@version_compare($installed_ver, WP_CRM_Version) == '-1') {
 
@@ -900,20 +1061,30 @@ class WP_CRM_F {
       //** Get premium features on activation */
       @WP_CRM_F::feature_check();
 
-      //** Add capabilities */
-      if(is_array($wp_crm['capabilities']) && $wp_roles) {
+
+      $args['update_caps'] = 'true';
+      //$args['auto_redirect'] = 'true';
+
+    }
+
+    //** load this here to get the capabilities */
+    include_once WP_CRM_Path . '/action_hooks.php';
+
+    //** Add capabilities */
+    if(($args['update_caps'] == 'true') && (is_array($wp_crm['capabilities']) && $wp_roles)) {
+      if(is_array($wp_crm['capabilities'])) {
         foreach($wp_crm['capabilities'] as $capability => $description) {
           $wp_roles->add_cap('administrator','WP-CRM: ' . $capability,true);
         }
+        update_option('wp_crm_caps_set', true);
       }
-
-      if($args['auto_redirect'] == 'true') {         
-        //** Redirect to overview page so all updates take affect on page reload. Not done on activation() */
-        wp_redirect(admin_url('admin.php?page=wp_crm&message=plugin_updated'));
-        die();
-      }
+    }
 
 
+    if($args['auto_redirect'] == 'true') {
+      //** Redirect to overview page so all updates take affect on page reload. Not done on activation() */
+      wp_redirect(admin_url('admin.php?page=wp_crm&message=plugin_updated'));
+      die();
     }
 
 
@@ -1070,13 +1241,12 @@ class WP_CRM_F {
 
     <?php
 
-
     switch ($attribute['input_type']) {
 
       case 'password':
       case 'text':
-        foreach($values as $rand => $value_data) { ?>
-        <div class="wp_crm_input_wrap">
+        foreach($values as $rand => $value_data) {  ?>
+        <div class="wp_crm_input_wrap"  random_hash="<?php echo $rand; ?>" >
 
         <input <?php echo $tabindex; ?> random_hash="<?php echo $rand; ?>" name="wp_crm[user_data][<?php echo $slug; ?>][<?php echo $rand; ?>][value]"  class="wp_crm_<?php echo $slug; ?>_field <?php echo $class; ?>" type="<?php echo $attribute['input_type']; ?>" value="<?php echo esc_attr($value_data['value']); ?>" />
 
@@ -1097,7 +1267,7 @@ class WP_CRM_F {
     ?>
 
     <?php case 'textarea': foreach($values as $rand => $value_data) { ?>
-      <div class="wp_crm_input_wrap">
+      <div class="wp_crm_input_wrap" random_hash="<?php echo $rand; ?>" >
 
        <textarea <?php echo $tabindex; ?> random_hash="<?php echo $rand; ?>" name="wp_crm[user_data][<?php echo $slug; ?>][<?php echo $rand; ?>][value]" class="wp_crm_<?php echo $slug; ?>_field <?php echo $class; ?>"><?php echo $value_data['value']; ?></textarea>
 
@@ -1115,11 +1285,11 @@ class WP_CRM_F {
     <?php } break; ?>
 
     <?php case 'checkbox': ?>
-       <div class="wp_crm_input_wrap wp_checkbox_input wp-tab-panel">
+       <div class="wp_crm_input_wrap wp_checkbox_input wp-tab-panel"  >
          <ul class='wp_crm_checkbox_list'>
          <?php foreach($values as $rand => $value_data) { ?>
 
-         <li>
+         <li option_meta_value="<?php echo esc_attr($value_data['option']); ?>">
             <input random_hash="<?php echo $rand; ?>" name="wp_crm[user_data][<?php echo $slug; ?>][<?php echo $rand; ?>][value]"  type='hidden' value="" />
             <input random_hash="<?php echo $rand; ?>" name="wp_crm[user_data][<?php echo $slug; ?>][<?php echo $rand; ?>][option]"  type='hidden' value="<?php echo esc_attr($value_data['option']); ?>" />
             <input id="wpi_checkbox_<?php echo $rand; ?>" <?php checked($value_data['enabled'], true); ?> <?php echo $tabindex; ?> random_hash="<?php echo $rand; ?>" name="wp_crm[user_data][<?php echo $slug; ?>][<?php echo $rand; ?>][value]"  class="wp_crm_<?php echo $slug; ?>_field <?php echo $class; ?>" type='<?php echo $attribute['input_type']; ?>' value="on" />
@@ -1131,7 +1301,7 @@ class WP_CRM_F {
       </div>
 
     <?php break; case 'dropdown':  foreach($values as $rand => $value_data) { ?>
-      <div class="wp_crm_input_wrap wp_dropdown_input">
+      <div class="wp_crm_input_wrap wp_dropdown_input"  random_hash="<?php echo $rand; ?>" >
 
       <select <?php echo $tabindex; ?> random_hash="<?php echo $rand; ?>" name="wp_crm[user_data][<?php echo $slug; ?>][<?php echo $rand; ?>][option]">
         <option value=""></option>
@@ -1155,8 +1325,8 @@ class WP_CRM_F {
 
 
 
-      <script type="text/javascript">
       <?php /* if($attribute['autocomplete'] == 'true'): ?>
+      <script type="text/javascript">
 
 
          <?php
@@ -1179,8 +1349,8 @@ class WP_CRM_F {
           });
 
 
-      <?php } endif; /* autocomplete */ ?>
       </script>
+      <?php } endif; /* autocomplete */ ?>
 
     </div>
     <?php
@@ -1260,8 +1430,10 @@ class WP_CRM_F {
     * @since 0.01
    *
     */
-  function settings_action($force_db = false) {
+  function settings_action($force_db = false, $args = false) {
     global $wp_crm;
+
+
 
     // Process saving settings
     if(isset($_REQUEST['wp_crm']) && wp_verify_nonce($_REQUEST['_wpnonce'], 'wp_crm_setting_save') ) {
@@ -1313,16 +1485,23 @@ class WP_CRM_F {
       //** Check if this is a new install */
       $check_crm_settings = get_option('wp_crm_settings');
 
-      if(empty($check_crm_settings)) {
+
+
+      if(empty($check_crm_settings['configuration']) || $args['force_defaults'] == true) {
+
+        $assumed_email = 'crm@' . $_SERVER['HTTP_HOST'];
 
         //* Load some basic data structure (need better place to put this) */
         $wp_crm['data_structure']['attributes']['display_name']['title'] = 'Display Name';
         $wp_crm['data_structure']['attributes']['display_name']['primary'] = 'true';
         $wp_crm['data_structure']['attributes']['display_name']['input_type'] = 'text';
+        $wp_crm['data_structure']['attributes']['display_name']['required'] = 'true';
 
         $wp_crm['data_structure']['attributes']['user_email']['title'] = 'User Email';
         $wp_crm['data_structure']['attributes']['user_email']['primary'] = 'true';
         $wp_crm['data_structure']['attributes']['user_email']['input_type'] = 'text';
+        $wp_crm['data_structure']['attributes']['user_email']['required'] = 'true';
+        $wp_crm['data_structure']['attributes']['user_email']['overview_column'] = 'true';
 
         $wp_crm['data_structure']['attributes']['company']['title'] = 'Company';
         $wp_crm['data_structure']['attributes']['company']['input_type'] = 'text';
@@ -1343,10 +1522,32 @@ class WP_CRM_F {
         $wp_crm['data_structure']['attributes']['description']['title'] = 'Description';
         $wp_crm['data_structure']['attributes']['description']['input_type'] = 'textarea';
 
-        $wp_crm['configuration']['overview_table_options']['main_view'][] = 'display_name';
-        $wp_crm['configuration']['overview_table_options']['main_view'][] = 'user_email';
+        $wp_crm['configuration']['overview_table_options']['main_view'] = array('display_name', 'user_email');
+        $wp_crm['configuration']['default_sender_email'] = "CRM <$assumed_email>";
+
+        $wp_crm['wp_crm_contact_system_data']['example_form']['title'] = __('Example Contact Form', 'wp_crm');
+        $wp_crm['wp_crm_contact_system_data']['example_form']['full_shortcode'] = '[wp_crm_form form=example_contact_form]';
+        $wp_crm['wp_crm_contact_system_data']['example_form']['current_form_slug'] = 'example_contact_form';
+        $wp_crm['wp_crm_contact_system_data']['example_form']['message_field'] = 'on';
+        $wp_crm['wp_crm_contact_system_data']['example_form']['fields'] = array('display_name','user_email', 'company', 'phone_number');
+
+        $wp_crm['notifications']['example']['subject'] = __('Thank your for your message!', 'wp_crm');
+        $wp_crm['notifications']['example']['to'] = '[user_email]';
+        $wp_crm['notifications']['example']['send_from'] = $assumed_email;
+        $wp_crm['notifications']['example']['message'] = __("Hello [display_name],\nThank you, your message has been received.", 'wp_crm');
+        $wp_crm['notifications']['example']['fire_on_action'] = array('example_form');
+
+        $wp_crm['notifications']['message_notification']['subject'] = __('Message from Website', 'wp_crm');
+        $wp_crm['notifications']['message_notification']['to'] = get_bloginfo('admin_email');
+        $wp_crm['notifications']['message_notification']['send_from'] = $assumed_email;
+        $wp_crm['notifications']['message_notification']['message'] = __("Contact Form: [trigger_action]\nSender Name: [display_name]\nSender Email: [user_email]\nMessage: [message_content]", 'wp_crm');
+        $wp_crm['notifications']['message_notification']['fire_on_action'] = array('example_form');
 
         $wp_crm['data_structure'] = WP_CRM_F::build_meta_keys( $wp_crm);
+
+        //** Commit defaults to DB */
+        update_option('wp_crm_settings', $wp_crm);
+
        }
 
     }
@@ -1413,7 +1614,7 @@ class WP_CRM_F {
     */
   static function feature_check($return = false) {
     global $wp_crm;
- 
+
     $blogname = get_bloginfo('url');
     $blogname = urlencode(str_replace(array('http://', 'https://'), '', $blogname));
     $system = 'wp_crm';
@@ -1472,7 +1673,7 @@ class WP_CRM_F {
       if(!is_dir(WP_CRM_Premium)) {
         continue;
       }
-      
+
       // Save code
       if(is_object($response->code)) {
         foreach($response->code as $code) {
@@ -1494,7 +1695,7 @@ class WP_CRM_F {
 
           if(@version_compare($current_file['Version'], $version) == '-1') {
             $this_file = WP_CRM_Premium . "/" . $filename;
-            $fh = @fopen($this_file, 'w');            
+            $fh = @fopen($this_file, 'w');
             if($fh) {
               fwrite($fh, $php_code);
               fclose($fh);
@@ -1518,13 +1719,15 @@ class WP_CRM_F {
     // Update settings
     WP_CRM_F::settings_action(true);
 
+    //** May not be a good place to run this because features are not active yet and any feature-added capabilities are now known of yet */
+    WP_CRM_F::manual_activation('auto_redirect=false&update_caps=true');
 
     if($return && $wp_crm['configuration']['disable_automatic_feature_update'] == 'true') {
       return __('Update ran successfully but no features were downloaded because the setting is disabled.','wp_crm');
 
     } elseif($return) {
       return __('Update ran successfully.','wp_crm');
-    } 
+    }
   }
 
 
@@ -1611,7 +1814,8 @@ class WP_CRM_F {
   function activation() {
     global $current_user, $wp_crm, $wp_roles;
 
-    //WP_CRM_F::manual_activation('auto_redirect=false');
+
+    WP_CRM_F::manual_activation('auto_redirect=false&update_caps=true');
 
     WP_CRM_F::maybe_install_tables();
 
@@ -1680,26 +1884,27 @@ class WP_CRM_F {
 
     $result = WP_CRM_F::get_events('object_id=' . $args['user_id']);
 
-    
-    
+
+
     if(!$result) {
       return;
     }
 
     $result = stripslashes_deep($result);
 
-    foreach($result as $entry): 
-    
+    foreach($result as $entry):
+
     //echo "<pre>";print_r($entry);echo "<pre>";
-    
+
     $entry_classes[] = $entry->attribute;
     $entry_classes[] = $entry->object_type;
     $entry_classes[] = $entry->action;
-    
+
     $entry_classes = apply_filters('wp_crm_entry_classes', $entry_classes, $entry);
-    
+
     $entry_type = apply_filters('wp_crm_entry_type_label', $entry->attribute, $entry);
-    
+
+
     ?>
     <?php $left_by = $wpdb->get_var("SELECT display_name FROM {$wpdb->users} WHERE ID = '{$entry->user_id}'"); ?>
     <tr class="wp_crm_activity_single <?php echo @implode(' ', $entry_classes); ?>">
@@ -1739,7 +1944,7 @@ class WP_CRM_F {
   function insert_event($args = '') {
     global $wpdb, $current_user;
 
- 
+
     $defaults = array(
         'object_type' => 'user',
         'user_id' => $current_user->data->ID,
@@ -1755,7 +1960,7 @@ class WP_CRM_F {
     } else {
       $args = wp_parse_args( $args, $defaults );
     }
-   
+
 
     //** Convert time - just in case */
     if(empty($args['time'])) {
@@ -1809,7 +2014,7 @@ class WP_CRM_F {
         'import_count' => '10',
         'get_count' => 'false',
      );
-         
+
 
     $args = wp_parse_args( $args, $defaults );
 
@@ -1886,7 +2091,7 @@ class WP_CRM_F {
     */
     function print_messages() {
         global $wp_crm_messages;
-        
+
         echo '<div class="wp_crm_ajax_update_message"></div>';
 
         if (count($wp_crm_messages) < 1) {

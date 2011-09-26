@@ -264,6 +264,7 @@ if(!function_exists('wp_crm_save_user_data')) {
       'use_global_messages' => 'true',
       'match_login' => 'false',
       'no_errors' => 'false',
+      'return_detail' => 'false',
       'default_role' => get_option('default_role'),
       'no_redirect' => 'false'
     );
@@ -294,6 +295,7 @@ if(!function_exists('wp_crm_save_user_data')) {
     }
 
    $temp_data['user_id'] = WP_CRM_F::get_first_value($user_data['user_id']);
+
 
 
     // Prepare Data
@@ -346,10 +348,28 @@ if(!function_exists('wp_crm_save_user_data')) {
       foreach((array)$values as $temp_key => $data) {
 
         if(in_array($meta_key, $wp_insert_user_vars)) {
+          
           //** If this attribute is in the main user table, we store it here */
-          $insert_data[$meta_key] = $data['value'];
+          
+          //** Do not overwrite $insert_data if its already set */
+          if(!isset($insert_data[$meta_key])) {
+            $insert_data[$meta_key] = $data['value'];
+            continue;
+          }
+          
+          
+          
+          //** Store data in meta table as well, as long as it's not already stored in main table */
+          if($insert_data[$meta_key] != $data['value']) {
+            //** Store any extra keys in values in regular data */
+            
+            $insert_custom_data[$meta_key][] = $data['value'];
+          }  
 
-        } elseif (in_array($meta_key, $wp_user_meta_data)) {
+        } 
+        
+        
+        if (in_array($meta_key, $wp_user_meta_data)) {
           //** If the attribute is a meta key created  by WP-CRM, we store it here */
                     
           switch ($wp_crm['data_structure']['attributes'][$meta_key]['input_type']) {
@@ -415,7 +435,7 @@ if(!function_exists('wp_crm_save_user_data')) {
     }
  
 
-   if(empty($temp_data['user_id'])) {
+    if(empty($temp_data['user_id'])) {
       // Determine user_id and if new or old user
       if ($args['match_login'] == 'true' && (isset($user_data['user_login']) || isset($user_data['user_email']))) {
 
@@ -530,7 +550,6 @@ if(!function_exists('wp_crm_save_user_data')) {
       }
       
 
-
       $display_name = WP_CRM_F::get_primary_display_value($user_id);
 
       if($display_name) {
@@ -547,6 +566,14 @@ if(!function_exists('wp_crm_save_user_data')) {
         }
       }
 
+         
+      do_action('wp_crm_save_user', array(
+        'user_id' =>$user_id,
+        'insert_data' =>$insert_data,
+        'insert_custom_data' =>$insert_custom_data,
+        'args' => $args)
+      );
+      
       // Don't redirect if data was passed
       if($args['no_redirect'] != 'true') {
         wp_redirect(admin_url("admin.php?page=wp_crm_add_new&user_id=$user_id&message=" . ($new_user ? 'created' : 'updated')));
@@ -566,11 +593,24 @@ if(!function_exists('wp_crm_save_user_data')) {
         }
       }
     }
+    
+
+    
 
     if($args['no_errors'] && is_wp_error($user_id)) {
       return false;
     }
 
+    if($args['return_detail'] == 'true') {
+      $return['user_id'] = $user_id;
+      
+      if($new_user) {
+        $return['new_user'] = true;
+      }
+      
+      return $return;
+    }
+    
     return $user_id;
   }
 }  /* wp_crm_save_user_data */

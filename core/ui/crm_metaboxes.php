@@ -42,6 +42,9 @@
     <div class="wp_crm_user_actions hidden">
       <ul class="wp_crm_action_list">
       <li class="wp_crm_orange_link wp_crm_export_to_csv"><?php _e("Export to CSV"); ?></li>
+      <?php if(WP_CRM_F::get_quantifiable_attributes()) { ?>
+      <li class="wp_crm_orange_link wp_crm_visualize_results"><?php _e("Visualize User Data"); ?></li>
+      <?php } ?>
       <?php do_action('wp_crm_user_actions'); ?>
       </ul>
     </div>
@@ -53,7 +56,62 @@
   }
 
 
+  
 class crm_page_wp_crm_add_new {
+
+
+
+  /**
+   * Contact history and messages for a user
+   *
+   *
+   * @todo Fix delete link to be handled internally and not depend on built-in user management
+   * @since 0.01
+   *
+   */
+  function user_activity_history($object) {
+
+    global $wpdb;
+    $user_id = WP_CRM_F::get_first_value($object['ID']);
+
+    ?>
+  <?php if(current_user_can('WP-CRM: Add User Messages')) { ?>
+  <div class="wp_crm_activity_top">
+    <input class='wp_crm_toggle_message_entry button' type='button' value='<?php _e('Add Message'); ?>' />
+    <?php do_action('wp_crm_user_activity_history_top', $object); ?>
+  </div>
+  <?php } ?>
+
+  <div class="wp_crm_new_message hidden">
+    <textarea id='wp_crm_message_content'></textarea>
+
+    <div class="wp_crm_new_message_options_line">
+
+      <div class="alignleft">
+        <div class="wp_crm_show_message_options"><?php _e('Show Options', 'wp_crm'); ?></div>
+        <div class="wp_crm_message_options hidden">
+        <?php _e('Date:', 'wp_crm'); ?>
+        <input class="datepicker" />
+        </div>
+      </div>
+      <div class="alignright"><input type='button' id='wp_crm_add_message' value='<?php _e('Add Message', 'wp_crm'); ?>'/></div>
+    </div>
+   </div>
+
+   <table id="wp_crm_user_activity_stream" cellpadding="0" cellspacing="0">
+    <thead></thead>
+    <tbody>
+    <?php if($user_id) { WP_CRM_F::get_user_activity_stream("user_id={$user_id} "); } ?>
+    </tbody>
+   </table>
+
+
+  <?php
+
+  }
+
+  
+  
   function primary_information($user_object) {
     global $wp_crm;
     $user_role = WP_CRM_F::get_first_value($user_object['role']);
@@ -118,12 +176,6 @@ class crm_page_wp_crm_add_new {
 <div id="minor-publishing">
   <ul>
 
-  <?php if(current_user_can( 'WP-CRM: Add User Messages' )) { ?>
-    <li><?php _e('Add a <b><a href="#" class="wp_crm_toggle_message_entry">general note</a></b>.', 'wp_crm'); ?></li>
-  <?php } else { ?>
-    
-  <?php } ?>
-
   <?php if(current_user_can( 'edit_users' )) { ?>
   <li><?php _('User Role:'); ?> <select id="wp_crm_role" name="wp_crm[user_data][role][<?php echo rand(1000,9999); ?>][value]"><option value=""></option><?php wp_dropdown_roles($object['role']['default'][0]); ?></select>
   
@@ -152,14 +204,12 @@ class crm_page_wp_crm_add_new {
   <?php if(current_user_can( 'edit_users' ))  { do_action('wp_crm_metabox_special_actions'); } ?>
 </div>
   
-  <div id="major-publishing-actions">
-  <?php if(current_user_can( 'remove_users' ) || current_user_can( 'delete_users' )) { ?>
-    <div id="delete-action">
-    <?php if(!$object['new'] && $user_id != $current_user->ID): ?>
-    <a href="<?php echo  wp_nonce_url( "admin.php?wp_crm_action=delete_user&page=wp_crm&user_id={$user_id}", 'wp-crm-delete-user-' . $user_id ); ?>" class="submitdelete deletion"><?php _e('Delete'); ?></a>
-    <?php endif; ?>
+  <div class="major-publishing-actions">
+  
+    <div class="other-action">
+      <span class="wp_crm_subtle_link wp_crm_toggle" toggle="wp_crm_user_actions"><?php _e('Show Actions'); ?></span>
     </div>
-  <?php } ?>
+
 
   <div id="publishing-action">  
       <input type="hidden" value="Publish" id="original_publish" name="original_publish">
@@ -172,59 +222,32 @@ class crm_page_wp_crm_add_new {
   <div class="clear"></div>
     
 </div>
+ 
+
+<div class="wp_crm_user_actions hidden">
+  <ul class="wp_crm_action_list">      
+    
+<?php if(current_user_can( 'WP-CRM: Add User Messages' )) { ?>
+  <li class="wp_crm_orange_link wp_crm_toggle_message_entry"><?php _e('Add a general note.', 'wp_crm'); ?></li>     
+<?php } ?>
+
+  
+<?php do_action('wp_crm_single_user_actions', $object); ?>
+  
+<?php if((current_user_can( 'remove_users' ) || current_user_can( 'delete_users' )) && (!$object['new'] && $user_id != $current_user->ID)){ ?>
+  <li class="wp_crm_orange_link"><a href="<?php echo  wp_nonce_url( "admin.php?wp_crm_action=delete_user&page=wp_crm&user_id={$user_id}", 'wp-crm-delete-user-' . $user_id ); ?>" class="submitdelete deletion"><?php _e('Delete'); ?></a></li>
+<?php } ?>
+
+
+
+  </ul>
+</div>
+
+    
+    
 <?php
 
 
-
-  }
-
-
-  /**
-   * Contact history and messages for a user
-   *
-   *
-   * @todo Fix delete link to be handled internally and not depend on built-in user management
-   * @since 0.01
-   *
-   */
-  function user_activity_history($object) {
-
-    global $wpdb;
-    $user_id = WP_CRM_F::get_first_value($object['ID']);
-
-    ?>
-  <?php if(current_user_can('WP-CRM: Add User Messages')) { ?>
-  <div class="wp_crm_activity_top">
-    <input class='wp_crm_toggle_message_entry button' type='button' value='<?php _e('Add Message'); ?>' />
-    <?php do_action('wp_crm_user_activity_history_top', $object); ?>
-  </div>
-  <?php } ?>
-
-  <div class="wp_crm_new_message hidden">
-    <textarea id='wp_crm_message_content'></textarea>
-
-    <div class="wp_crm_new_message_options_line">
-
-      <div class="alignleft">
-        <div class="wp_crm_show_message_options"><?php _e('Show Options', 'wp_crm'); ?></div>
-        <div class="wp_crm_message_options hidden">
-        <?php _e('Date:', 'wp_crm'); ?>
-        <input class="datepicker" />
-        </div>
-      </div>
-      <div class="alignright"><input type='button' id='wp_crm_add_message' value='<?php _e('Add Message', 'wp_crm'); ?>'/></div>
-    </div>
-   </div>
-
-   <table id="wp_crm_user_activity_stream" cellpadding="0" cellspacing="0">
-    <thead></thead>
-    <tbody>
-    <?php if($user_id) { WP_CRM_F::get_user_activity_stream("user_id={$user_id} "); } ?>
-    </tbody>
-   </table>
-
-
-  <?php
 
   }
 

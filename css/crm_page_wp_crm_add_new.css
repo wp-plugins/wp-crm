@@ -1,5 +1,32 @@
 @import url("wp_crm_global.css");
 
+.wp_crm_secondary_ajax_result .wpc_action_wrapper {
+    background: none repeat scroll 0 0 #BBCCFF;
+    clear: both;
+    margin-bottom: 25px;
+    position: relative;
+    top: 10px;
+}
+
+.wp_crm_secondary_ajax_result .wpc_action_wrapper .wpc_action_fields {
+  padding: 12px 16px 6px;
+}
+
+.wp_crm_secondary_ajax_result .wpc_action_wrapper .wpc_action_fields input[type=text] {
+    background: none repeat scroll 0 0 #EEF2FF;
+    border: 1px solid #A1A6CC;
+    border-radius: 4px 4px 4px 4px;
+    padding: 1px 4px;
+}
+
+.wp_crm_secondary_ajax_result .wpc_action_wrapper .wpc_action_fields input[type=text].small_field  {
+  width: 50px;
+}
+
+.wp_crm_secondary_ajax_result .wpc_action_wrapper .wpc_actions{
+   background: none repeat scroll 0 0 #ADBEEF;
+    padding: 9px 0 8px 10px;
+}
 
 .ui-datepicker  {
     background: none repeat scroll 0 0 #F2F2F2;

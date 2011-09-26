@@ -1,6 +1,10 @@
 <?php
 
-  require_once(ABSPATH . 'wp-admin/includes/class-wp-list-table.php');
+  if(file_exists(ABSPATH . 'wp-admin/includes/class-wp-list-table.php')) {
+    require_once(ABSPATH . 'wp-admin/includes/class-wp-list-table.php');
+  } else {
+    return;
+  }
   
   class WP_CMR_List_Table extends WP_List_Table  {
   

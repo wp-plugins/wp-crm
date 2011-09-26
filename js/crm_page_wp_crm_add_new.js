@@ -225,8 +225,43 @@ jQuery(document).ready(function() {
       jQuery('.add_another', parent_row).hide();
     }
   });
+ 
+  
 });
 
+  /**
+   * Looks through all input fields and generates new random keys (should be done after new elements are added to DOM
+   *
+   *
+   */
+  function wp_crm_refresh_random_keys(element) {  
+  
+  
+    
+      if(jQuery(element).attr("random_hash")) {
+      
+        var old_hash = jQuery(element).attr("random_hash");
+      
+        var new_hash = Math.floor(Math.random()*10000000);
+        
+        var current_html = jQuery(element).html();
+        
+        console.log(current_html);
+        
+        old_hash = new RegExp(old_hash, 'gi');
+        
+        var new_html = current_html.replace(old_hash,new_hash); 
+        
+        jQuery(element).html(new_html);
+       
+        
+        jQuery(element).attr("random_hash", new_hash);
+        
+      }
+ 
+  }
+  
+  
   /**
    * Contact history and messages for a user
    *

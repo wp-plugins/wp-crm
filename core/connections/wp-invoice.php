@@ -95,27 +95,41 @@
   
   }    
 
-  function get_user_worth($user_id) {
+  function get_user_worth($user_id, $args = "") {
     global $wpdb;
    
+    $defaults = array(
+      'format_number' => 'true'
+    );
+
+    $args = wp_parse_args( $args, $defaults );
+    extract( $args, EXTR_SKIP );
+  
+    $user_email = $wpdb->get_var("SELECT user_email FROM {$wpdb->users} WHERE ID = {$user_id}");
+    
     if($have_sales = $wpdb->get_var("
       SELECT SUM(value) 
       FROM {$wpdb->prefix}wpi_object_log as log
-      LEFT JOIN {$wpdb->posts} as invoices
-      ON log.object_ID = invoices.ID
-      WHERE user_id = '{$user_id}' 
-      AND action = 'add_payment'
-      AND post_type = 'wpi_object'
+      LEFT JOIN {$wpdb->postmeta} as invoice_meta
+      ON log.object_ID = invoice_meta.post_id
+      WHERE action = 'add_payment'
+      AND meta_value = '{$user_email}'
+      AND meta_key = 'user_email'
       "
     )) {
+    
       if(class_exists('WPI_Functions')) {
-        return WPI_Functions::currency_format($have_sales);
+        if($args['format_number'] == 'true') {
+          return WPI_Functions::currency_format($have_sales);
+        } else {
+          return $have_sales;        
+        }
       } else {
         return $have_sales;
       }      
       
     }
-    
+    //echo $wpdb->last_query;
     return false;
   
   }

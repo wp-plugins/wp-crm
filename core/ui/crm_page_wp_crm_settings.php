@@ -125,10 +125,25 @@ if(empty($wp_crm['data_structure']['attributes'])) {
         <ul>
           <li>
           <input id="replace_default_user_page" value='true' type="checkbox"  <?php checked($wp_crm['configuration']['replace_default_user_page'], 'true'); ?> name="wp_crm[configuration][replace_default_user_page]" />
-          <label for="replace_default_user_page"><?php _e('Replace default WordPress User page with WP-CRM.'); ?></label>          
+          <label for="replace_default_user_page"><?php _e('Replace default WordPress User page with WP-CRM.', 'wp_crm'); ?></label>          
           </li>
         </ul>
       </td>
+      </tr>
+          <tr>
+      <th><?php _e('Email Settings','wp_crm'); ?></th>
+      <td>
+        <ul>
+          <li>
+          <input id="wp_crm_default_email" class="regular-text" type="text" value="<?php echo esc_attr($wp_crm['configuration']['default_sender_email']); ?>" name="wp_crm[configuration][default_sender_email]" />
+          <label for="wp_crm_default_email"><?php _e('Default sender e-mail address.', 'wp_crm'); ?></label>          
+          <div class="description"><?php printf(__('If you are not using SMTP, it is advisable to use a @%s email address to avoid being spammed.', 'wp_crm'), $_SERVER['HTTP_HOST']); ?></div>
+          </li>
+        </ul>
+      </td>
+      </tr>
+      
+      
     </table>
   </div>
 

@@ -1,11 +1,50 @@
 @import url("wp_crm_global.css");
 
 
-.major-publishing-actions {
-  border-top: medium none;
-  clear: both;
-  padding: 10px 10px 8px;
+.wp_crm_message.updated {
+  margin: 9px 0 8px;
 }
+
+
+
+div.wp_crm_visualize_results.no_data {
+  height: auto;
+}
+
+div.wp_crm_visualize_results {
+    background: none repeat scroll 0 0 #F7F7F7;
+    border: 1px solid #EAEAEA;
+    border-radius: 8px 8px 8px 8px;
+    clear: both;
+    height: 370px;
+    margin-bottom: 20px;
+    overflow: auto;
+    padding: 13px 10px 10px;
+    position: relative;
+    top: 9px;
+  
+}
+
+
+.wp_crm_visualize_results .wp_crm_chart_title { 
+    background: none repeat scroll 0 0 #EAEAEA;
+    display: block;
+    font-weight: bold;
+    margin-bottom: 0;
+    margin-top: 0px;
+    padding: 8px 0;
+    text-align: center;
+    width: 100%;
+}
+
+.wp_crm_visualize_results .wp_crm_chart_wrapper {
+    display: table-cell;
+    height: 350px;
+    padding: 0 11px 0 0;
+    position: relative;
+    width: 380px;
+}
+
 
 #actions.postbox  .inside {
   padding: 0;
@@ -21,13 +60,6 @@
   width: 100%;
 }
 
-#actions.postbox  .inside .wp_crm_user_actions {
-  background: none repeat scroll 0 0 #4E4E4D;
-  border-top: 3px solid #3A3939;
-  color: #FFFFFF;
-  padding: 10px;
-}
-
 #actions.postbox  .inside .publishing-action {
   float: right;
   line-height: 23px;
@@ -40,6 +72,10 @@
 }
 
 td.wp_crm_user_card div.user_avatar {
+  width: 50px;
+  height: 50px;
+  background: #EDEDED;
+  border: 1px solid #D6D6D6;
   margin: 4px 0 0 3px;
 } 
 

@@ -51,7 +51,8 @@
     'View Overview' => __('View individual prospects and the overview page.', 'wp_crm'),
     'View Profiles' => __('View a user\'s profile.', 'wp_crm'),
     'Add User Messages' => __('Add to correspondence thread on a user\'s profile.', 'wp_crm'),
-    'Send Group Message' => __('Send a group message to users.', 'wp_crm')
+    'Send Group Message' => __('Send a group message to users.', 'wp_crm'),
+    'Perform Advanced Functions' => __('Perform advanced functions such as mergins users.', 'wp_crm')
   );
 
 

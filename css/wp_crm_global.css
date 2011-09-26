@@ -1,3 +1,18 @@
+.major-publishing-actions {
+  border-top: medium none;
+  clear: both;
+  padding: 10px 10px 8px;
+}
+
+
+.inside .wp_crm_user_actions {
+  background: none repeat scroll 0 0 #4E4E4D;
+  border-top: 3px solid #3A3939;
+  color: #FFFFFF;
+  padding: 10px;
+}
+
+
 .wp_crm_ajax_update_message {
   display:none;
 }
@@ -132,6 +147,10 @@ pre {
   color: #ADADAD;
   cursor: pointer;
   font-size: 0.9em;    
+}
+
+.wp_crm_orange_link a:link  {
+  color: #FFD565 !important;
 }
 
 .wp_crm_orange_link:active {

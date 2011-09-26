@@ -5,6 +5,13 @@
  *
 */
 jQuery(document).ready(function() {
+
+
+  jQuery(".wp_crm_cancel_ajax_action").live("click", function() {
+    var ajax_wrapper = jQuery(this).parents(".wpc_action_wrapper");
+    ajax_wrapper.remove();
+    
+  });
   
   jQuery('.wp_crm_toggle').live('click',function() {
     var toggle_what = jQuery(this).attr('toggle');

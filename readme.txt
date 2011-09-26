@@ -15,6 +15,8 @@ WordPress already comes with some basic user management functions - WP-CRM expan
 
 Your WP control panel can effectively be used to manage all your customers, vendors, partners, affiliates, etc.
 
+This plugin is in beta stages.
+
 = Core Features =
 * Excellent user organization, filtering and editing.
 * Ability to easily add new user data attributes (i.e. Company Name).
@@ -54,6 +56,7 @@ Visit CRM -> Settings and click on the "Data" tab.  There you will  be able to a
 2. User editing
 4. Incoming contact messages overview
 3. Example of the contact form in action
+4. Graphs and charts.
 
 == Upgrade Notice ==
 
@@ -61,6 +64,15 @@ Visit CRM -> Settings and click on the "Data" tab.  There you will  be able to a
 * Initial public release.
  
 == Changelog ==
+
+= 0.19 =
+* Added graphs for displaying quantifiable attributes.
+* Fixes to avoid deletion of existing users when reviewing received messages.
+* Added default data that is installed on first run to include contact messages and notifications.
+* Added filtering options to contact messages screen.
+* Setup default UI settings for metabox layout.
+* Added a setting for default "system" e-mail address.
+* Added contextual help to user editing page.
 
 = 0.18 =
 * Added check to prevent self-deletion. 
