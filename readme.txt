@@ -20,10 +20,10 @@ This plugin is in beta stages.
 = Core Features =
 * Excellent user organization, filtering and editing.
 * Ability to easily add new user data attributes (i.e. Company Name).
-* Form Creation.
-* User CSV Exporting.
-* Contact Message Management.
-* Keep track of customer, client and vendor notes.
+* Dynamic charts representing attributes with quantifiable data.
+* Form Creation and Contact Message Management.
+* User CSV Exporting.* 
+* User activity and note tracking.
 
 = Contact Forms =
 
@@ -42,7 +42,8 @@ This plugin is in beta stages.
 == Installation ==
 
 Immediately after activation you will see a new "CRM" section which will list your existing users.
-To configure, visit CRM -> Settings.
+Default data will be loaded on the first install, which can then be configured further on the CRM -> Settings page.
+For additional help, please reference the contextual help dropdowns the different plugin pages.
 
 == Frequently Asked Questions == 
 
@@ -54,9 +55,9 @@ Visit CRM -> Settings and click on the "Data" tab.  There you will  be able to a
 
 1. Main view and filter
 2. User editing
-4. Incoming contact messages overview
-3. Example of the contact form in action
-4. Graphs and charts.
+3. Incoming contact messages overview
+4. Example of the contact form in action
+5. Graphs and charts.
 
 == Upgrade Notice ==
 
