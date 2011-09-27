@@ -82,7 +82,7 @@ class class_contact_messages {
 
       if($success) {
         $return['success'] = 'true';
-        $return['message'] = _('Message trashed.', 'wp_crm');
+        $return['message'] = __('Message trashed.', 'wp_crm');
         $return['action'] = 'hide_element';
         return $return;
       }
@@ -183,12 +183,11 @@ class class_contact_messages {
       $object = (array) $data['object'];
 
 
+      $return_data = $object;
+
+      //** Rename some keys for convinience */
       $return_data['ID'] = $object['message_id'];
-      $return_data['user_id'] = $object['user_id'];
-      $return_data['total_messages'] = $object['total_messages'];
       $return_data['status'] = $object['value'];
-      $return_data['text'] = $object['text'];
-      $return_data['time'] = $object['time'];
 
       return $return_data;
 
@@ -210,7 +209,18 @@ class class_contact_messages {
 
       $object = $cell_data['object'];
       $user_id = $object['user_id'];
-
+      
+      if($associated_object = $object['associated_object']) {      
+        $associated_object = get_post($associated_object);
+        
+        //** Only allow specific post types to be "associated "*/
+        if(apply_filters('wp_crm_associated_post_types', false, $associated_object->post_type)) {
+          $post_type = get_post_type_object($associated_object->post_type);
+        } else {
+          unset($associated_object);
+        }
+      }
+ 
 
       switch($cell_data['column_name']) {
 
@@ -256,10 +266,16 @@ class class_contact_messages {
           $additional_messages = ($total_messages - 1);
           ob_start();
 
+          //print_r($object);
           ?>
 
             <ul>
               <li><?php echo  CRM_UD_F::parse_urls(nl2br($object['text']), 100,'_blank'); ?></li>
+              
+              <?php if($associated_object) { ?>
+              <li><?php echo sprintf(__('Related %s:','wp_crm'), $post_type->labels->singular_name); ?> <a href="<?php echo admin_url("post.php?post={$associated_object->post_ID}&action=edit"); ?>" target="_blank"><?php echo $associated_object->post_title; ?></a></li>
+              <?php } ?>
+              
               <li><?php echo human_time_diff(strtotime($object['time'])); ?> <?php _e('ago'); ?>.
                 <?php if($additional_messages) { echo '<a href="' . admin_url("admin.php?page=wp_crm_add_new&user_id=$user_id") . '">' . $additional_messages . ' ' . __('other messages.') . '</a>'; }  ?>
               </li>
@@ -424,7 +440,7 @@ class class_contact_messages {
    * Copyright 2011 Andy Potanin, Usability Dynamics, Inc.  <andy.potanin@usabilitydynamics.com>
    */
   function draw_form($form_settings) {
-    global $wp_crm;
+    global $wp_crm, $post;
 
      extract($form_settings);
 
@@ -495,6 +511,7 @@ class class_contact_messages {
         <input class="<?php echo md5($wp_crm_nonce . '_submit'); ?>" type="submit" value="<?php echo $submit_text; ?>" />
       </div>
       <input type="hidden" name="form_slug" value="<?php echo md5($form_slug); ?>" />
+      <input type="hidden" name="associated_object" value="<?php echo $post->ID; ?>" />
     </li>
   </ul>
   </form>
@@ -574,6 +591,42 @@ class class_contact_messages {
    */
   function insert_message($user_id, $message, $form_slug) {
       $insert_id = WP_CRM_F::insert_event("object_id={$user_id}&user_id={$user_id}&attribute=contact_form_message&text={$message}&value=new&other={$form_slug}");
+      
+      if($insert_id) {
+        return $insert_id;      
+      }
+      
+      return false;
+  }
+
+  /**
+   * Insert message meta into log meta
+   *
+   * @version 0.20
+   * Copyright 2011 Andy Potanin, Usability Dynamics, Inc.  <andy.potanin@usabilitydynamics.com>
+   */
+  function insert_message_meta($message_id, $meta_key, $meta_value, $args = false) {
+    global $wpdb;
+    
+    $defaults = array(
+      'meta_group' => ''
+     );
+
+    $args = wp_parse_args( $args, $defaults );
+    
+    
+    $insert['message_id'] = $message_id;
+    $insert['meta_key'] = $meta_key;
+    $insert['meta_value'] = $meta_value;
+    
+    if(!empty($meta_group)) {
+      $insert['meta_group'] = $args['meta_group'];
+    }
+    
+    $wpdb->insert($wpdb->crm_log_meta, $insert);
+   
+    return $wpdb->insert_id;
+    
   }
 
 
@@ -611,6 +664,7 @@ class class_contact_messages {
     }
 
     $md5_form_slug = $_REQUEST['form_slug'];
+    $associated_object = $_REQUEST['associated_object'];
 
     foreach($wp_crm['wp_crm_contact_system_data'] as $form_slug => $form_data) {
       if($md5_form_slug == md5($form_slug)) {
@@ -665,6 +719,10 @@ class class_contact_messages {
     } else {
       //** Message is submitted. Do stuff. */
       $message_id = class_contact_messages::insert_message($user_id, $message, $confirmed_form_slug);
+      
+      if($associated_object) {
+        class_contact_messages::insert_message_meta($message_id, 'associated_object', $associated_object);
+      }
 
       $notification_info = (array) wp_crm_get_user($user_id);
       $notification_info['message_content'] = stripslashes($message);
@@ -869,13 +927,16 @@ class class_contact_messages {
     global $wp_crm;
 
     //** Check how many message exist */
-    $message_count = count(class_contact_messages::get_messages());
 
+    $new_message_count = count(class_contact_messages::get_messages());
 
     //** Only show message section if messages exist */
+    /*
     if($message_count) {
-      $wp_crm['pages']['contact_messages']['overview'] = add_submenu_page('wp_crm','Messages', 'Messages', 'WP-CRM: View Messages', 'wp_crm_contact_messages', array('class_contact_messages', 'page_loader'), '', 30);
     }
+    */
+    
+    $wp_crm['pages']['contact_messages']['overview'] = add_submenu_page('wp_crm','Messages', 'Messages' . ($new_message_count ? ' (' . $new_message_count . ')' : ''), 'WP-CRM: View Messages', 'wp_crm_contact_messages', array('class_contact_messages', 'page_loader'), '', 30);
 
     // Add columns to overview page
     add_filter("manage_{$wp_crm['pages']['contact_messages']['overview']}_columns", array('class_contact_messages', "overview_columns"));
@@ -1034,8 +1095,22 @@ class class_contact_messages {
       FROM {$wpdb->prefix}crm_log
       $where_query
       GROUP BY object_id
-      ORDER BY time DESC");
+      ORDER BY time DESC", ARRAY_A);
+      
 
+
+    //** Get messages meta */
+    foreach($messages as $key => $message_data) {
+      $meta_data = $wpdb->get_results("SELECT * FROM {$wpdb->crm_log_meta} WHERE message_id = {$message_data[message_id]}", ARRAY_A);      
+      
+      if(!empty($meta_data)) {
+        foreach($meta_data as $meta_data) {
+          $messages[$key][$meta_data['meta_key']] = $meta_data['meta_value'];          
+        }
+      }
+    
+    }
+ 
     //echo $wpdb->last_query;
 
     $messages = stripslashes_deep($messages);

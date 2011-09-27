@@ -683,7 +683,7 @@ class WP_CRM_F {
 
         $wpdb->update($wpdb->prefix . 'crm_log', array('value' => 'archived'), array('id' =>$object_id));
         $return['success'] = 'true';
-        $return['message'] = _('Message archived.', 'wp_crm');
+        $return['message'] = __('Message archived.', 'wp_crm');
         $return['action'] = 'hide_element';
 
       break;
@@ -695,7 +695,7 @@ class WP_CRM_F {
 
         if($wpdb->query("DELETE FROM {$wpdb->prefix}crm_log WHERE id = {$object_id}")) {
           $return['success'] = 'true';
-          $return['message'] = _('Message deleted.', 'wp_crm');
+          $return['message'] = __('Message deleted.', 'wp_crm');
           $return['action'] = 'hide_element';
         }
 
@@ -713,7 +713,7 @@ class WP_CRM_F {
         }
 
         $return['success'] = 'true';
-        $return['message'] = _('Sender trashed.', 'wp_crm');
+        $return['message'] = __('Sender trashed.', 'wp_crm');
         $return['action'] = 'hide_element';
         }
 
@@ -1814,10 +1814,10 @@ class WP_CRM_F {
   function activation() {
     global $current_user, $wp_crm, $wp_roles;
 
+    WP_CRM_F::maybe_install_tables();
 
     WP_CRM_F::manual_activation('auto_redirect=false&update_caps=true');
 
-    WP_CRM_F::maybe_install_tables();
 
   }
 
@@ -1837,8 +1837,14 @@ class WP_CRM_F {
     if(!$wpdb->crm_log) {
       $wpdb->crm_log = $wpdb->prefix . 'crm_log';
     }
+    
+    if(!$wpdb->crm_log_meta) {
+      $wpdb->crm_log_meta = $wpdb->crm_log . '_meta';
+    }
+    
+    require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
 
-    $sql[] = "CREATE TABLE {$wpdb->crm_log} (
+    $sql = "CREATE TABLE {$wpdb->crm_log} (
       id mediumint(9) NOT NULL AUTO_INCREMENT,
       object_id mediumint(9) NOT NULL,
       object_type VARCHAR(11),
@@ -1856,10 +1862,21 @@ class WP_CRM_F {
       other VARCHAR(255),
       UNIQUE KEY id (id)
     );";
+    dbDelta( $sql );
 
 
-    require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
-    dbDelta( implode(' ', $sql) );
+    $sql = "CREATE TABLE {$wpdb->crm_log_meta} (
+      meta_id mediumint(9) NOT NULL AUTO_INCREMENT,
+      message_id mediumint(9) NOT NULL,
+      meta_key VARCHAR(255),
+      meta_group VARCHAR(255),
+      meta_value TEXT,
+      UNIQUE KEY id (meta_id)
+    );";
+
+
+    dbDelta( $sql );
+    
 
 
 

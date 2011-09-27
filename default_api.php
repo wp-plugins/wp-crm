@@ -641,3 +641,42 @@ if(!function_exists('wp_crm_add_to_user_log')) {
   }
 
 }
+
+
+//** Other Hooks with Core and With Plugins We Like */
+add_action('wp_crm_associated_post_types', 'wpp_crm_associated_post_types', 0, 2);
+
+function wpp_crm_associated_post_types($current, $post_type) {
+  
+  if($post_type == 'property') {
+    return true;
+  }
+  
+  return false;
+
+}
+add_action('retrieve_password', 'wp_crm_retrieve_password');
+
+
+function wp_crm_retrieve_password($user_login) {
+  global $wpdb;
+  
+  $user_id = username_exists($user_login);  
+  
+  if(!$user_id) {
+    return;
+  }
+  
+  $key = $wpdb->get_var($wpdb->prepare("SELECT user_activation_key FROM {$wpdb->users} WHERE user_login = %s", $user_login));
+	if ( empty($key) ) {
+		$key = wp_generate_password(20, false);
+		do_action('retrieve_password_key', $user_login, $key);
+		$wpdb->update($wpdb->users, array('user_activation_key' => $key), array('user_login' => $user_login));
+	}
+ 
+  $reset_url = network_site_url("wp-login.php?action=rp&key=$key&login=" . rawurlencode($user_login), 'login');
+  $message .= __('Password reset initiated: ', 'wp_crm') . '<a href="' . $reset_url . '">' . $reset_url . '</a>';
+  
+  wp_crm_add_to_user_log($user_id, $message);
+
+}

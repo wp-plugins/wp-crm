@@ -41,7 +41,14 @@ class WP_CRM_Core {
 
     add_action('init', array('WP_CRM_Core', 'init'));
 
-
+    if(!$wpdb->crm_log) {
+      $wpdb->crm_log = $wpdb->prefix . 'crm_log';
+    }
+    
+    if(!$wpdb->crm_log_meta) {
+      $wpdb->crm_log_meta = $wpdb->crm_log . '_meta';
+    }
+    
   }
 
 
@@ -145,12 +152,14 @@ class WP_CRM_Core {
 
 
     //** Check if installed DB version is older than THIS version */
-    if(!get_option('wp_crm_caps_set')) {
-      WP_CRM_F::manual_activation('update_caps=true&auto_redirect=true');
-    }
+    if(is_admin()) {
+      if(!get_option('wp_crm_caps_set')) {
+        WP_CRM_F::manual_activation('update_caps=true&auto_redirect=true');
+      }
 
-    //** Load defaults */
-    WP_CRM_F::manual_activation();
+      //** Load defaults */
+      WP_CRM_F::manual_activation();
+    }
 
 
     // Filers are applied

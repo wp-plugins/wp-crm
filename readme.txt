@@ -66,6 +66,10 @@ Visit CRM -> Settings and click on the "Data" tab.  There you will  be able to a
  
 == Changelog ==
 
+= 0.20 =
+* Added hook to add new user password reset link to user profile stream.
+* Associated objects, such as properties, are now associated with messages when the contact form shortcode is filled out from a property page.
+
 = 0.19 =
 * Added graphs for displaying quantifiable attributes.
 * Fixes to avoid deletion of existing users when reviewing received messages.

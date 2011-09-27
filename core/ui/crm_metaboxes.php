@@ -167,18 +167,17 @@ class crm_page_wp_crm_add_new {
    *
    */
   function special_actions($object) {
-    global $current_user;
+    global $current_user, $wpdb;
     
-   $user_id = $object['ID']['default'][0];
+    $user_id = $object['ID']['default'][0];
+    
 
-   
    ?>
 <div id="minor-publishing">
   <ul>
 
   <?php if(current_user_can( 'edit_users' )) { ?>
   <li><?php _('User Role:'); ?> <select id="wp_crm_role" name="wp_crm[user_data][role][<?php echo rand(1000,9999); ?>][value]"><option value=""></option><?php wp_dropdown_roles($object['role']['default'][0]); ?></select>
-  
 
   <li class="wp_crm_advanced_user_actions">
     <div class="wp_crm_toggle_advanced_user_actions wp_crm_link"><?php _e('Toggle Advanced User Settings'); ?></div>
