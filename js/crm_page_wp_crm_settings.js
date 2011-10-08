@@ -58,15 +58,21 @@ jQuery(document).ready(function() {
     });
 
   });
-  
+
   // Generate fake users
   jQuery("#wp_crm_generate_fake_users").click(function() {
+
+    var number_of_users = jQuery("#wp_crm_fake_users").val();
+
+    if(!confirm("Are you sure you want to generate " + number_of_users + " user(s)?")) {
+      return;
+    }
 
     var settings_block = jQuery(this).parents('.wp_crm_settings_block');
 
     jQuery.post(ajaxurl, {
-      action: 'wp_crm_do_fake_users', 
-      number: jQuery("#wp_crm_fake_users").val(),
+      action: 'wp_crm_do_fake_users',
+      number: number_of_users,
       do_what: 'generate'
     }, function(result) {
       jQuery('.wp_crm_class_pre', settings_block).show();
@@ -74,7 +80,29 @@ jQuery(document).ready(function() {
     });
 
   });
-  
+
+
+  // Delete fake users
+  jQuery("#wp_crm_delete_fake_users").click(function(event) {
+
+    event.preventDefault();
+    
+    if(!confirm("Are you sure you want to delete ALL fake users you have generated?\nNone of the fake user information will not be reassigned, but completely removed.")) {
+      return;
+    }
+
+    var settings_block = jQuery(this).parents('.wp_crm_settings_block');
+
+    jQuery.post(ajaxurl, {
+      action: 'wp_crm_do_fake_users',
+      do_what: 'remove'
+    }, function(result) {
+      jQuery('.wp_crm_class_pre', settings_block).show();
+      jQuery('.wp_crm_class_pre', settings_block).text(result);
+    });
+
+  });
+
 // Return reprot of user meta usage and typical data
   jQuery("#wp_crm_show_meta_report").click(function() {
 

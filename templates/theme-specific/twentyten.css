@@ -17,7 +17,7 @@
   
  .wp_crm_contact_form li.wp_crm_submit_row div.wp_crm_input_wrapper,
  .wp_crm_contact_form li.wp_crm_message_field div.wp_crm_input_wrapper {
-  margin-left: 170px;
+  margin-left: 175px;
   
  }
  .wp_crm_contact_form li.wp_crm_submit_row {
@@ -37,11 +37,23 @@
  }
  .wp_crm_contact_form li div.wp_crm_input_wrapper{
   width: 400px;
+  margin-bottom: 10px;
+ }
+ .wp_crm_contact_form li div.wp_crm_input_wrapper input {
+  margin-bottom: 0;
  }
  
+ .wp_crm_contact_form li div.wp_crm_input_wrapper input.regular-text  {
+  width: 15em;
+ }
+ 
+ .wp_crm_contact_form li div.wp_crm_input_wrapper .wp_crm_error_messages {
+  color: red;
+  font-size: 0.9em;
+ }
  
  .wp_crm_contact_form li.wp_crm_form_response div{
-    margin-left: 170px; 
+    margin-left: 175px; 
     margin-top: 12px;
     padding: 10px;
  }

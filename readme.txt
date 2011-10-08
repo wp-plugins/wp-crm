@@ -1,7 +1,7 @@
 === WP-CRM - Customer Relations Management for WordPress ===
 Contributors: Usability Dynamics, andypotanin
-Donate link: http://twincitiestech.com/plugins/
-Tags: CRM, user management, contact form, email, feedback, form, contact form plugin
+Donate link: http://usabilitydynamics.com/products/
+Tags: CRM, user management, contact form, email, feedback, form, contact form plugin, WordPress CRM, contact form builder, newsletters, bbpress
 Requires at least: 3.0
 Tested up to: 3.2.2
 Stable tag: trunk
@@ -65,6 +65,18 @@ Visit CRM -> Settings and click on the "Data" tab.  There you will  be able to a
 * Initial public release.
  
 == Changelog ==
+
+= 0.21 =
+* Ability to create user accounts without e-mail addresses.
+* Contact forms verify that a user with an e-mail address does not already exist before processing form.
+* Contact form notifications can be enabled even when no message has been filled out.
+* Fake users created via the plugin can be deleted in one click.
+* Bug fix with user fields not being able to be blanked out.
+* User search filter automatically removes white space.
+* Added visualization for incoming contact form messages.
+* Added extra classes to shortcode contact form on the front-end.
+* bbPress forum participation can be displayed on user overview.
+* WP-Invoice integration - invoices can be seen in CRM profile.
 
 = 0.20 =
 * Added hook to add new user password reset link to user profile stream.

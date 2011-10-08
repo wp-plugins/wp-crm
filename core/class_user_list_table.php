@@ -237,62 +237,7 @@ class CRM_User_List_Table extends WP_CMR_List_Table {
 
         case 'user_card':
 
-
-          ob_start();
-          ?>
-
-            <div class='user_avatar'>
-              <?php if(current_user_can('WP-CRM: View Profiles')) { ?>
-                <a href='<?php echo admin_url("admin.php?page=wp_crm_add_new&user_id=$user_id"); ?>'><?php echo  get_avatar( $user_id, 50 ); ?></a>
-              <?php } else { ?>
-                <?php echo  get_avatar( $user_id, 50 ); ?>
-              <?php } ?> 
-            </div>
-            <ul class="user_card_data">
-              <li class='primary'>
-                <?php if(current_user_can('WP-CRM: View Profiles')) { ?>
-                <a href='<?php echo  admin_url("admin.php?page=wp_crm_add_new&user_id=$user_id"); ?>'><?php echo WP_CRM_F::get_primary_display_value($user_object); ?></a>
-                <?php } else { ?>
-                <?php echo WP_CRM_F::get_primary_display_value($user_object); ?>
-                <?php } ?> 
-              </li>
-              <?php if(is_array($wp_crm['configuration']['overview_table_options']['main_view'])) { foreach($wp_crm['configuration']['overview_table_options']['main_view'] as $key) { ?>
-                <li class="<?php echo $key; ?>">
-                  <?php
-
-                    unset($visible_options);
-
-                    if($wp_crm['data_structure']['attributes'][$key]['has_options']) {
-                      $visible_options = WP_CRM_F::list_options($user_object, $key);
-                    } else {
-
-                      $visible_options[] = apply_filters('wp_crm_display_' . $key, WP_CRM_F::get_first_value($user_object[$key]),$user_id, $user_object,  'user_card');
-                    }
-
-                    if(is_array($visible_options)) {
-                      foreach($visible_options as $this_key => $option) {
-                        if(CRM_UD_F::is_url($option)) {
-                          $visible_options[$this_key] = "<a href='$option'>$option</a>";
-                        }
-                      }
-                    }
-
-                     if(is_array($visible_options)) {
-                      echo '<ul><li>' . implode('</li><li>', $visible_options) . '</li></ul>';
-                    }
-
-
-
-                  ?></li>
-              <?php } } ?>
-            </ul>
-
-          <?php
-
-          $content = ob_get_contents();
-          ob_end_clean();
-          $r .= $content;
-
+          $r .= WP_CRM_F::render_user_card(array('user_id' => $user_id, 'user_object' => $user_object, 'full_column_name' => $full_column_name));
 
         break;
 

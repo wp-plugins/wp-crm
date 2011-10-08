@@ -14,6 +14,133 @@ class WP_CRM_F {
 
 
 /**
+   * Checks a field for conflicts
+   *
+   * @since 0.21
+   *
+   */
+   function check_data_field($key = false, $value = false) {
+    global $wpdb;
+
+    if(!$key || !$value) {
+      return false;
+    }
+
+    //** Check primary table */
+    if($user_id = $wpdb->get_var("SELECT ID FROM {$wpdb->users} WHERE {$key} = '{$value}'")) {
+      return $user_id;
+    }
+
+    //** Check meta fields */
+    if($user_id = $wpdb->get_var("SELECT user_id FROM {$wpdb->usermeta} WHERE meta_key = '{$key}' AND meta_value = '{$value}'")) {
+      return $user_id;
+    }
+
+
+    return false;
+
+   }
+
+
+/**
+   * Returns user's information as set in Overview Page User Card
+   *
+   * @since 0.21
+   *
+   */
+   function render_user_card($args = false) {
+    global $wp_crm;
+
+    if(!$args) {
+      return;
+    }
+
+    $defaults = array(
+        'avatar_width' => 50,
+        'do_not_display_user_avatars' => ($wp_crm['configuration']['do_not_display_user_avatars'] == 'true' ? true : false)
+    );
+
+    $args = wp_parse_args( $args, $defaults);
+
+    extract($args);
+
+    if(!isset($user_object)) {
+      $user_object = wp_crm_get_user($user_id);
+    }
+
+     //** Get selected attributes from Settings page */
+    $user_card_attributes = $wp_crm['configuration']['overview_table_options']['main_view'];
+
+    //** Load Default user card values to avoid having blank user cards */
+    if(!is_array($user_card_attributes)) {
+      $user_card_attributes[] = 'display_name';
+      $user_card_attributes[] = 'user_email';
+    }
+
+
+    ob_start();
+    ?>
+
+    <?php if(!$do_not_display_user_avatars) { ?>
+    <div class='user_avatar'>
+      <?php if(current_user_can('WP-CRM: View Profiles')) { ?>
+        <a href='<?php echo admin_url("admin.php?page=wp_crm_add_new&user_id={$user_id}"); ?>'><?php echo get_avatar( $user_id, $avatar_width ); ?></a>
+      <?php } else { ?>
+        <?php echo  get_avatar( $user_id, $avatar_width ); ?>
+      <?php } ?>
+    </div>
+    <?php } ?>
+
+    <ul class="user_card_data">
+      <li class='primary'>
+        <?php if(current_user_can('WP-CRM: View Profiles')) { ?>
+        <a href='<?php echo admin_url("admin.php?page=wp_crm_add_new&user_id={$user_id}"); ?>'><?php echo WP_CRM_F::get_primary_display_value($user_object); ?></a>
+        <?php } else { ?>
+        <?php echo WP_CRM_F::get_primary_display_value($user_object); ?>
+        <?php } ?>
+      </li>
+      <?php foreach($user_card_attributes as $key) { ?>
+        <li class="<?php echo $key; ?>">
+          <?php
+
+            unset($visible_options);
+
+            if($wp_crm['data_structure']['attributes'][$key]['has_options']) {
+              $visible_options = WP_CRM_F::list_options($user_object, $key);
+            } else {
+              $visible_options[] = apply_filters('wp_crm_display_' . $key, WP_CRM_F::get_first_value($user_object[$key]),$user_id, $user_object,  'user_card');
+            }
+
+            if(is_array($visible_options)) {
+              foreach($visible_options as $this_key => $option) {
+                if(CRM_UD_F::is_url($option)) {
+                  $visible_options[$this_key] = "<a href='$option'>$option</a>";
+                }
+              }
+            }
+
+             if(is_array($visible_options)) {
+              echo '<ul><li>' . implode('</li><li>', $visible_options) . '</li></ul>';
+            }
+
+          ?></li>
+      <?php } ?>
+    </ul>
+
+    <?php
+
+    $content = ob_get_contents();
+    ob_end_clean();
+
+    return $content;
+
+
+   }
+
+
+
+
+/**
    * Visualize quantifiable data
    *
    * @todo There may be an issue with overlapping attributes for certain users, as unaccounted_for sometimes results in a negative number
@@ -374,7 +501,7 @@ class WP_CRM_F {
       if($args['do_what'] == 'generate') {
 
 
-        $names = array('John', 'Bill', 'Randy', 'Mary', 'Jenna', 'Beth', 'Allyson', 'Samantha');
+        $names = array('Gilbert', 'James', 'Anthony', 'Mark', 'Kimberly',  'John', 'Bill', 'Randy', 'Mary', 'Jenna', 'Beth', 'Allyson', 'Samantha', 'Davis', 'Roberts', 'Campbell', 'Edwards', 'Martinez');
         $emails = array('gmail.com', 'yahoo.com', 'msn.com', 'acme.com', 'xyz.com', 'mac.com', 'microsoft.com', 'google.com');
 
 
@@ -407,6 +534,22 @@ class WP_CRM_F {
 
       if($args['do_what'] == 'remove') {
 
+        //** Get all fake users */
+        $fake_users = $wpdb->get_col("SELECT user_id FROM {$wpdb->usermeta} WHERE meta_key = 'wp_crm_fake_user' AND meta_value =1");
+
+        if($fake_users) {
+          foreach($fake_users as $user_id) {
+            if(wp_delete_user($user_id)) {
+              $deleted_user[] = true;
+            }
+          }
+          $deleted_user = count($deleted_user);
+          echo "Fake users found. Deleted {$deleted_user} fake user(s)";
+
+        } else {
+          echo __('No fake users found.', 'wp_crm');
+        }
+
 
       }
 
@@ -416,7 +559,7 @@ class WP_CRM_F {
 /**
    * Performs a user search
    *
-   *
+   * @todo Need to add some sort of option, configured in settings, on whether the searches are inclusive or exclusive potanin@UD
    * @since 0.1
    *
    */
@@ -445,7 +588,7 @@ class WP_CRM_F {
           //** Handle search_string differently, it applies to all meta values */
           if($primary_key == 'search_string'){
             /* First, go through the users table */
-            $tofind = strtolower($key_terms);
+            $tofind = trim(strtolower($key_terms));
             $sql .= " AND (";
             $sql .= " u.ID IN (SELECT ID FROM {$wpdb->prefix}users WHERE LOWER(display_name) LIKE '%$tofind%' OR LOWER(user_email) LIKE '%$tofind%')";
             /* Now go through the users meta table */
@@ -777,8 +920,12 @@ class WP_CRM_F {
       return $array;
     }
 
-    if(isset($arary['default'][0])) {
-      return $arary['default'][0];
+    if(isset($array['value']) && !is_array($array['value'])) {
+      return $array['value'];
+    }
+
+    if(isset($array['default']['value']) && !is_array($array['default']['value'])) {
+      return $array['default']['value'];
     }
 
     foreach($array as $key => $data) {
@@ -902,30 +1049,40 @@ class WP_CRM_F {
         global $wp_crm;
 
         if(!empty($user_object) && is_numeric($user_object)) {
-            $user_object = wp_crm_get_user($user_object);
+          $user_object = wp_crm_get_user($user_object);
         }
 
-        if(!empty($wp_crm['data_structure']) && is_array($wp_crm['data_structure']['attributes'])) {
-            $attribute_keys = array_keys($wp_crm['data_structure']['attributes']);
-            foreach($attribute_keys as $key) {
+        if($primary_user_attribute = $wp_crm['configuration']['primary_user_attribute']) {
+          $primary_user_attribute = WP_CRM_F::get_first_value($user_object[$primary_user_attribute]);
 
-                if(!empty($user_object[$key]['default'])) {
-                  if(is_array($user_object[$key]['default'])) {
-                    return $user_object[$key]['default'][0];
-                  } else {
-                    return $user_object[$key]['default'];
-                  }
-                } else {
-                  //** Default is empty */
-                  if(is_array($user_object[$key])) {
-                    foreach($user_object[$key] as $some_value) {
-                      if(!empty($some_value)) {
-                        return $some_value;
-                      }
-                    }
-                  }
-                }
+          if(!empty($primary_user_attribute)) {
+            $return = $primary_user_attribute;
+          }
+        }
+
+        //** If unable to get value from primary user attribute, grab the first from attribute list */
+
+        if(!$return && !empty($wp_crm['data_structure']) && is_array($wp_crm['data_structure']['attributes'])) {
+
+          $attribute_keys = array_keys($wp_crm['data_structure']['attributes']);
+
+          foreach($attribute_keys as $key) {
+
+            if($return = WP_CRM_F::get_first_value($user_object[$key])) {
+              break;
             }
+
+          }
+        }
+
+        //** Default to user_login */
+        if(!$return || is_array($return)) {
+          $return = WP_CRM_F::get_first_value($user_object['user_login']);
+        }
+
+        //** Return values */
+        if($return) {
+          return $return;
         }
 
         return false;
@@ -1248,7 +1405,7 @@ class WP_CRM_F {
         foreach($values as $rand => $value_data) {  ?>
         <div class="wp_crm_input_wrap"  random_hash="<?php echo $rand; ?>" >
 
-        <input <?php echo $tabindex; ?> random_hash="<?php echo $rand; ?>" name="wp_crm[user_data][<?php echo $slug; ?>][<?php echo $rand; ?>][value]"  class="wp_crm_<?php echo $slug; ?>_field <?php echo $class; ?>" type="<?php echo $attribute['input_type']; ?>" value="<?php echo esc_attr($value_data['value']); ?>" />
+        <input <?php echo $tabindex; ?> wp_crm_slug="<?php echo esc_attr($slug); ?>" random_hash="<?php echo $rand; ?>" name="wp_crm[user_data][<?php echo $slug; ?>][<?php echo $rand; ?>][value]"  class="wp_crm_<?php echo $slug; ?>_field <?php echo $class; ?>" type="<?php echo $attribute['input_type']; ?>" value="<?php echo esc_attr($value_data['value']); ?>" />
 
         <?php if($attribute['has_options']) { ?>
           <select <?php echo $tabindex; ?>  random_hash="<?php echo $rand; ?>" name="wp_crm[user_data][<?php echo $slug; ?>][<?php echo $rand; ?>][option]">
@@ -1269,7 +1426,7 @@ class WP_CRM_F {
     <?php case 'textarea': foreach($values as $rand => $value_data) { ?>
       <div class="wp_crm_input_wrap" random_hash="<?php echo $rand; ?>" >
 
-       <textarea <?php echo $tabindex; ?> random_hash="<?php echo $rand; ?>" name="wp_crm[user_data][<?php echo $slug; ?>][<?php echo $rand; ?>][value]" class="wp_crm_<?php echo $slug; ?>_field <?php echo $class; ?>"><?php echo $value_data['value']; ?></textarea>
+       <textarea  wp_crm_slug="<?php echo esc_attr($slug); ?>"  <?php echo $tabindex; ?> random_hash="<?php echo $rand; ?>" name="wp_crm[user_data][<?php echo $slug; ?>][<?php echo $rand; ?>][value]" class="wp_crm_<?php echo $slug; ?>_field <?php echo $class; ?>"><?php echo $value_data['value']; ?></textarea>
 
         <?php if($attribute['has_options']) { ?>
           <select <?php echo $tabindex; ?>  random_hash="<?php echo $rand; ?>" name="wp_crm[user_data][<?php echo $slug; ?>][<?php echo $rand; ?>][option]">
@@ -1286,10 +1443,10 @@ class WP_CRM_F {
 
     <?php case 'checkbox': ?>
        <div class="wp_crm_input_wrap wp_checkbox_input wp-tab-panel"  >
-         <ul class='wp_crm_checkbox_list'>
+         <ul class="wp_crm_checkbox_list"  wp_crm_slug="<?php echo esc_attr($slug); ?>">
          <?php foreach($values as $rand => $value_data) { ?>
 
-         <li option_meta_value="<?php echo esc_attr($value_data['option']); ?>">
+         <li option_meta_value="<?php echo esc_attr($value_data['option']); ?>" >
             <input random_hash="<?php echo $rand; ?>" name="wp_crm[user_data][<?php echo $slug; ?>][<?php echo $rand; ?>][value]"  type='hidden' value="" />
             <input random_hash="<?php echo $rand; ?>" name="wp_crm[user_data][<?php echo $slug; ?>][<?php echo $rand; ?>][option]"  type='hidden' value="<?php echo esc_attr($value_data['option']); ?>" />
             <input id="wpi_checkbox_<?php echo $rand; ?>" <?php checked($value_data['enabled'], true); ?> <?php echo $tabindex; ?> random_hash="<?php echo $rand; ?>" name="wp_crm[user_data][<?php echo $slug; ?>][<?php echo $rand; ?>][value]"  class="wp_crm_<?php echo $slug; ?>_field <?php echo $class; ?>" type='<?php echo $attribute['input_type']; ?>' value="on" />
@@ -1303,7 +1460,7 @@ class WP_CRM_F {
     <?php break; case 'dropdown':  foreach($values as $rand => $value_data) { ?>
       <div class="wp_crm_input_wrap wp_dropdown_input"  random_hash="<?php echo $rand; ?>" >
 
-      <select <?php echo $tabindex; ?> random_hash="<?php echo $rand; ?>" name="wp_crm[user_data][<?php echo $slug; ?>][<?php echo $rand; ?>][option]">
+      <select  wp_crm_slug="<?php echo esc_attr($slug); ?>"  <?php echo $tabindex; ?> random_hash="<?php echo $rand; ?>" name="wp_crm[user_data][<?php echo $slug; ?>][<?php echo $rand; ?>][option]">
         <option value=""></option>
         <?php foreach($attribute['option_labels'] as $type_slug => $type_label): ?>
           <option  <?php selected($type_slug, $value_data['option']); ?> value="<?php echo $type_slug; ?>"><?php echo $type_label; ?></option>
@@ -1524,6 +1681,7 @@ class WP_CRM_F {
 
         $wp_crm['configuration']['overview_table_options']['main_view'] = array('display_name', 'user_email');
         $wp_crm['configuration']['default_sender_email'] = "CRM <$assumed_email>";
+        $wp_crm['configuration']['primary_user_attribute'] = 'display_name';
 
         $wp_crm['wp_crm_contact_system_data']['example_form']['title'] = __('Example Contact Form', 'wp_crm');
         $wp_crm['wp_crm_contact_system_data']['example_form']['full_shortcode'] = '[wp_crm_form form=example_contact_form]';

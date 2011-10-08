@@ -86,20 +86,20 @@ class WP_CRM_Core {
     // Find and register theme-specific style if a custom wp_properties.css does not exist in theme
     $theme_slug = get_option('stylesheet');
     if(file_exists( WP_CRM_Templates . "/theme-specific/{$theme_slug}.css")) {
-      wp_register_style('wp-crm-theme-specific', WP_CRM_URL . "/templates/theme-specific/{$theme_slug}.css",  array('wp-crm-default-styles'),WPP_Version);
+      wp_register_style('wp-crm-theme-specific', WP_CRM_URL . "/templates/theme-specific/{$theme_slug}.css",  array('wp-crm-default-styles'),WP_CRM_Version);
     }
 
     //** Load default styles */
     if(file_exists( WP_CRM_Path . "/templates/wp-crm-default-styles.css")) {
-      wp_register_style('wp-crm-default-styles', WP_CRM_URL . "/templates/wp-crm-default-styles.css",  array(),WPP_Version);
+      wp_register_style('wp-crm-default-styles', WP_CRM_URL . "/templates/wp-crm-default-styles.css",  array(),WP_CRM_Version);
     }
 
 
     if(file_exists( WP_CRM_Path . "/css/wp_crm_global.css")) {
-      wp_register_style('wp_crm_global', WP_CRM_URL . "/css/wp_crm_global.css",  array(),WPP_Version);
+      wp_register_style('wp_crm_global', WP_CRM_URL . "/css/wp_crm_global.css",  array(),WP_CRM_Version);
     }
 
-    wp_register_style('wp-crm-data-tables', WP_CRM_URL . "/css/crm-data-tables.css",  array(),WPP_Version);
+    wp_register_style('wp-crm-data-tables', WP_CRM_URL . "/css/crm-data-tables.css",  array(),WP_CRM_Version);
 
     // Plug page actions -> Add Settings Link to plugin overview page
     add_filter('plugin_action_links', array('WP_CRM_Core', 'plugin_action_links'), 10, 2 );
@@ -242,6 +242,9 @@ class WP_CRM_Core {
 
       die();
     }
+    
+    //** Make sure tables are up to date */
+    WP_CRM_F::maybe_install_tables();
   }
 
   /**
@@ -353,7 +356,9 @@ class WP_CRM_Core {
   function wp_crm_save_user_data_caller() {
 
     if(wp_verify_nonce($_REQUEST['wp_crm_update_user'], 'wp_crm_update_user')) {
-      wp_crm_save_user_data($_REQUEST['wp_crm']['user_data'], $_REQUEST['wp_crm']['args']);
+      $args = $_REQUEST['wp_crm']['args'];
+      $args['admin_save_action'] = true;
+      wp_crm_save_user_data($_REQUEST['wp_crm']['user_data'], $args);
     }
 
   }

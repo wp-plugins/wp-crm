@@ -99,8 +99,25 @@ if(empty($wp_crm['data_structure']['attributes'])) {
     <table class="form-table">
     <tr>
       <th>
+        <?php _e('Primary User Identifier','wp_crm'); ?>
+        <div class="description"><?php _e('The main user data field for identifying users.', 'wp_crm'); ?></div>
+      </th>
+      <td>        
+        <select id="wp_crm_primary_user_attribute" name="wp_crm[configuration][primary_user_attribute]">
+          <option value=""> - </option>
+         <?php foreach(apply_filters('wp_crm_primary_user_attribute_keys', $wp_crm['data_structure']['attributes']) as $key => $attribute_data) { ?>          
+            <option value="<?php echo esc_attr($key); ?>" <?php selected($key, $wp_crm['configuration']['primary_user_attribute']); ?>><?php echo $attribute_data['title']; ?> <?php echo ($attribute_data['quick_description'] ? '(' . $attribute_data['quick_description'] . ')' : ''); ?></option>
+        <?php } ?>
+        </select>
+        </ul>
+        </div>
+      </td>
+    </tr>
+    
+    <tr>
+      <th>
         <?php _e('Overview Page User Card','wp_crm'); ?>
-        <span class="description"><?php _e("Information to display in primary user information cell on overview table.", 'wp_crm'); ?></span>
+        <div class="description"><?php _e('User data to be displayed in the <b>Information</b> column.', 'wp_crm'); ?></div>
       </th>
       <td>
         <div class="wp-tab-panel">
@@ -108,7 +125,7 @@ if(empty($wp_crm['data_structure']['attributes'])) {
          <?php foreach(apply_filters('wp_crm_user_card_keys', $wp_crm['data_structure']['attributes']) as $key => $attribute_data): $rand = rand(1000,9999); ?>
           <li>
             <input type="checkbox" value="<?php echo $key; ?>" <?php CRM_UD_UI::checked_in_array($key, $wp_crm['configuration']['overview_table_options']['main_view']); ?> name="wp_crm[configuration][overview_table_options][main_view][]" id="<?php echo $key.$rand; ?>" />
-            <label for="<?php echo $key.$rand; ?>"><?php echo ($attribute_data['title'] ? $attribute_data['title'] : CRM_UD_F::de_slug($key)); ?></label>
+            <label for="<?php echo $key.$rand; ?>"><?php echo ($attribute_data['title'] ? $attribute_data['title'] : CRM_UD_F::de_slug($key)); ?> <?php echo ($attribute_data['quick_description'] ? '<span class="description">' . $attribute_data['quick_description'] . '</span>' : ''); ?></label>
           </li>
         <?php endforeach; ?>
         </ul>
@@ -124,9 +141,20 @@ if(empty($wp_crm['data_structure']['attributes'])) {
       <td>
         <ul>
           <li>
-          <input id="replace_default_user_page" value='true' type="checkbox"  <?php checked($wp_crm['configuration']['replace_default_user_page'], 'true'); ?> name="wp_crm[configuration][replace_default_user_page]" />
-          <label for="replace_default_user_page"><?php _e('Replace default WordPress User page with WP-CRM.', 'wp_crm'); ?></label>          
+            <input id="replace_default_user_page" value='true' type="checkbox"  <?php checked($wp_crm['configuration']['replace_default_user_page'], 'true'); ?> name="wp_crm[configuration][replace_default_user_page]" />
+            <label for="replace_default_user_page"><?php _e('Replace default WordPress User page with WP-CRM.', 'wp_crm'); ?></label>          
           </li>
+          
+          <li>
+            <input id="do_not_display_user_avatars" value='true' type="checkbox"  <?php checked($wp_crm['configuration']['do_not_display_user_avatars'], 'true'); ?> name="wp_crm[configuration][do_not_display_user_avatars]" />
+            <label for="do_not_display_user_avatars"><?php _e('Do not display user avatars on overview pages.', 'wp_crm'); ?></label>          
+          </li>         
+
+          <li>
+            <input id="allow_account_creation_with_no_email" value='true' type="checkbox"  <?php checked($wp_crm['configuration']['allow_account_creation_with_no_email'], 'true'); ?> name="wp_crm[configuration][allow_account_creation_with_no_email]" />
+            <label for="allow_account_creation_with_no_email"><?php _e('Allow user accounts to be created without an e-mail address.', 'wp_crm'); ?></label>          
+          </li>
+          
         </ul>
       </td>
       </tr>
@@ -363,35 +391,35 @@ if(empty($wp_crm['data_structure']['attributes'])) {
     </tr>
   </thead>
   <tbody>
-  <?php foreach($wp_roles->roles as $role_slug => $role):  $rand_id = rand(1000,9999); ?>
+  <?php if(is_array($wp_roles->roles)) { foreach($wp_roles->roles as $role_slug => $role) {  $rand_id = rand(1000,9999); ?>
    <tr class="wp_crm_dynamic_table_row" slug="<?php echo $role_slug; ?>"  new_row='false'>
 
       <td><?php echo $role['name']; ?></td>
 
         <td >
          <ul class="wp-tab-panel">
-          <?php foreach($wp_crm['data_structure']['attributes'] as $key => $attribute_data): ?>
+          <?php foreach($wp_crm['data_structure']['attributes'] as $key => $attribute_data) { ?>
           <li>
             <input <?php CRM_UD_UI::checked_in_array($key, $wp_crm['hidden_attributes'][$role_slug]); ?> id="<?php echo $key; ?>_<?php echo $rand_id; ?>" type="checkbox" name="wp_crm[hidden_attributes][<?php echo $role_slug; ?>][]" value="<?php echo $key; ?>" />
             <label for="<?php echo $key; ?>_<?php echo $rand_id; ?>"><?php echo $attribute_data['title']; ?></label>
           </li>
-          <?php endforeach; ?>
+          <?php } ?>
           </ul>
         </td>
         <td>
 
           <ul class="wp-tab-panel">
-          <?php foreach($role['capabilities'] as $cap_slug => $cap_setting): ?>
+          <?php foreach($role['capabilities'] as $cap_slug => $cap_setting) { ?>
 
             <li>
             <?php echo $cap_slug; ?>
             </li>
 
-          <?php endforeach; ?>
+          <?php } ?>
           </ul>
         </td>
         </tr>
-   <?php endforeach; ?>
+   <?php } }  ?>
   </tbody>
 </table>
 
@@ -502,6 +530,7 @@ if(empty($wp_crm['data_structure']['attributes'])) {
       <div class="wp_crm_settings_block">
         <?php _e('Generate ','wp_crm') ?> <input type="input" value="5" id="wp_crm_fake_users"> <?php _e('fake users. ','wp_crm') ?>
         <input type="button" value="<?php _e('Generate','wp_crm') ?>" id="wp_crm_generate_fake_users">
+        <a href="#" id="wp_crm_delete_fake_users"><?php _e('Delete All Fake Users','wp_crm') ?></a>
        <pre  class="wp_crm_class_pre hidden"></pre>
       </div>
 

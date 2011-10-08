@@ -31,7 +31,7 @@
 
     <div class="major-publishing-actions">
       <div class="other-action">
-        <span class="wp_crm_subtle_link wp_crm_toggle" toggle="wp_crm_user_actions"><?php _e('Show Actions'); ?></span>
+        <span class="wp_crm_subtle_link wp_crm_toggle" toggle="wp_crm_user_actions"><?php _e('Show Actions', 'wp_crm'); ?></span>
       </div>
       <div class="publishing-action">
         <?php submit_button( __('Filter Results'), 'button', false, false, array('id' => 'search-submit') ); ?>
@@ -41,9 +41,9 @@
 
     <div class="wp_crm_user_actions hidden">
       <ul class="wp_crm_action_list">
-      <li class="wp_crm_orange_link wp_crm_export_to_csv"><?php _e("Export to CSV"); ?></li>
+      <li class="wp_crm_orange_link wp_crm_export_to_csv"><?php _e('Export to CSV', 'wp_crm'); ?></li>
       <?php if(WP_CRM_F::get_quantifiable_attributes()) { ?>
-      <li class="wp_crm_orange_link wp_crm_visualize_results"><?php _e("Visualize User Data"); ?></li>
+      <li class="wp_crm_orange_link wp_crm_visualize_results"><?php _e('Visualize User Data', 'wp_crm'); ?></li>
       <?php } ?>
       <?php do_action('wp_crm_user_actions'); ?>
       </ul>

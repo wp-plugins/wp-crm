@@ -1,3 +1,33 @@
+
+
+div.wp_crm_visualize_results.no_data {
+  height: auto;
+}
+
+div.wp_crm_visualize_results {
+    background: none repeat scroll 0 0 #F7F7F7;
+    border: 1px solid #EAEAEA;
+    border-radius: 8px 8px 8px 8px;
+    clear: both;
+    margin-bottom: 20px;
+    overflow: auto;
+    padding: 13px 10px 10px;
+    position: relative;
+    top: 9px;
+  
+}
+
+.wp_crm_visualize_results .wp_crm_chart_title { 
+    background: none repeat scroll 0 0 #EAEAEA;
+    display: block;
+    font-weight: bold;
+    margin-bottom: 0;
+    margin-top: 0px;
+    padding: 8px 0;
+    text-align: center;
+    width: 100%;
+}
+
 .major-publishing-actions {
   border-top: medium none;
   clear: both;
@@ -144,7 +174,7 @@ pre {
 }
 
 .wp_crm_subtle_link {
-  color: #ADADAD;
+  color: #737373;
   cursor: pointer;
   font-size: 0.9em;    
 }
