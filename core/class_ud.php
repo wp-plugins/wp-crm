@@ -501,7 +501,6 @@ endif; /* f(!class_exists('CRM_UD_UI')): */
 
 if(!class_exists('CRM_UD_F')):
 
-
 /**
  * General Shared Functions used in UsabilityDynamics and TwinCitiesTech.com plugins and themes.
  *
@@ -514,7 +513,20 @@ if(!class_exists('CRM_UD_F')):
 
 class CRM_UD_F {
 
+  function shuffle_assoc(&$array) {
+    $keys = array_keys($array);
 
+    shuffle($keys);
+
+    foreach($keys as $key) {
+        $new[$key] = $array[$key];
+    }
+
+    $array = $new;
+
+    return true;
+  }
+  
  function get_column_names($table) {
   global $wpdb;
   

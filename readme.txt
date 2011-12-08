@@ -3,7 +3,7 @@ Contributors: Usability Dynamics, andypotanin
 Donate link: http://usabilitydynamics.com/products/
 Tags: CRM, user management, contact form, email, feedback, form, contact form plugin, WordPress CRM, contact form builder, newsletters, bbpress
 Requires at least: 3.0
-Tested up to: 3.2.2
+Tested up to: 3.3
 Stable tag: trunk
 
 
@@ -15,8 +15,6 @@ WordPress already comes with some basic user management functions - WP-CRM expan
 
 Your WP control panel can effectively be used to manage all your customers, vendors, partners, affiliates, etc.
 
-This plugin is in beta stages.
-
 = Core Features =
 * Excellent user organization, filtering and editing.
 * Ability to easily add new user data attributes (i.e. Company Name).
@@ -24,6 +22,9 @@ This plugin is in beta stages.
 * Form Creation and Contact Message Management.
 * User CSV Exporting.* 
 * User activity and note tracking.
+
+= Other Plugin Integration =
+* User Avatar - Plugin for uploading custom images for users.  Picture and upload functions are located under "Special Actions" in CRM profile pages when User Avatar plugin is activated.
 
 = Contact Forms =
 
@@ -61,10 +62,33 @@ Visit CRM -> Settings and click on the "Data" tab.  There you will  be able to a
 
 == Upgrade Notice ==
 
+= 0.30-b1 =
+* Required input fields that also have dropdown options now require that a dropdown value is selcted during validation, in addition to text. 
+
 = 0.08 =
+
 * Initial public release.
  
 == Changelog ==
+
+= 0.30 =
+* Added better BuddyPress integration - link to a user's BuddyPress profile can be enabled to display on the overview table for quick access.
+* Added Google Analytics Event tracking to contact forms.
+* Added Admin Bar and Color Scheme selection UI to CRM profiles. 
+* Added option to standardize Display Names by using values from other user attributes.
+* Improvements to WP-Property integration to allow properties associated with an inquiry to be displayed on the Messages page.
+* Required input fields that also have dropdown options now require that a dropdown value is selected during validation, in addition to text. 
+* Added "My Profile" link to WP-CRM navigation menu.
+* Added admin color picker to WP-CRM profile editor (located in Advanced User Settings)
+* Disabled changing role of own profile.
+* "Your Profile" link in header directs to CMR profile when "Replace default WordPress User page with WP-CRM." is enabled.
+* Added support for User Avatar plugin to display avatar uploading functions in Special Actions metabox on profile page.
+* Added new redirection rules for when default User management is set to be replaced by WP-CRM management
+* Added option to disable automatic line-break conversion in Notification Messages content.
+* Added actions: wp_crm_data_structure_attributes
+* Added actions: show_user_profile, edit_user_profile same as on standard users page for third-party plugin hooks. API-added functionality is organized under 'Personal Options' and 'Additional Settings' metaboxes.
+* Added WordPress 3.3 compatibility.
+* Developer Note: added conditional body classes to profile page: 'wp_crm_existing' if current profile is for existing user and 'wp_crm_new_user' if new user creation.
 
 = 0.21 =
 * Ability to create user accounts without e-mail addresses.

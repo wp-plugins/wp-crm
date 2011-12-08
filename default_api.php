@@ -7,6 +7,7 @@
  * @package WP-CRM
  */
 
+add_filter('wp_crm_trigger_action_arguments', array('wp_crm_default_api', 'trigger_action_arguments'), 0,2);
 add_filter('wp_crm_contact_form_data_validation', array('wp_crm_default_api', 'email_validation'), 0,2);
 add_filter('wp_crm_user_card_keys', array('wp_crm_default_api', 'wpp_crm_card_keys_default'));
 add_filter('wp_crm_primary_user_attribute_keys', array('wp_crm_default_api', 'wpp_crm_card_keys_default'));
@@ -14,6 +15,7 @@ add_filter('wp_crm_notification_actions', array('wp_crm_default_api', 'default_w
 add_filter('wp_crm_display_phone_number', array('wp_crm_default_api', 'wpp_crm_format_phone_number'));
 add_filter('wp_crm_display_company', array('wp_crm_default_api', 'wp_crm_display_company'), 0, 4);
 add_filter('wp_crm_display_user_email', array('wp_crm_default_api', 'wp_crm_display_user_email'), 0, 4);
+add_filter('wp_crm_settings_lower', array('wp_crm_default_api', 'wp_crm_add_overview_user_actions'), 0, 10);
 
 /**
  * Default WP-CRM API
@@ -22,6 +24,28 @@ add_filter('wp_crm_display_user_email', array('wp_crm_default_api', 'wp_crm_disp
  *
   */
 class wp_crm_default_api {
+
+  /**
+   * Add default user actions.
+   *
+   * Can be disabled / enabled by Settings page.
+   *
+   * @since 0.1
+   */
+  function wp_crm_add_overview_user_actions($wp_crm) {
+
+    //** Add Quick Actions */
+    if(current_user_can('edit_users')) {
+      $wp_crm['overview_user_actions']['reset_password']['label'] = __('Quick Password Reset', 'wp_crm');
+    }
+
+    //** Add trigger */
+    add_filter('wp_crm_notification_actions', create_function('$current', ' $current["password_reset"] = __("Password Reset", "wp_crm"); return $current;  '));
+
+    return $wp_crm;
+
+  }
+
 
   /**
    * Add attribute to overview "User Card" selection for settings page.
@@ -61,6 +85,62 @@ class wp_crm_default_api {
     return $current;
 
   }
+
+
+/**
+   * Fires off when a user retrieves their WordPres password.
+   *
+   * Adds note to user stream.
+   *
+   */
+  function wp_crm_retrieve_password($user_login) {
+    global $wpdb;
+
+    $user_id = username_exists($user_login);
+
+    if(!$user_id) {
+      return;
+    }
+
+    $key = $wpdb->get_var($wpdb->prepare("SELECT user_activation_key FROM {$wpdb->users} WHERE user_login = %s", $user_login));
+    if ( empty($key) ) {
+      $key = wp_generate_password(20, false);
+      do_action('retrieve_password_key', $user_login, $key);
+      $wpdb->update($wpdb->users, array('user_activation_key' => $key), array('user_login' => $user_login));
+    }
+
+    $reset_url = network_site_url("wp-login.php?action=rp&key=$key&login=" . rawurlencode($user_login), 'login');
+    $message .= sprintf(__('Password reset initiated by user. Reset URL: %1s.', 'wp_crm'), '<a href="' . $reset_url . '">' . $reset_url . '</a>');
+
+    wp_crm_add_to_user_log($user_id, $message);
+
+  }
+
+
+
+/**
+   * Load default arguments for trigger actions.
+   *
+   *
+   */
+  function trigger_action_arguments($triggers) {
+    global $wp_crm;
+
+
+    $triggers['new_user_registration'] = array(
+      'test' => 'Tes1',
+      'test2' => 'Tes2'
+    );
+
+    $triggers['support_request'] = array(
+      'test2' => 'Tes2',
+      'test3' => 'Tes3'
+    );
+
+    return $triggers;
+
+  }
+
 
   /**
    * Makes sure the submitted e-mail is good.
@@ -154,22 +234,130 @@ class wp_crm_default_api {
   }
 
 
-
 }
 
 
 
+if(!function_exists('wp_crm_get_value')) {
+  /**
+   * Get a value of a user.
+   *
+   * Ideally an attribute key should be passed, in which case the first value will be returned by default.
+   * If a full meta key is passed, the value will be returned.
+   * If a value of an option is passed, a boolean will be returned depending on if the option is enabled for the user.
+   *
+   * @since 0.1
+   *
+   */
+  function wp_crm_get_value($meta_key, $user_id = false, $args = '') {
+    global $current_user, $wp_crm;
 
-add_action('wp_crm_pre_load', 'wp_crm_load_connections');
+    $args = wp_parse_args( $args, array(
+      'return' => 'value',
+      'meta_key' => $meta_key
+    ));
 
-function wp_crm_load_connections() {
-  if(class_exists('WPI_Core')) {
-    include_once WP_CRM_Path . '/core/connections/wp-invoice.php';
+    if(!$user_id) {
+      $user_id = $current_user->ID;
+    }
+
+    $quantifiable_attributes = array_keys(WP_CRM_F::get_quantifiable_attributes());
+
+    //** Check if meta key exists as key and as label */
+    $attributes = $wp_crm['data_structure']['attributes'];
+    $full_meta_keys = $wp_crm['data_structure']['full_meta_keys'];
+    $meta_keys = $wp_crm['data_structure']['meta_keys'];
+
+    //* If passed key is an attribute key (as intended) */
+    if(is_array($attributes) && in_array($meta_key, array_keys($attributes))) {
+      $args['attribute_key'] = $meta_key;
+    }
+
+    //* If passed meta_key is actually a label name */
+    if(is_array($meta_keys) && in_array($meta_key, $meta_keys)) {
+      $meta_value_flip = array_flip($meta_keys);
+      $args['attribute_key'] = $meta_value_flip[$meta_key];
+      $meta_key = $args['attribute_key'];
+    }
+
+    //* If a full meta key is passed (for pre-defined values)  */
+    if(is_array($full_meta_keys) && in_array($meta_key, array_keys($full_meta_keys))) {
+      $args['full_meta_key'] = $meta_key;
+      $args['attribute_key'] = $full_meta_keys[$meta_key];
+    }
+
+    //** Get the full attribute data once we have the attribute_key */
+    $attribute = $wp_crm['data_structure']['attributes'][$args['attribute_key']];
+
+    //* Make sure we have a user object */
+    if(!empty($user_id) && is_numeric($user_id)) {
+      $user_object = (array) wp_crm_get_user($user_id);
+    }
+
+    if(!empty($args['full_meta_key']) && $args['full_meta_key'] != $args['attribute_key']) {
+      $args['value'] = get_user_meta($user_id, $args['full_meta_key'], true);
+
+    } else {
+
+      //** Attribute has options, we return the label of the option */
+      if($attribute['has_options']) {
+
+        $args['option_key']= array_keys($user_object[$args['attribute_key']]);
+        $args['option_key']= $args['option_key'][0];
+        $args['label'] = $meta_keys[$args['attribute_key'] . '_option_' . $args['option_key']];
+        $args['return_option_label'] = true;
+
+        if($attribute['input_type'] == 'text' || $attribute['input_type'] == 'textarea') {
+
+          if($args['option_key'] == 'default') {
+            $args['value'] = get_user_meta($user_id, $args['attribute_key'], true);
+          } else {
+            $args['value'] = get_user_meta($user_id, $args['attribute_key'] . '_option_' . $args['option_key'], true) . ', ' . $args['label'];
+          }
+
+        } else {
+          $args['value'] = $args['label'];
+        }
+
+
+      } else {
+
+        $args['value'] = WP_CRM_F::get_first_value($user_object[$args['attribute_key']]);
+      }
+
+    }
+
+    //** Check if this should be a boolean response */
+    if(!$args['return_option_label'] && in_array($args['attribute_key'], $quantifiable_attributes)) {
+      if($args['value'] == 'on') {
+        $args['value'] = true;
+      } else {
+        $args['value'] = false;
+      }
+    }
+
+    switch($args['return']) {
+
+      case 'value':
+        $result = $args['value'];
+      break;
+
+      case 'detail':
+        $result = $args;
+      break;
+
+      default:
+        $result = $args[$args['return']];
+      break;
+
+    }
+
+    return $result;
+
+
   }
-  include_once WP_CRM_Path . '/core/connections/bb_press.php';
+
 }
-
-
 
 
 if(!function_exists('wp_crm_get_user')) {
@@ -182,10 +370,9 @@ if(!function_exists('wp_crm_get_user')) {
   function wp_crm_get_user($user_id, $args = '') {
     global $wp_crm, $wpdb, $current_user;
 
-    $defaults = array(
+    $args = wp_parse_args( $args, array(
       'return_type' => 'object'
-    );
-    $args = wp_parse_args( $args, $defaults );
+    ));
 
     //** Check if user exists */
     if(!$user_table = $wpdb->get_row("SELECT * FROM {$wpdb->users} WHERE ID = $user_id", ARRAY_A)) {
@@ -273,6 +460,7 @@ if(!function_exists('wp_crm_send_notification')) {
       return false;
     }
 
+
     $defaults = array(
       'force' => false
     );
@@ -305,7 +493,12 @@ if(!function_exists('wp_crm_send_notification')) {
 
       add_filter('wp_mail_content_type',create_function('', 'return "text/html"; '));
 
-      $message['message'] = nl2br($message['message']);
+      if($wp_crm['configuration']['do_not_use_nl2br_in_messages'] == 'true') {
+        $message['message'] = $message['message'];
+      } else {
+        $message['message'] = nl2br($message['message']);
+      }
+
       $result = wp_mail($message['to'], $message['subject'], $message['message'], $headers, ($args['attachments'] ? $args['attachments'] : false));
 
 
@@ -336,6 +529,7 @@ if(!function_exists('wp_crm_save_user_data')) {
       'default_role' => get_option('default_role'),
       'no_redirect' => 'false'
     );
+
     $args = wp_parse_args( $args, $defaults );
 
     $wp_insert_user_vars = array(
@@ -354,6 +548,7 @@ if(!function_exists('wp_crm_save_user_data')) {
 
     //** Get custom meta attributes */
     $wp_user_meta_data = array();
+
     if(!empty($wp_crm['data_structure']) && is_array($wp_crm['data_structure']['attributes'])) {
       foreach($wp_crm['data_structure']['attributes'] as $slug => $value) {
         if(!in_array($slug, $wp_insert_user_vars)) {
@@ -361,6 +556,10 @@ if(!function_exists('wp_crm_save_user_data')) {
         }
       }
     }
+
+    //** Add custom keys that are not necessarily created in WP-CRM data but must be saved if passed */
+    $wp_user_meta_data[] = 'show_admin_bar_front';
+    $wp_user_meta_data[] = 'admin_color';
 
     $temp_data['user_id'] = WP_CRM_F::get_first_value($user_data['user_id']);
 
@@ -385,7 +584,6 @@ if(!function_exists('wp_crm_save_user_data')) {
           if(in_array($values, $wp_crm['data_structure']['attributes'][$meta_key]['option_labels'] )) {
 
             //** Get option key from passed option title */
-
             $option_key = array_search($values, $wp_crm['data_structure']['attributes'][$meta_key]['option_labels']);
             //** Restet $values, and update with checkbox friendly data entry */
             $values = array(
@@ -408,19 +606,19 @@ if(!function_exists('wp_crm_save_user_data')) {
 
       }
 
+      //** Make sure values are always in array format */
+      $values = !is_array($values) ? $values : (array) $values;
 
-      foreach((array)$values as $temp_key => $data) {
+      foreach($values as $temp_key => $data) {
 
+        //** If this attribute is in the main user table, we store it here */
         if(in_array($meta_key, $wp_insert_user_vars)) {
-
-          //** If this attribute is in the main user table, we store it here */
 
           //** Do not overwrite $insert_data if its already set */
           if(!isset($insert_data[$meta_key])) {
             $insert_data[$meta_key] = $data['value'];
             continue;
           }
-
 
           //** Store data in meta table as well, as long as it's not already stored in main table */
           if($insert_data[$meta_key] != $data['value']) {
@@ -430,8 +628,8 @@ if(!function_exists('wp_crm_save_user_data')) {
 
         }
 
+        //** If the attribute is a meta key created  by WP-CRM, we store it here */
         if (in_array($meta_key, $wp_user_meta_data)) {
-          //** If the attribute is a meta key created  by WP-CRM, we store it here */
 
           switch ($wp_crm['data_structure']['attributes'][$meta_key]['input_type']) {
 
@@ -490,12 +688,13 @@ if(!function_exists('wp_crm_save_user_data')) {
           }
 
         }
+
       }
     }
 
 
+    //* Determine user_id */
     if(empty($temp_data['user_id'])) {
-      // Determine user_id and if new or old user
       if ($args['match_login'] == 'true' && (isset($user_data['user_login']) || isset($user_data['user_email']))) {
 
         $temp_data['user_login'] = WP_CRM_F::get_first_value($user_data['user_login']);
@@ -505,7 +704,7 @@ if(!function_exists('wp_crm_save_user_data')) {
         if($temp_data['user_email']) {
           $insert_data['ID'] = username_exists($temp_data['user_email']);
         }
-        // Validate e-mail
+        //* Validate e-mail */
         if(empty($insert_data['ID'])) {
           $insert_data['ID'] = email_exists($temp_data['user_email']);
         }
@@ -559,8 +758,6 @@ if(!function_exists('wp_crm_save_user_data')) {
       $insert_data['role'] = $args['default_role'];
     }
 
-    //echo "<pre>" . print_r($user_id, true) . print_r($insert_data, true) . print_r($insert_custom_data, true). print_r($_REQUEST, true);die();
-
     if($wp_crm['configuration']['allow_account_creation_with_no_email'] == 'true' && empty($insert_data['user_email'])) {
       $fake_user_email = rand(10000,99999) . '@' .  rand(10000,99999) . '.com';
       $insert_data['user_email'] = $fake_user_email;
@@ -578,29 +775,26 @@ if(!function_exists('wp_crm_save_user_data')) {
         $wpdb->update($wpdb->users, array('user_email' => ''), array('ID' => $user_id));
       }
 
-      //** Remove all old meta values if field is set (to avoid deleting unpasssed valued */
-      if(is_array($wp_crm['data_structure']['meta_keys'])) {
-        foreach($wp_crm['data_structure']['meta_keys'] as $meta_key => $meta_label) {
+      //** Remove all old meta values if field is set (to avoid deleting unpasssed values) */
+      foreach($wp_user_meta_data as $meta_key) {
 
-          if(isset($insert_custom_data[$meta_key])) {
-
-          //echo "$meta_key is set deleting <br />";
-            delete_user_meta($user_id, $meta_key);
-          }
-
-          //** Delete old option meta keys for this meta_key  */
-          if($wp_crm['data_structure']['attributes'][$meta_key]['has_options']) {
-
-            //** Delete "holder" meta key (this may not be necessary */
-            delete_user_meta($user_id, $meta_key);
-            foreach($wp_crm['data_structure']['attributes'][$meta_key]['option_keys'] as $old_meta_key) {
-              //** Delete individual long (optional) meta keys */
-              delete_user_meta($user_id, $old_meta_key);
-            }
-          }
-
+        if(isset($insert_custom_data[$meta_key])) {
+          delete_user_meta($user_id, $meta_key);
         }
+
+        //** Delete old option meta keys for this meta_key  */
+        if($wp_crm['data_structure']['attributes'][$meta_key]['has_options']) {
+
+          //** Delete "holder" meta key (this may not be necessary */
+          delete_user_meta($user_id, $meta_key);
+          foreach($wp_crm['data_structure']['attributes'][$meta_key]['option_keys'] as $old_meta_key) {
+            //** Delete individual long (optional) meta keys */
+            delete_user_meta($user_id, $old_meta_key);
+          }
+        }
+
       }
+
 
       //** Add meta values */
       if(is_array($insert_custom_data) && !empty($insert_custom_data)) {
@@ -626,7 +820,6 @@ if(!function_exists('wp_crm_save_user_data')) {
           WP_CRM_F::add_message(__('User updated.', 'wp_crm'));
         }
       }
-
 
       do_action('wp_crm_save_user', array(
         'user_id' =>$user_id,
@@ -655,9 +848,6 @@ if(!function_exists('wp_crm_save_user_data')) {
       }
     }
 
-
-
-
     if($args['no_errors'] && is_wp_error($user_id)) {
       return false;
     }
@@ -674,6 +864,7 @@ if(!function_exists('wp_crm_save_user_data')) {
 
     return $user_id;
   }
+
 }  /* wp_crm_save_user_data */
 
 
@@ -716,28 +907,5 @@ function wpp_crm_associated_post_types($current, $post_type) {
   return false;
 
 }
-add_action('retrieve_password', 'wp_crm_retrieve_password');
 
 
-function wp_crm_retrieve_password($user_login) {
-  global $wpdb;
-
-  $user_id = username_exists($user_login);
-
-  if(!$user_id) {
-    return;
-  }
-
-  $key = $wpdb->get_var($wpdb->prepare("SELECT user_activation_key FROM {$wpdb->users} WHERE user_login = %s", $user_login));
-	if ( empty($key) ) {
-		$key = wp_generate_password(20, false);
-		do_action('retrieve_password_key', $user_login, $key);
-		$wpdb->update($wpdb->users, array('user_activation_key' => $key), array('user_login' => $user_login));
-	}
-
-  $reset_url = network_site_url("wp-login.php?action=rp&key=$key&login=" . rawurlencode($user_login), 'login');
-  $message .= __('Password reset initiated: ', 'wp_crm') . '<a href="' . $reset_url . '">' . $reset_url . '</a>';
-
-  wp_crm_add_to_user_log($user_id, $message);
-
-}

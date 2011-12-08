@@ -20,7 +20,7 @@ td.wp_crm_user_card  div.user_avatar {
   float: left;
 }
 
-td.wp_crm_user_card  ul.user_card_data {
+td.wp_crm_user_card  div.user_card_inner_wrapper {
   float: left;
   margin-left: 10px;
 }
@@ -72,8 +72,10 @@ td.wp_crm_user_card  ul li.primary {
 }
 
 .dataTables_info {
-	width: 60%;
-	float: left;
+  display: inline;
+  color: #BABABA;
+  line-height: 30px;
+  line-height:30px;
 }
 
 .dataTables_paginate {
@@ -190,7 +192,7 @@ table.display td.center {
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  * DataTables row classes
  */
-table.display tr.odd.gradeA {
+table.display tr.odd_row.gradeA {
 	background-color: #ddffdd;
 }
 
@@ -198,7 +200,7 @@ table.display tr.even.gradeA {
 	background-color: #eeffee;
 }
 
-table.display tr.odd.gradeC {
+table.display tr.odd_row.gradeC {
 	background-color: #ddddff;
 }
 
@@ -206,7 +208,7 @@ table.display tr.even.gradeC {
 	background-color: #eeeeff;
 }
 
-table.display tr.odd.gradeX {
+table.display tr.odd_row.gradeX {
 	background-color: #ffdddd;
 }
 
@@ -214,7 +216,7 @@ table.display tr.even.gradeX {
 	background-color: #ffeeee;
 }
 
-table.display tr.odd.gradeU {
+table.display tr.odd_row.gradeU {
 	background-color: #ddd;
 }
 
@@ -223,11 +225,11 @@ table.display tr.even.gradeU {
 }
 
 
-tr.odd {
+tr.wp_crm_row.odd_row {
 	background-color: #F9F9F9;
 }
 
-tr.even {
+tr.wp_crm_row.even_row {
 	background-color: white;
 }
 
@@ -332,7 +334,7 @@ table.display tr.even.row_selected td {
 	background-color: #B0BED9;
 }
 
-table.display tr.odd.row_selected td {    
+table.display tr.odd_row.row_selected td {    
 
 }
 
@@ -341,11 +343,11 @@ table.display tr.odd.row_selected td {
  * Sorting classes for columns
  */
 /* For the standard odd/even */
-tr.odd td.sorting_1 {
+tr.odd_row td.sorting_1 {
 	
 }
 
-tr.odd td.sorting_2 {
+tr.odd_row td.sorting_2 {
 	
 }
 
@@ -359,15 +361,15 @@ tr.odd td.sorting_2 {
 	  dd > d1
 	  ee > e2
  */
-tr.odd.gradeA td.sorting_1 {
+tr.odd_row.gradeA td.sorting_1 {
 	background-color: #c4ffc4;
 }
 
-tr.odd.gradeA td.sorting_2 {
+tr.odd_row.gradeA td.sorting_2 {
 	background-color: #d1ffd1;
 }
 
-tr.odd.gradeA td.sorting_3 {
+tr.odd_row.gradeA td.sorting_3 {
 	background-color: #d1ffd1;
 }
 
@@ -383,15 +385,15 @@ tr.even.gradeA td.sorting_3 {
 	background-color: #e2ffe2;
 }
 
-tr.odd.gradeC td.sorting_1 {
+tr.odd_row.gradeC td.sorting_1 {
 	background-color: #c4c4ff;
 }
 
-tr.odd.gradeC td.sorting_2 {
+tr.odd_row.gradeC td.sorting_2 {
 	background-color: #d1d1ff;
 }
 
-tr.odd.gradeC td.sorting_3 {
+tr.odd_row.gradeC td.sorting_3 {
 	background-color: #d1d1ff;
 }
 
@@ -407,15 +409,15 @@ tr.even.gradeC td.sorting_3 {
 	background-color: #e2e2ff;
 }
 
-tr.odd.gradeX td.sorting_1 {
+tr.odd_row.gradeX td.sorting_1 {
 	background-color: #ffc4c4;
 }
 
-tr.odd.gradeX td.sorting_2 {
+tr.odd_row.gradeX td.sorting_2 {
 	background-color: #ffd1d1;
 }
 
-tr.odd.gradeX td.sorting_3 {
+tr.odd_row.gradeX td.sorting_3 {
 	background-color: #ffd1d1;
 }
 
@@ -431,15 +433,15 @@ tr.even.gradeX td.sorting_3 {
 	background-color: #ffe2e2;
 }
 
-tr.odd.gradeU td.sorting_1 {
+tr.odd_row.gradeU td.sorting_1 {
 	background-color: #c4c4c4;
 }
 
-tr.odd.gradeU td.sorting_2 {
+tr.odd_row.gradeU td.sorting_2 {
 	background-color: #d1d1d1;
 }
 
-tr.odd.gradeU td.sorting_3 {
+tr.odd_row.gradeU td.sorting_3 {
 	background-color: #d1d1d1;
 }
 
@@ -463,7 +465,7 @@ tr.even.gradeU td.sorting_3 {
 	background-color: #ECFFB3;
 }
 
-.ex_highlight #example tbody tr.odd:hover, #example tbody tr.odd td.highlighted {
+.ex_highlight #example tbody tr.odd_row:hover, #example tbody tr.odd_row td.highlighted {
 	background-color: #E6FF99;
 }
 
@@ -483,19 +485,19 @@ tr.even.gradeU td.sorting_3 {
 	background-color: #E2FF89;
 }
 
-.ex_highlight_row #example tr.odd:hover {
+.ex_highlight_row #example tr.odd_row:hover {
 	background-color: #E6FF99;
 }
 
-.ex_highlight_row #example tr.odd:hover td.sorting_1 {
+.ex_highlight_row #example tr.odd_row:hover td.sorting_1 {
 	background-color: #D6FF5C;
 }
 
-.ex_highlight_row #example tr.odd:hover td.sorting_2 {
+.ex_highlight_row #example tr.odd_row:hover td.sorting_2 {
 	background-color: #E0FF84;
 }
 
-.ex_highlight_row #example tr.odd:hover td.sorting_3 {
+.ex_highlight_row #example tr.odd_row:hover td.sorting_3 {
 	background-color: #DBFF70;
 }
 

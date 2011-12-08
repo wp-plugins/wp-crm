@@ -1,5 +1,4 @@
-<?php
- 
+<?php 
   
 if(!empty($wp_crm['data_structure']) && is_array($wp_crm['data_structure']['attributes'])) {
     $attribute_keys = array_keys($wp_crm['data_structure']['attributes']);
@@ -8,9 +7,9 @@ if(!empty($wp_crm['data_structure']) && is_array($wp_crm['data_structure']['attr
 }
 
  if($_REQUEST['message'] == 'created') {
-  WP_CRM_F::add_message(__('User created.'));
+  WP_CRM_F::add_message(__('Profile created.', 'wp_crm'));
 }elseif($_REQUEST['message'] == 'updated') {
-  WP_CRM_F::add_message(__('User updated.'));
+  WP_CRM_F::add_message(__('Profile updated.', 'wp_crm'));
 }
 
 if($wp_crm_user)  {
@@ -21,29 +20,29 @@ if($wp_crm_user)  {
 	$object = array();
 	$object['new'] = true;
   $object['user_role']['default'][0] = get_option('default_role');
-	$title = __('Add New Person');
+	$title = __('Add New Person', 'wp_crm');
 }
- 
 
-//echo "<pre> ". print_r($object, true) . "</pre>";
+$wp_crm_js = array(
+  'user_id' => '"' . $user_id . '"',
+  'hidden_attributes' => $wp_crm['hidden_attributes']
+);
 
+if($wp_crm['configuration']['standardize_display_name'] == 'true' && !empty($wp_crm['configuration']['display_name_rule'])) {
+  $wp_crm_js['standardize_display_name'] = true;
+  $wp_crm_js['display_name_rule'] = $wp_crm['configuration']['display_name_rule'];
+} 
+
+if(is_array($wp_crm_js)) {
+  echo '<script type="text/javascript">var wp_crm = jQuery.parseJSON(' . json_encode(json_encode($wp_crm_js)) . '); </script>';
+}  
 
 ?>
-<script type="text/javascript">
-  var wp_crm = {
-    'user_id': '<?php echo $user_id; ?>'
-  };
-  
-  var wp_crm_hidden_attributes = {<?php 
-  $count = 0; $roles = count($wp_crm['hidden_attributes']); if(is_array($wp_crm['hidden_attributes'])) foreach($wp_crm['hidden_attributes']  as $role => $elements): $count++; ?>
- '<?php echo $role; ?>': ['<?php  echo implode("','", $elements); ?>']<?php echo ($count != $roles ? ',' : ''); ?>   <?php endforeach; ?>};
-</script>
-
 
 <div class="wp_crm_profile_wrapper wrap">
   <div class="wp_crm_ajax_result"></div>
   <?php screen_icon(); ?>
-  <h2><?php echo $title; ?></h2>
+  <h2 class="wp_crm_page_title"><?php echo $title; ?></h2>
   <?php WP_CRM_F::print_messages(); ?>
 
   <form enctype="multipart/form-data"  name="crm_user" action="admin.php?page=wp_crm_add_new<?php echo ($user_id ? "&user_id=$user_id" : ''); ?>" method="post" id="crm_user">

@@ -1,9 +1,9 @@
-<?php
+﻿<?php
 /*
 Name: Shortcode Contact Forms
 Class: class_contact_messages
-Version: 0.1
-Minimum WPC Version: 0.16
+Version: 0.2.0
+Minimum Core Version: 0.30
 Description: Create contact forms using shortcodes and keep track of messages in your dashboard.
 Feature ID: 12
 */
@@ -41,8 +41,8 @@ class class_contact_messages {
     add_action('admin_enqueue_scripts', array('class_contact_messages', 'admin_enqueue_scripts'));
 
     add_action("wp_ajax_wp_crm_messages_table", create_function('',' echo class_contact_messages::ajax_table_rows(); die; '));
-
     add_action("wp_ajax_wp_crm_visualize_contact_results", create_function('',' class_contact_messages::visualize_contact_results($_REQUEST["filters"]); die();'));
+    add_action("wp_ajax_wp_crm_display_shortcode_form", create_function('',' class_contact_messages::display_shortcode_form(array("shortcode" => $_REQUEST["shortcode"], "atts" =>  $_REQUEST["atts"])); die(); '));
 
     add_filter('wp_crm_settings_nav', array('class_contact_messages', "settings_page_nav"));
     add_filter('widget_text', 'do_shortcode');
@@ -95,6 +95,24 @@ class class_contact_messages {
 
     return false;
    }
+
+
+  /**
+    * Show user creation UI (mostly for ajax calls)
+    *
+    * @todo Prone to breaking because of the way values are passed.
+    * @since 0.1
+    *
+    */
+    static function display_shortcode_form($args = '') {
+
+      if(!empty($args['shortcode'])) {
+        $atts = $args['atts'];
+
+        echo do_shortcode("[{$args['shortcode']} {$atts}]");
+      }
+    }
+
 
 /**
    * Sidebar filter for contact messages.
@@ -485,7 +503,6 @@ class class_contact_messages {
   function shortcode_wp_crm_form($atts, $content = null, $code = '') {
     global $wp_crm;
 
-
     $a = shortcode_atts( array(
       'js_callback_function' => false,
       'js_validation_function' => false,
@@ -499,7 +516,7 @@ class class_contact_messages {
 
 
 
-    if(!$a['form']) {
+    if(!$a['form'] || !is_array($wp_crm['wp_crm_contact_system_data'])) {
       return;
     }
 
@@ -570,7 +587,13 @@ class class_contact_messages {
 
     $form = $wp_crm['wp_crm_contact_system_data'][$form_slug];
 
-    $wp_crm_nonce = md5(NONCE_KEY);
+    if(empty($form['fields'])) {
+      return false;
+    }    
+    
+    $wp_crm_nonce = md5(NONCE_KEY . $form_slug);
+
+    $wpc_form_id = 'wpc_' . $wp_crm_nonce . '_form';
 
     //** Load user object if passed */
     if($use_current_user == 'true') {
@@ -589,7 +612,7 @@ class class_contact_messages {
     }
 
   ?>
-  <form id="<?php echo md5($wp_crm_nonce . '_form'); ?>" class="wp_crm_contact_form wp_crm_contact_form_<?php echo $form_slug; ?>">
+  <form id="<?php echo $wpc_form_id; ?>" class="wp_crm_contact_form wp_crm_contact_form_<?php echo $form_slug; ?>">
   <ul class="wp_crm_contact_form">
     <li class="wp_crm_<?php echo $wp_crm_nonce; ?>_first">
       <?php /* Span Prevention */ ?>
@@ -638,7 +661,7 @@ class class_contact_messages {
     </div>
   </li>
   <?php } ?>
-    <li class="wp_crm_form_response" style="display:none;"><div></div></li>
+    <li class="wp_crm_form_response"><div class="wp_crm_response_text" style="display:none;"></li>
     <li class="wp_crm_submit_row">
       <div class="wp_crm_input_wrapper">
         <input class="<?php echo md5($wp_crm_nonce . '_submit'); ?>" type="submit" value="<?php echo $submit_text; ?>" />
@@ -652,39 +675,79 @@ class class_contact_messages {
   <style type="text/css">.wp_crm_<?php echo $wp_crm_nonce; ?>_first {display:none;}</style>
   <script type="text/javascript">
     jQuery(document).ready(function() {
+    
+      if(typeof wp_crm_developer_log != 'function') {
+        function wp_crm_developer_log() {}
+      }
+      
+      if(typeof _gaq != 'object') {
+        var _gaq = false;
+      }
 
+      if(_gaq) {
+        _gaq.push(['_trackEvent', "Contact Form", "Viewed", "<?php echo esc_attr($form['title']); ?>"]);
+      }
+
+      var this_form = jQuery("#<?php echo $wpc_form_id; ?>");
+      var submit_button = jQuery("input[type=submit]", this_form);
+      var form_response_field = jQuery(".wp_crm_form_response div", this_form);
+
+      var this_form_data = {};
       var validation_error = false;
 
-      jQuery("#<?php echo md5($wp_crm_nonce . '_form'); ?>").submit(function(event) {
-        event.preventDefault();
-        submit_<?php echo md5($wp_crm_nonce . '_form'); ?>();
+      jQuery(this_form).change(function(event) {
+
+        if(this_form_data.start_form == undefined) {
+          this_form_data.start_form = event.timeStamp;
+        }
+
+        if(_gaq && this_form_data.interaction_logged !== undefined) {
+          _gaq.push(['_trackEvent', "Contact Form", "Interacted With", "<?php echo esc_attr($form['title']); ?>"]);
+          this_form_data.interaction_logged = true;
+        }
+
       });
 
-      jQuery(".<?php echo md5($wp_crm_nonce . '_submit'); ?>").click(function(event) {
+
+      jQuery(this_form).submit(function(event) {
         event.preventDefault();
-        submit_<?php echo md5($wp_crm_nonce . '_form'); ?>();
+        submit_this_form();
+      });
+
+      jQuery(submit_button).click(function(event) {
+        event.preventDefault();
+        submit_this_form();
       });
 
 
     <?php if($require_login_for_existing_users) { foreach($check_fields as $attribute_slug) { ?>
-      jQuery(".wp_crm_<?php echo $attribute_slug; ?>_field").change(function() {
+      jQuery(".wp_crm_<?php echo $attribute_slug; ?>_field", this_form).change(function() {
         validation_error = true;
-        submit_<?php echo md5($wp_crm_nonce . '_form'); ?>('system_validate', this);
+        submit_this_form('system_validate', this);
       });
       <?php } ?>
       <?php } ?>
 
-      function submit_<?php echo md5($wp_crm_nonce . '_form'); ?>(crm_action, trigger_object) {
-
+      function submit_this_form(crm_action, trigger_object) {
         var validation_error = false;
+        var form = this_form;
 
-        var form = jQuery("#<?php echo md5($wp_crm_nonce . '_form'); ?> ");
+        wp_crm_developer_log('submit_this_form() initiated.');
+
+        if(typeof wp_crm_save_user_form == 'function') {
+          /* passed form object into wp_crm_save_user_form() is not usable */
+          if(!wp_crm_save_user_form(jQuery(form))) {
+            return false;
+          }
+        } else {
+          wp_crm_developer_log('wp_crm_save_user_form() function does not exist.');        
+        }
 
         jQuery("*", form).removeClass(form).removeClass("wp_crm_input_error");
 
         jQuery("span.wp_crm_error_messages", form).removeClass(form).text("");
 
-        <?php if(isset($form_settings['js_validation_function'])): ?>
+        <?php if(isset($form_settings['js_validation_function'])) { ?>
           /** Custom validation */
           if(!validation_error){
             t = <?php echo $form_settings['js_validation_function']; ?>(form);
@@ -692,76 +755,115 @@ class class_contact_messages {
               validation_error = true;
             }
           }
-        <?php endif; ?>
+        <?php } ?>
 
         if(validation_error) {
-          jQuery(".<?php echo md5($wp_crm_nonce . '_submit'); ?>").attr("disabled", false);
+          jQuery(submit_button).attr("disabled", false);
           return false;
         }
 
-        params = jQuery("#<?php echo md5($wp_crm_nonce . '_form'); ?>").serialize();
+        params = jQuery(this_form).serialize();
 
         if(crm_action != 'system_validate') {
-          jQuery(".<?php echo md5($wp_crm_nonce . '_submit'); ?>").attr("disabled", true);
+          jQuery(submit_button).attr("disabled", true);
 
-          jQuery("#<?php echo md5($wp_crm_nonce . '_form'); ?> .wp_crm_form_response").show();
-          jQuery("#<?php echo md5($wp_crm_nonce . '_form'); ?> .wp_crm_form_response div").removeClass();
-          jQuery("#<?php echo md5($wp_crm_nonce . '_form'); ?> .wp_crm_form_response div").text("<?php _e("Processing..."); ?>");
+          jQuery(form_response_field).show();
+          jQuery(form_response_field).removeClass('success');
+          jQuery(form_response_field).removeClass('failure');
+          jQuery(form_response_field).text("<?php _e('Processing...', 'wp_crm'); ?>");
         }
 
         if(crm_action) {
-          params = params + '&crm_action=' + crm_action;
+          params = params + "&crm_action=" + crm_action;
         }
+ 
+        jQuery(submit_button).attr("disabled", true);
 
-        jQuery(".<?php echo md5($wp_crm_nonce . '_submit'); ?>").attr("disabled", true);
-        
-        jQuery.post("<?php echo admin_url('admin-ajax.php'); ?>",params, function(result) {
+        jQuery.ajax({
+          url: "<?php echo admin_url('admin-ajax.php'); ?>",
+          dataType: "json",
+          data: params,
+          cache: false,
+          success: function(result) {
 
-          /* Enable submit button in case it was disabled during validation */
-          jQuery(".<?php echo md5($wp_crm_nonce . '_submit'); ?>").attr("disabled", false);
-          
-          /* Get conflicting fields */
-          if(result.bad_fields !== undefined) {          
-            
-            jQuery.each(result.bad_fields, function(field) {
-            
-              /* If check started by a specific object, we only update it */
-              if(jQuery(trigger_object).hasClass("regular-text") && jQuery(trigger_object).attr("wp_crm_slug") != field) {
-                return;
-              }              
-            
-              jQuery("div.wp_crm_"+field+"_div input.regular-text:first", form).addClass("wp_crm_input_error");
-              jQuery("div.wp_crm_"+field+"_div span.wp_crm_error_messages", form).text(result.bad_fields[field]);
-            });
-          }
+            /* Enable submit button in case it was disabled during validation */
+            jQuery(submit_button).attr("disabled", false);
 
-          /* If doing only a validation, stop here */
-          if(crm_action == 'system_validate') {
-            if(result.validation_passed == true) {
-              validation_error = true;
-            } else {
-              validation_error = false;
+            /* Get conflicting fields */
+            if(result.bad_fields !== undefined) {
+
+              jQuery.each(result.bad_fields, function(field) {
+
+                /* If check started by a specific object, we only update it */
+                if(jQuery(trigger_object).hasClass("regular-text") && jQuery(trigger_object).attr("wp_crm_slug") != field) {
+                  return;
+                }
+
+                jQuery("div.wp_crm_"+field+"_div input.regular-text:first", form).addClass("wp_crm_input_error");
+                jQuery("div.wp_crm_"+field+"_div span.wp_crm_error_messages", form).text(result.bad_fields[field]);
+              });
             }
-            return;
+
+            /* If doing only a validation, stop here */
+            if(crm_action == 'system_validate') {
+              if(result.validation_passed == true) {
+                validation_error = true;
+              } else {
+                validation_error = false;
+              }
+              return;
+            }
+
+            if(result.success == "true") {
+
+
+              if(_gaq) {
+                _gaq.push(['_trackEvent', "Contact Form: <?php echo esc_attr($form['title']); ?>", "Submitted", "Total Time", (+new Date) - this_form_data.start_time]);
+              }
+
+
+              jQuery(form_response_field).addClass("success");
+              jQuery(submit_button).attr("disabled",true);
+
+            } else {
+
+              if(_gaq) {
+                _gaq.push(['_trackEvent', "Contact Form: <?php echo esc_attr($form['title']); ?>", "Submission Failure", result.message]);
+                this_form_data.interaction_logged = true;
+              }
+
+
+              jQuery(form_response_field).addClass("failure");
+              jQuery(submit_button).attr("disabled",false);
+            }
+
+            <?php if($js_callback_function) { ?>
+            if(typeof <?php echo $js_callback_function; ?> == 'function') {
+              callback_data = {};
+              callback_data.form =  jQuery("#<?php echo $wpc_form_id; ?>");
+              callback_data.result =  result;
+              <?php echo $js_callback_function; ?>(callback_data);
+            }
+            <?php } ?>
+
+            jQuery(form_response_field).text(result.message);
+
+        },
+        error: function(result) {
+
+          jQuery(form_response_field).show();
+          jQuery(form_response_field).addClass("failure");
+          jQuery(form_response_field).text("<?php _e('A server error occurred while trying to process the form.', 'wp_crm'); ?>");
+
+          if(_gaq) {
+            _gaq.push(['_trackEvent', "Contact Form: <?php echo esc_attr($form['title']); ?>", "Submission Failure", "Server error."]);
+            this_form_data.interaction_logged = true;
           }
 
-          if(result.success == "true") {
-            jQuery("#<?php echo md5($wp_crm_nonce . '_form'); ?> .wp_crm_form_response div").addClass("success");
-            jQuery(".<?php echo md5($wp_crm_nonce . '_submit'); ?>").attr("disabled",true);
-            
-          } else {
-            jQuery("#<?php echo md5($wp_crm_nonce . '_form'); ?> .wp_crm_form_response div").addClass("failure");
-            jQuery(".<?php echo md5($wp_crm_nonce . '_submit'); ?>").attr("disabled",false);
-          }
-          <?php if($js_callback_function) { ?>
-          callback_data = {};
-          callback_data.form =  jQuery("#<?php echo md5($wp_crm_nonce . '_form'); ?>");
-          callback_data.result =  result;
-          <?php echo $js_callback_function; ?>(callback_data);
-          <?php } ?>
-          jQuery("#<?php echo md5($wp_crm_nonce . '_form'); ?> .wp_crm_form_response div").text(result.message);
-        }, "json");
-      };
+        }
+      });
+
+     }
 
     });
   </script>
@@ -899,9 +1001,9 @@ class class_contact_messages {
 
         //** Check for completion */
         if($wp_crm['data_structure']['attributes'][$field_slug]['required']) {
-        
+
           $error = apply_filters('wp_crm_contact_form_data_validation', false, array('field' => $field_slug, 'value' => $value));
-          
+
           if($error) {
             $bad_fields[$field_slug] = $error;
             continue;
@@ -915,16 +1017,16 @@ class class_contact_messages {
 
         //** Check for data conlicts */
         if(is_array($check_fields) && in_array($field_slug, $check_fields)) {
-          
-          //** Current field needs to be checked to avoid conflict */          
+
+          //** Current field needs to be checked to avoid conflict */
           if($conflict_user_id = WP_CRM_F::check_data_field($field_slug, $value)) {
             if($data['user_data']['user_id']['default'][0] != $conflict_user_id) {
               $bad_fields[$field_slug] = sprintf(__('This %1s belongs to a registered user, please login.', 'wp_crm'), $wp_crm['data_structure']['attributes'][$field_slug]['title']);
             }
           }
-          
+
         }
-        
+
       }
 
     }
@@ -973,21 +1075,23 @@ class class_contact_messages {
       if(empty($message)) {
         $message = __(' -- No message. -- ', 'wp_crm');
       }
-      
+
       //** Message is submitted. Do stuff. */
       $message_id = class_contact_messages::insert_message($user_id, $message, $confirmed_form_slug);
-
+      
+      $associated_object = !empty($associated_object) ? $associated_object : false;
       if($associated_object) {
         class_contact_messages::insert_message_meta($message_id, 'associated_object', $associated_object);
       }
-    
-
+      
       $notification_info = (array) wp_crm_get_user($user_id);
       $notification_info['message_content'] = stripslashes($message);
       $notification_info['trigger_action'] = $confirmed_form_data['title'];
       $notification_info['profile_link'] = admin_url("admin.php?page=wp_crm_add_new&user_id=$user_id");
+      /** Go through Filters */
+      $notification_info = apply_filters('wp_crm_notification_info', $associated_object, $notification_info);
+      
       wp_crm_send_notification($confirmed_form_slug,$notification_info);
-
     }
 
     $result = array('success' => 'true','message' => $data['success_message']);

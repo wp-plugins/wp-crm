@@ -79,6 +79,13 @@ ul.wp_crm_notification_main_configuration .wp_crm_checkbox_on_left {
   width: 99%;
 }
 
+#wp_crm_settings_tabs td {
+  vertical-align: top;
+}
+#wp_crm_settings_tabs label, 
+#wp_crm_settings_tabs input {
+  vertical-align: middle;
+}
   
 #wp_crm_settings_tabs #tab_plugins div.wp_crm_settings_block {
   padding-right: 200px;

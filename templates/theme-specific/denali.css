@@ -1,4 +1,6 @@
+#body_container .entry-content form.wp_crm_contact_form,
 form.wp_crm_contact_form {
+  list-style: none;
   margin-bottom: 5px;
   overflow: auto;
 }

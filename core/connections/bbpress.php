@@ -1,12 +1,16 @@
 <?php
+
 /**
-   * BB Press Connector
-   *
-   */
+  * Name: BB Press Connector
+  * Description: Adds Extra functionality to WP-CRM when the BB Press plugin is active.
+  * Author: Usability Dynamics, Inc.
+  * Version: 1.0
+  *
+  */
+   
 
-   //** Load user invoices into global user */
+   //** Detect if BBPress is active and load functionality */
    add_action('init', array('WPC_BB_Press', 'init'));
-
 
    class WPC_BB_Press {
      
@@ -17,16 +21,17 @@
    */
     function init() {
       global $wpdb;
-      
+
       if(!$wpdb->get_var("show tables like 'bb_posts'")) {
         return;
       }
-      
-       add_action('wp_crm_user_loaded', array('WPC_BB_Press', 'wp_crm_user_loaded'));
+
+      add_action('wp_crm_user_loaded', array('WPC_BB_Press', 'wp_crm_user_loaded'));
 
       add_filter('wp_crm_overview_columns', array('WPC_BB_Press', 'wp_crm_overview_columns'));
       add_filter('wp_crm_overview_cell', array('WPC_BB_Press', 'wp_crm_overview_cell'), 10, 2);
     }
+    
     
   /**
    * Loads extra data for the user
@@ -36,10 +41,8 @@
    */
     function wp_crm_user_loaded($wp_crm_user) {
       global $wp_crm_user, $bb_table_prefix, $wpdb;
-
       
-      //** Check if BB Press exists */
-      
+      //** Check if BB Press exists */      
       $user_id = $wp_crm_user['ID']['default'][0];
       
       if($bb_data = WPC_BB_Press::get_user_counts($user_id)) {
@@ -117,6 +120,7 @@
     return $echo;
     
   }
+  
   
   function wp_crm_overview_columns($current) {
     $current['forum_participation']['title'] = __('Forum Participation');

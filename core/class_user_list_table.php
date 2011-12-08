@@ -56,7 +56,6 @@ class CRM_User_List_Table extends WP_CMR_List_Table {
 
     $this->_args['iColumns'] = count($this->aoColumns);
 
-
   }
 
 
@@ -225,9 +224,11 @@ class CRM_User_List_Table extends WP_CMR_List_Table {
     }
 
     function single_cell($full_column_name,$user_object, $user_id) {
-    global $wp_crm;
+      global $wp_crm;
 
       $column_name = str_replace('wp_crm_', '', $full_column_name);
+
+      $this_attribute = $wp_crm['data_structure']['attributes'][$column_name];
 
       switch ( $column_name ) {
 
@@ -237,7 +238,12 @@ class CRM_User_List_Table extends WP_CMR_List_Table {
 
         case 'user_card':
 
-          $r .= WP_CRM_F::render_user_card(array('user_id' => $user_id, 'user_object' => $user_object, 'full_column_name' => $full_column_name));
+          $r .= WP_CRM_F::render_user_card(array(
+            'user_id' => $user_id,
+            'user_object' => $user_object,
+            'full_column_name' => $full_column_name,
+            'show_user_actions' => true
+          ));
 
         break;
 
@@ -261,7 +267,13 @@ class CRM_User_List_Table extends WP_CMR_List_Table {
         if(is_array($user_object[$column_name]))  {
           foreach($user_object[$column_name] as $option_slug =>  $values) {
 
-            if($wp_crm['data_structure']['attributes'][$column_name]['has_options']) {
+
+            if($this_attribute['input_type'] == 'text' && $this_attribute['has_options']) {
+              //** We have a text input with options (dropdown) */
+
+              $r .= wp_crm_get_value($column_name, $user_id);
+
+            } elseif($wp_crm['data_structure']['attributes'][$column_name]['has_options']) {
 
               //** Get label and only show when enabled */
               $visible_options = WP_CRM_F::list_options($user_object, $column_name);
@@ -275,15 +287,15 @@ class CRM_User_List_Table extends WP_CMR_List_Table {
           }
         }
 
-          if(is_array($visible_options)) {
-            foreach($visible_options as $key => $single_value) {
-              $visible_options[$key] = nl2br($single_value);
-            }
-            $r .= '<ul><li>' . implode('</li><li>', $visible_options) . '</li></ul>';
+        if(is_array($visible_options)) {
+          foreach($visible_options as $key => $single_value) {
+            $visible_options[$key] = nl2br($single_value);
           }
-          
-          $r = apply_filters('wp_crm_overview_cell', $r, array('column_name' => $column_name, 'user_object' => $user_object, 'user_id' => $user_id));
-          
+          $r .= '<ul><li>' . implode('</li><li>', $visible_options) . '</li></ul>';
+        }
+
+        $r = apply_filters('wp_crm_overview_cell', $r, array('column_name' => $column_name, 'user_object' => $user_object, 'user_id' => $user_id));
+
 
         break;
       }
@@ -310,19 +322,19 @@ class CRM_User_List_Table extends WP_CMR_List_Table {
         $search = $_REQUEST['wp_crm_search'];
 
         if (empty($views)) {
-            return;
+          return;
         }
 
         echo "<ul class='wp_crm_overview_filters'>\n";
-        echo "<li class='wpp_crm_filter_section_title'>Role Lists<a class='wpp_crm_filter_show'>".__('Show', 'wp_crm')."</a></li>";
+        echo "<li class='wpp_crm_filter_section_title'>" . __('Role Lists', 'wp_crm') . " <a class='wpp_crm_filter_show'>". __('Show', 'wp_crm') ."</a></li>";
 
         if(is_array($views)) {
-            foreach ( $views as $class => $view ) {
-                $views[ $class ] = "\t<li class='$class wp_crm_checkbox_filter'>$view";
-            }
+          foreach ( $views as $class => $view ) {
+            $views[$class] = "\t<li class='$class wp_crm_checkbox_filter'>$view";
+          }
         }
 
-        echo implode( " </li>\n", __($views , 'wp_crm')) . "</li>\n";
+        echo implode( " </li>\n", $views) . "</li>\n";
         echo "</ul>";
 
         //** Get all fiterable keys - for now just checkboxes */
@@ -335,8 +347,6 @@ class CRM_User_List_Table extends WP_CMR_List_Table {
         }
 
         $filterable_keys = apply_filters('wp_crm_filterable_keys',$filterable_keys, 'overview_page');
-
-        //echo "<pre>" . print_r($options, true) . "</pre>";
 
         if(is_array($filterable_keys)) {
           foreach($filterable_keys as $main_key => $meta_data) {
