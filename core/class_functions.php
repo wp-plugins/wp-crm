@@ -866,7 +866,7 @@ class WP_CRM_F {
    *
    */
     static function user_search($search_vars = false, $args = array()) {
-      global $wp_crm, $wpdb;
+      global $wp_crm, $wpdb, $blog_id;
 
       $defaults = array(
         'select_what' => '*',
@@ -882,7 +882,7 @@ class WP_CRM_F {
       $sort_by = ' ORDER BY user_registered DESC ';
       /** Start our SQL, we include the 'WHERE 1' to avoid complex statements later */
 
-      $sql = "SELECT {$args[select_what]} FROM {$wpdb->prefix}users AS u WHERE 1";
+      $sql = "SELECT {$args[select_what]} FROM {$wpdb->users} AS u WHERE 1";
 
       if(!empty($search_vars) && is_array($search_vars)) {
         foreach($search_vars as $primary_key => $key_terms) {
@@ -892,9 +892,9 @@ class WP_CRM_F {
             /* First, go through the users table */
             $tofind = trim(strtolower($key_terms));
             $sql .= " AND (";
-            $sql .= " u.ID IN (SELECT ID FROM {$wpdb->prefix}users WHERE LOWER(display_name) LIKE '%$tofind%' OR LOWER(user_email) LIKE '%$tofind%')";
+            $sql .= " u.ID IN (SELECT ID FROM {$wpdb->users} WHERE LOWER(display_name) LIKE '%$tofind%' OR LOWER(user_email) LIKE '%$tofind%')";
             /* Now go through the users meta table */
-            $sql .= " OR u.ID IN (SELECT user_id FROM {$wpdb->prefix}usermeta WHERE LOWER(meta_value) LIKE '%$tofind%')";
+            $sql .= " OR u.ID IN (SELECT user_id FROM {$wpdb->usermeta} WHERE LOWER(meta_value) LIKE '%$tofind%')";
             $sql .= ")";
             continue;
           }
@@ -905,7 +905,7 @@ class WP_CRM_F {
             unset($or);
             foreach($key_terms as $single_term) {
               $or = (isset($or) ? " OR " : "");
-              $sql .= "{$or}u.ID IN (SELECT user_id FROM {$wpdb->prefix}usermeta WHERE meta_key = '{$wpdb->prefix}capabilities' AND meta_value LIKE '%$single_term%')";
+              $sql .= "{$or}u.ID IN (SELECT user_id FROM {$wpdb->usermeta} WHERE meta_key = '{$wpdb->prefix}capabilities' AND meta_value LIKE '%$single_term%')";
             }
             $sql .= ")";
             continue;
@@ -917,7 +917,7 @@ class WP_CRM_F {
             $sql .= " AND (1";
             foreach($key_terms as $single_term) {
               $meta_key = $wp_crm['data_structure']['attributes'][$primary_key]['option_keys'][$single_term];
-              $sql .= " AND u.ID IN (SELECT user_id FROM {$wpdb->prefix}usermeta WHERE meta_key = '$meta_key' AND (meta_value = 'on' OR meta_value = 'true'))";
+              $sql .= " AND u.ID IN (SELECT user_id FROM {$wpdb->usermeta} WHERE meta_key = '$meta_key' AND (meta_value = 'on' OR meta_value = 'true'))";
             }
             $sql .= ")";
           }

@@ -62,7 +62,7 @@ Visit CRM -> Settings and click on the "Data" tab.  There you will  be able to a
 
 == Upgrade Notice ==
 
-= 0.30-b1 =
+= 0.30.1 =
 * Required input fields that also have dropdown options now require that a dropdown value is selcted during validation, in addition to text. 
 
 = 0.08 =
@@ -70,6 +70,9 @@ Visit CRM -> Settings and click on the "Data" tab.  There you will  be able to a
 * Initial public release.
  
 == Changelog ==
+
+= 0.30.1 =
+* Fix for WP Network Compatibility.
 
 = 0.30 =
 * Added better BuddyPress integration - link to a user's BuddyPress profile can be enabled to display on the overview table for quick access.

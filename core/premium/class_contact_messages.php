@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /*
 Name: Shortcode Contact Forms
 Class: class_contact_messages
