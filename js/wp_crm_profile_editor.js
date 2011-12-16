@@ -57,6 +57,14 @@ jQuery(document).ready(function() {
     });
   }
 
+  if(typeof jQuery.fn.datepicker == 'function') {
+    jQuery('input.wpc_date_picker').datepicker({
+      numberOfMonths: 2,
+       dateFormat: 'yy-mm-dd',
+       changeMonth: true
+    });
+  }
+
 
   /* Convert a uneditable element into something used for display only */
   jQuery('.wp_crm_attribute_uneditable:not(div)').each(function() {

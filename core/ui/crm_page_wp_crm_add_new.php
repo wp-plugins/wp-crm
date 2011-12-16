@@ -24,7 +24,7 @@ if($wp_crm_user)  {
 }
 
 $wp_crm_js = array(
-  'user_id' => '"' . $user_id . '"',
+  'user_id' => is_numeric($user_id) ? $user_id : false,
   'hidden_attributes' => $wp_crm['hidden_attributes']
 );
 

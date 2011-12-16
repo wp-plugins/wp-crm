@@ -124,6 +124,7 @@ jQuery(document).ready(function() {
     jQuery("input[type=text]", added_row).val('');
     jQuery("input[type=checkbox]", added_row).attr('checked', false);
     jQuery("textarea", added_row).val('');
+    jQuery("select", added_row).val('');
 
     // Unset 'new_row' attribute
     jQuery(added_row).attr('new_row', 'true');
@@ -386,11 +387,30 @@ function wp_crm_create_slug(slug) {
 
       wp_crm_developer_log({meta_key : meta_key, has_options: has_options, input_type: input_type});
 
-      if(input_type == 'text') {
+      if(input_type == 'text' || input_type == 'date') {
 
         if(jQuery("input.regular-text:first", this).val() == '') {
           jQuery("input.regular-text:first", this).addClass("wp_crm_input_error");
           jQuery("input.regular-text:first", this).focus();
+          jQuery(".blank_slate", this).hide();
+          jQuery(".input_div", this).show();
+          stop_form = true;
+        }
+
+        /* If this text input element has options, we make sure a value is selected */
+        if(has_options && jQuery("select.wp_crm_input_options:first", this).val() == '') {
+          jQuery("select.wp_crm_input_options:first", this).addClass("wp_crm_input_error");
+          jQuery("select.wp_crm_input_options:first", this).focus();
+          stop_form = true;
+        }
+
+      }
+
+      if(input_type == 'textarea') {
+
+        if(jQuery("textarea.wp_crm_required_field:first", this).val() == '') {
+          jQuery("textarea.wp_crm_required_field:first", this).addClass("wp_crm_input_error");
+          jQuery("textarea.wp_crm_required_field:first", this).focus();
           jQuery(".blank_slate", this).hide();
           jQuery(".input_div", this).show();
           stop_form = true;

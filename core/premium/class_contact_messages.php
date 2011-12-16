@@ -2,8 +2,8 @@
 /*
 Name: Shortcode Contact Forms
 Class: class_contact_messages
-Version: 0.2.0
-Minimum Core Version: 0.30
+Version: 0.2.1
+Minimum Core Version: 0.30.2
 Description: Create contact forms using shortcodes and keep track of messages in your dashboard.
 Feature ID: 12
 */
@@ -80,7 +80,7 @@ class class_contact_messages {
 
     if($action['action'] == 'trash_message') {
 
-      $success = $wpdb->query($wpdb->prepare("DELETE FROM {$wpdb->prefix}crm_log WHERE id = {$action['object_id']}"));
+      $success = $wpdb->query($wpdb->prepare("DELETE FROM {$wpdb->crm_log} WHERE id = {$action['object_id']}"));
 
       if($success) {
         $return['success'] = 'true';
@@ -234,8 +234,6 @@ class class_contact_messages {
       parse_str($_REQUEST['filters'], $wp_crm_filter_vars);
       $wp_crm_message_search = $wp_crm_filter_vars['wp_crm_message_search'];
 
-      //echo "<pre>";print_r($wp_crm_message_search);echo "</pre>";
-
       //** Get users from filter query */
       $wp_crm_message_search['value'] = 'all';
       $wp_crm_message_search['group_by'] = "date_format(time, '%m-%d-%Y') ";
@@ -257,13 +255,11 @@ class class_contact_messages {
       $distinct_data = class_contact_messages::get_messages($wp_crm_message_search);
       */
 
-      //echo "<pre>";print_r($data);echo "</pre>";
 
       if(empty($data)) {
         die('<div class="wp_crm_visualize_results no_data">' . __('There is not enough quantifiable data to generate any graphs.', 'wp_crm') . '</div>');
       }
 
-       //echo "<pre>";print_r($data[0]);echo "</pre>";
 
        $zoomStartTime = date('Y-m-d', strtotime('-1 month'));
 
@@ -383,7 +379,6 @@ class class_contact_messages {
           $additional_messages = ($total_messages - 1);
           ob_start();
 
-          //print_r($object);
           ?>
 
             <ul>
@@ -515,7 +510,6 @@ class class_contact_messages {
     ), $atts );
 
 
-
     if(!$a['form'] || !is_array($wp_crm['wp_crm_contact_system_data'])) {
       return;
     }
@@ -558,12 +552,13 @@ class class_contact_messages {
 
     if($form_slug) {
 
-    ob_start();
-    class_contact_messages::draw_form($form_vars);
+      ob_start();
+      class_contact_messages::draw_form($form_vars);
 
-    $form = ob_get_contents();
-    ob_end_clean();
-    return preg_replace('(\r|\n|\t)', '', $form);
+      $form = ob_get_contents();
+      ob_end_clean();
+      return $form;
+      return preg_replace('(\r|\n|\t)', '', $form);
 
     } else {
       return;
@@ -589,8 +584,11 @@ class class_contact_messages {
 
     if(empty($form['fields'])) {
       return false;
-    }    
-    
+    }
+
+    WP_CRM_F::force_script_inclusion('jquery-datepicker');
+    WP_CRM_F::force_script_inclusion('wp_crm_profile_editor');
+
     $wp_crm_nonce = md5(NONCE_KEY . $form_slug);
 
     $wpc_form_id = 'wpc_' . $wp_crm_nonce . '_form';
@@ -632,14 +630,15 @@ class class_contact_messages {
     $tabindex = 1;
 
     foreach($form['fields'] as $field) {
-    $this_attribute = $wp_crm['data_structure']['attributes'][$field];
-    $this_attribute['autocomplete'] = 'false';
 
-    if($user_data && $user_data[$field]) {
-      $values = $user_data[$field];
-    } else {
-      $values = false;
-    }
+      $this_attribute = $wp_crm['data_structure']['attributes'][$field];
+      $this_attribute['autocomplete'] = 'false';
+
+      if($user_data && $user_data[$field]) {
+        $values = $user_data[$field];
+      } else {
+        $values = false;
+      }
 
     ?>
     <li class="wp_crm_form_element <?php echo ($this_attribute['required'] == 'true' ? 'wp_crm_required_field' : ''); ?> wp_crm_<?php echo $field; ?>_container">
@@ -647,7 +646,7 @@ class class_contact_messages {
 
       <div class="wp_crm_input_wrapper">
       <?php if($display_notes && $this_attribute['input_type'] != 'text') { ?><span class="wp_crm_attribute_note"><?php echo nl2br($this_attribute['description']); ?></span><?php } ?>
-      <?php echo WP_CRM_F::user_input_field($field, $values, $this_attribute, false, "tabindex=$tabindex"); ?>
+      <?php echo WP_CRM_F::user_input_field($field, $values, $this_attribute, $user_data, "tabindex=$tabindex"); ?>
       <?php if($display_notes && $this_attribute['input_type'] == 'text') { ?><span class="wp_crm_attribute_note"><?php echo nl2br($this_attribute['description']); ?></span><?php } ?>
       <span class="wp_crm_error_messages"></span>
       </div>
@@ -657,7 +656,7 @@ class class_contact_messages {
   <?php  if($form['message_field'] == 'on') { ?>
   <li class="wp_crm_form_element wp_crm_message_field ">
       <div class="wp_crm_input_wrapper">
-        <?php echo WP_CRM_F::user_input_field('message_field', false,  array('input_type' => 'textarea'),false, "tabindex=$tabindex"); ?>
+        <?php echo WP_CRM_F::user_input_field('message_field', false,  array('input_type' => 'textarea'), $user_data, "tabindex=$tabindex"); ?>
     </div>
   </li>
   <?php } ?>
@@ -675,11 +674,11 @@ class class_contact_messages {
   <style type="text/css">.wp_crm_<?php echo $wp_crm_nonce; ?>_first {display:none;}</style>
   <script type="text/javascript">
     jQuery(document).ready(function() {
-    
+
       if(typeof wp_crm_developer_log != 'function') {
         function wp_crm_developer_log() {}
       }
-      
+
       if(typeof _gaq != 'object') {
         var _gaq = false;
       }
@@ -740,7 +739,7 @@ class class_contact_messages {
             return false;
           }
         } else {
-          wp_crm_developer_log('wp_crm_save_user_form() function does not exist.');        
+          wp_crm_developer_log('wp_crm_save_user_form() function does not exist.');
         }
 
         jQuery("*", form).removeClass(form).removeClass("wp_crm_input_error");
@@ -758,14 +757,14 @@ class class_contact_messages {
         <?php } ?>
 
         if(validation_error) {
-          jQuery(submit_button).attr("disabled", false);
+          jQuery(submit_button).removeAttr("disabled");
           return false;
         }
 
         params = jQuery(this_form).serialize();
 
         if(crm_action != 'system_validate') {
-          jQuery(submit_button).attr("disabled", true);
+          jQuery(submit_button).attr("disabled", "disabled");
 
           jQuery(form_response_field).show();
           jQuery(form_response_field).removeClass('success');
@@ -776,8 +775,8 @@ class class_contact_messages {
         if(crm_action) {
           params = params + "&crm_action=" + crm_action;
         }
- 
-        jQuery(submit_button).attr("disabled", true);
+
+        jQuery(submit_button).attr("disabled", "disabled");
 
         jQuery.ajax({
           url: "<?php echo admin_url('admin-ajax.php'); ?>",
@@ -787,7 +786,7 @@ class class_contact_messages {
           success: function(result) {
 
             /* Enable submit button in case it was disabled during validation */
-            jQuery(submit_button).attr("disabled", false);
+            jQuery(submit_button).removeAttr("disabled");
 
             /* Get conflicting fields */
             if(result.bad_fields !== undefined) {
@@ -816,14 +815,12 @@ class class_contact_messages {
 
             if(result.success == "true") {
 
-
               if(_gaq) {
                 _gaq.push(['_trackEvent', "Contact Form: <?php echo esc_attr($form['title']); ?>", "Submitted", "Total Time", (+new Date) - this_form_data.start_time]);
               }
 
-
               jQuery(form_response_field).addClass("success");
-              jQuery(submit_button).attr("disabled",true);
+              jQuery(submit_button).removeAttr("disabled");
 
             } else {
 
@@ -834,7 +831,7 @@ class class_contact_messages {
 
 
               jQuery(form_response_field).addClass("failure");
-              jQuery(submit_button).attr("disabled",false);
+              jQuery(submit_button).removeAttr("disabled");
             }
 
             <?php if($js_callback_function) { ?>
@@ -854,6 +851,9 @@ class class_contact_messages {
           jQuery(form_response_field).show();
           jQuery(form_response_field).addClass("failure");
           jQuery(form_response_field).text("<?php _e('A server error occurred while trying to process the form.', 'wp_crm'); ?>");
+
+          jQuery(form_response_field).addClass("failure");
+          jQuery(submit_button).removeAttr("disabled");
 
           if(_gaq) {
             _gaq.push(['_trackEvent', "Contact Form: <?php echo esc_attr($form['title']); ?>", "Submission Failure", "Server error."]);
@@ -990,7 +990,6 @@ class class_contact_messages {
       }
     }
 
-
     $check_fields = apply_filters('wp_crm_distinct_user_fields', array('user_email'));
 
     //** Do not check any fields if nothing to check */
@@ -1078,28 +1077,43 @@ class class_contact_messages {
 
       //** Message is submitted. Do stuff. */
       $message_id = class_contact_messages::insert_message($user_id, $message, $confirmed_form_slug);
-      
+
       $associated_object = !empty($associated_object) ? $associated_object : false;
       if($associated_object) {
         class_contact_messages::insert_message_meta($message_id, 'associated_object', $associated_object);
       }
-      
-      $notification_info = (array) wp_crm_get_user($user_id);
+
+      //** Build default notification arguments */
+      foreach($wp_crm['data_structure']['attributes'] as $attribute => $attribute_data) {
+        $notification_info[$attribute]  = wp_crm_get_value($attribute, $user_id);
+      }
+
       $notification_info['message_content'] = stripslashes($message);
       $notification_info['trigger_action'] = $confirmed_form_data['title'];
-      $notification_info['profile_link'] = admin_url("admin.php?page=wp_crm_add_new&user_id=$user_id");
-      /** Go through Filters */
-      $notification_info = apply_filters('wp_crm_notification_info', $associated_object, $notification_info);
-      
-      wp_crm_send_notification($confirmed_form_slug,$notification_info);
+      $notification_info['profile_link'] = admin_url("admin.php?page=wp_crm_add_new&user_id={$user_id}");
+
+      /** Add extra filters */
+      $maybe_notification_info = apply_filters('wp_crm_notification_info', $notification_info, $associated_object);
+
+      //** Make sure our array wasn't overwritten by a poorly written hooked in function, it shuold never be blank */
+      if(!empty($maybe_notification_info) || !is_array($maybe_notification_info)) {
+        $notification_info = $maybe_notification_info;
+      }
+
+      //** Pass the trigger and array of notification arguments to sender function */
+      wp_crm_send_notification($confirmed_form_slug, $notification_info);
+
     }
 
-    $result = array('success' => 'true','message' => $data['success_message']);
+    $result = array(
+      'success' => 'true',
+      'message' => $data['success_message']
+    );
 
-    if( current_user_can('manage_options') ) {
+    if(current_user_can('manage_options')) {
       $result['user_id'] = $user_id;
     }
-
+ 
     echo json_encode($result);
     die();
   }
@@ -1339,20 +1353,14 @@ class class_contact_messages {
   function page_loader() {
     global $wp_crm, $screen_layout_columns, $current_screen, $wpdb, $crm_messages, $user_ID;
 
-   // echo "<script type='text/javascript'>console.log('screen id: {$current_screen->id}');</script>";
-
     // Figure out what object we are working with
     $object_slug = $current_screen->base;
 
-
-
-    if(method_exists('class_contact_messages',$object_slug))
+    if(method_exists('class_contact_messages',$object_slug)) {
       call_user_func(array('class_contact_messages', $object_slug));
-    else
+    } else {
       echo "<div class='wrap'><h2>Template Error</h2><p>Template via method <b>class_contact_messages::{$object_slug}()</b> not found.</p><div>";
-
-    //print_r(func_get_args());
-
+    }
 
   }
 
@@ -1384,7 +1392,7 @@ class class_contact_messages {
     }
 
     //** Check if we have archived messaged*/
-    if($wpdb->get_var("SELECT COUNT(id) FROM {$wpdb->prefix}crm_log WHERE value = 'archived'")) {
+    if($wpdb->get_var("SELECT COUNT(id) FROM {$wpdb->crm_log} WHERE value = 'archived'")) {
       $show_filter = true;
     }
 
@@ -1487,9 +1495,7 @@ class class_contact_messages {
 
     $where_query  = 'WHERE (' . implode(" AND ", $where_query) . ") ";
 
-    $messages = $wpdb->get_results("SELECT {$select_query} \nFROM {$wpdb->prefix}crm_log \n{$where_query}\n{$group_query}\nORDER BY time DESC", ARRAY_A);
-
-
+    $messages = $wpdb->get_results("SELECT {$select_query} \nFROM {$wpdb->crm_log} \n{$where_query}\n{$group_query}\nORDER BY time DESC", ARRAY_A);
 
     //** Get messages meta */
     foreach($messages as $key => $message_data) {
@@ -1504,8 +1510,6 @@ class class_contact_messages {
       //** If custom fields are requested, we get them now*/
       if($args['return_fields']) {
         foreach($messages[$key] as $meta_key  => $meta_value) {
-
-          //echo "checking $meta_key in " . print_r($args['return_fields'], true) . "<br />";
 
           if(!in_array($meta_key, $args['return_fields'])) {
             unset($messages[$key][$meta_key]);

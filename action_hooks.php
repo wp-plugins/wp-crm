@@ -37,10 +37,9 @@
     'checkbox' => __("Checkbox", 'wp_crm'),
     'textarea' => __("Textarea", 'wp_crm'),
     'dropdown' => __("Dropdown", 'wp_crm'),
-    'password' => __("Password", 'wp_crm')
+    'password' => __("Password", 'wp_crm'),
+    'date' => __("Date Picker", 'wp_crm')
   );
-      
- 
  
   /*
     Permissions to be utilized through the plugin. 

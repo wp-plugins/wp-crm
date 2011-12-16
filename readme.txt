@@ -71,6 +71,12 @@ Visit CRM -> Settings and click on the "Data" tab.  There you will  be able to a
  
 == Changelog ==
 
+= 0.30.2 =
+* Added Date Picker input option.
+* Updated Notifications to send checkbox and dropdown values correctly, concatenating multiple values with a comma when they exist.
+* Fixed issue with user activity messages not saving.
+* Fixed "Required" validation for text areas.
+
 = 0.30.1 =
 * Fix for WP Network Compatibility.
 

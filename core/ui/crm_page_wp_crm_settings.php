@@ -556,7 +556,7 @@ if(empty($wp_crm['data_structure']['attributes'])) {
       </div>
 
       <?php foreach($wp_crm['available_features'] as $plugin_slug => $plugin_data): ?>
-      <div class="wp_crm_settings_block" style="background-image: url(<?php echo $plugin_data['image']; ?>);">
+      <div class="wp_crm_settings_block wp_crm_feature_block <?php echo ($plugin_data['image']) ? 'have_premium_image' : 'no_premium_image'; ?>" style="background-image: url(<?php echo $plugin_data['image']; ?>);">
         <input type="hidden" name="wp_crm[available_features][<?php echo $plugin_slug; ?>][title]" value="<?php echo $plugin_data['title']; ?>" />
         <input type="hidden" name="wp_crm[available_features][<?php echo $plugin_slug; ?>][tagline]" value="<?php echo $plugin_data['tagline']; ?>" />
         <input type="hidden" name="wp_crm[available_features][<?php echo $plugin_slug; ?>][image]" value="<?php echo $plugin_data['image']; ?>" />
@@ -564,7 +564,6 @@ if(empty($wp_crm['data_structure']['attributes'])) {
 
         <?php $installed = (!empty($wp_crm['installed_features'][$plugin_slug]['version']) ? true : false); ?>
         <?php $active = (@$wp_crm['installed_features'][$plugin_slug]['disabled'] != 'false' ? true : false); ?>
-
 
             <strong><?php echo $plugin_data['title']; ?></strong>
             <p><?php echo $plugin_data['tagline']; ?> <a href="http://usabilitydynamics.com/products/wp-crm/premium/"><?php _e('[learn more]','wp_crm') ?></a></p>

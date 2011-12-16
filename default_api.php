@@ -254,6 +254,7 @@ if(!function_exists('wp_crm_get_value')) {
 
     $args = wp_parse_args( $args, array(
       'return' => 'value',
+      'concat_char' => ', ',
       'meta_key' => $meta_key
     ));
 
@@ -286,14 +287,20 @@ if(!function_exists('wp_crm_get_value')) {
       $args['attribute_key'] = $full_meta_keys[$meta_key];
     }
 
+    //** If all else fails, use the passed $meta_key (it may be a main user table key) */
+    if(empty($args['attribute_key'])) {
+      $args['attribute_key'] = $meta_key;
+    }
+
     //** Get the full attribute data once we have the attribute_key */
-    $attribute = $wp_crm['data_structure']['attributes'][$args['attribute_key']];
+    $attribute = WP_CRM_F::get_attribute($args['attribute_key']);
 
     //* Make sure we have a user object */
     if(!empty($user_id) && is_numeric($user_id)) {
       $user_object = (array) wp_crm_get_user($user_id);
     }
 
+    //** If we have the full meta key then we can get value easily from get_user_meta() */
     if(!empty($args['full_meta_key']) && $args['full_meta_key'] != $args['attribute_key']) {
       $args['value'] = get_user_meta($user_id, $args['full_meta_key'], true);
 
@@ -302,27 +309,33 @@ if(!function_exists('wp_crm_get_value')) {
       //** Attribute has options, we return the label of the option */
       if($attribute['has_options']) {
 
-        $args['option_key']= array_keys($user_object[$args['attribute_key']]);
         $args['option_key']= $args['option_key'][0];
         $args['label'] = $meta_keys[$args['attribute_key'] . '_option_' . $args['option_key']];
         $args['return_option_label'] = true;
 
-        if($attribute['input_type'] == 'text' || $attribute['input_type'] == 'textarea') {
+        if($attribute['input_type'] == 'text' || $attribute['input_type'] == 'textarea' || $attribute['input_type'] == 'date') {
 
           if($args['option_key'] == 'default') {
+
             $args['value'] = get_user_meta($user_id, $args['attribute_key'], true);
           } else {
             $args['value'] = get_user_meta($user_id, $args['attribute_key'] . '_option_' . $args['option_key'], true) . ', ' . $args['label'];
           }
 
         } else {
-          $args['value'] = $args['label'];
-        }
 
+          $options = WP_CRM_F::list_options($user_object, $args['attribute_key']);
+
+          if(is_array($options)) {
+            $args['value'] = implode($args['concat_char'], $options);
+          }
+
+        }
 
       } else {
 
         $args['value'] = WP_CRM_F::get_first_value($user_object[$args['attribute_key']]);
+
       }
 
     }
@@ -460,7 +473,6 @@ if(!function_exists('wp_crm_send_notification')) {
       return false;
     }
 
-
     $defaults = array(
       'force' => false
     );
@@ -479,8 +491,7 @@ if(!function_exists('wp_crm_send_notification')) {
       return false;
     }
 
-
-     // Act upon every notification one at a time
+     //** Act upon every notification one at a time */
      foreach($notifications as $notification) {
 
       $message = WP_CRM_F::replace_notification_values($notification, $args);
@@ -500,7 +511,6 @@ if(!function_exists('wp_crm_send_notification')) {
       }
 
       $result = wp_mail($message['to'], $message['subject'], $message['message'], $headers, ($args['attachments'] ? $args['attachments'] : false));
-
 
      }
 

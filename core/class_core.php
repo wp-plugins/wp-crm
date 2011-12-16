@@ -52,7 +52,7 @@ class WP_CRM_Core {
     add_action('init', array($this, 'init_lower'), 100);
 
     if(!$wpdb->crm_log) {
-      $wpdb->crm_log = $wpdb->prefix . 'crm_log';
+      $wpdb->crm_log = $wpdb->base_prefix . 'crm_log';
     }
 
     if(!$wpdb->crm_log_meta) {
@@ -79,11 +79,15 @@ class WP_CRM_Core {
 
     /** Loads all the class for handling all plugin tables */
     include_once WP_CRM_Path . '/core/class_list_table.php';
+    
+    if($wp_crm['configuration']['track_detailed_user_activity'] == 'true') {
+      WP_CRM_F::track_detailed_user_activity();
+    }
 
     wp_register_script('google-jsapi', 'https://www.google.com/jsapi');
     wp_register_script('jquery-cookie', WP_CRM_URL. '/third-party/jquery.smookie.js', array('jquery'), '1.7.3' );
     wp_register_script('swfobject', WP_CRM_URL. '/third-party/swfobject.js', array('jquery'));
-    wp_register_script('jquery-uploadify', WP_CRM_URL. '/third-party/uploadify/jquery.uploadify.v2.1.4.min.js', array('jquery'));
+    wp_register_script('jquery-uploadify', WP_CRM_URL. '/third-party/uploadify/jquery.uploadify.v2.1.4.min.js', array('jquery', 'swfobject'));
     wp_register_script('jquery-position', WP_CRM_URL. '/third-party/jquery.ui.position.min.js', array('jquery-ui-core'));
     wp_register_script('jquery-slider', WP_CRM_URL. '/third-party/jquery.ui.slider.min.js', array('jquery-ui-core'));
     wp_register_script('jquery-widget', WP_CRM_URL. '/third-party/jquery.ui.widget.min.js', array('jquery-ui-core'));
@@ -613,8 +617,6 @@ class WP_CRM_Core {
   function page_loader() {
     global $wp_crm, $screen_layout_columns, $current_screen, $wpdb, $crm_messages, $user_ID, $wp_crm_user;
 
-    //** echo "<script type='text/javascript'>console.log('screen id: {$current_screen->base}');</script>"; */
-
     $file_path = WP_CRM_Path . "/core/ui/{$current_screen->base}.php";
 
     if(file_exists($file_path)) {
@@ -645,10 +647,10 @@ class WP_CRM_Core {
         wp_enqueue_script('google-jsapi');
         wp_enqueue_style('wp-crm-data-tables');
 
-        $contextual_help[] = '<he>' . __('General</h3>', 'wp_crm') . '</h3>';
+        $contextual_help[] = '<h3>' . __('General</h3>', 'wp_crm') . '</h3>';
         $contextual_help[] = '<p>' .  __('This page is used to filter and find various users. Visit the Settings page to select which attributes to show on the overview.', 'wp_crm') . '</p>';
 
-        $contextual_help[] = '<p>' .  __('Exporting', 'wp_crm') . '</h3>';
+        $contextual_help[] = '<p>' .  __('Exporting', 'wp_crm') . '</p>';
         $contextual_help[] = '<p>' .  __('Once you narrow down the user results to the ones you want to export, click "Show Actions" and then "Export to CSV" to generate a comma separated flle.', 'wp_crm') . '</p>';
         $contextual_help[] = '<p>' .  __('The CSV export will only include the user data as defined in Data tab, on the Settings page.', 'wp_crm') . '</p>';
 

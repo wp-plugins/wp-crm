@@ -133,51 +133,82 @@ table.color-palette td {
     padding: 9px 0 8px 10px;
 }
 
-.ui-datepicker  {
+.crm_page_wp_crm_add_new .ui-datepicker  {
     background: none repeat scroll 0 0 #F2F2F2;
     border: 1px solid #C4C4C4;
     box-shadow: 1px 2px 6px #A9A9A9;
     margin-top: 4px;
+  }
 
-}
-.ui-datepicker  .ui-datepicker-header  {
+
+.crm_page_wp_crm_add_new .ui-datepicker .ui-datepicker-header  {
     background: none repeat scroll 0 0 #E6E6E6;
     padding: 7px;
+    height: 20px;
 }
-.ui-datepicker  .ui-datepicker-calendar  {
+
+.crm_page_wp_crm_add_new .ui-datepicker select option {
+  padding: 0 7px 0 0;
+}
+
+.crm_page_wp_crm_add_new .ui-datepicker .ui-datepicker-group {
+  float: left;  
+}
+
+.crm_page_wp_crm_add_new .ui-datepicker.ui-datepicker-multi-2 .ui-datepicker-group {
+  width: 50%;
+}
+
+.crm_page_wp_crm_add_new .ui-datepicker .ui-datepicker-group.ui-datepicker-group-first .ui-datepicker-calendar {
+  border-right: 1px solid #E6E6E6;
+}
+
+.crm_page_wp_crm_add_new .ui-datepicker .ui-datepicker-calendar  {
   padding: 7px;
 }
-.ui-datepicker  .ui-datepicker-calendar  td {
+
+.crm_page_wp_crm_add_new .ui-datepicker .ui-datepicker-calendar  td {
   padding: 2px 6px;
 }
 
-.ui-datepicker  .ui-datepicker-prev,
-.ui-datepicker  .ui-datepicker-next  {
+.crm_page_wp_crm_add_new .ui-datepicker .ui-datepicker-prev,
+.crm_page_wp_crm_add_new .ui-datepicker .ui-datepicker-next  {
   background: none repeat scroll 0 0 #D7D7D7;
   color: #414141;
-  font-size: 0.9em;
-  margin-top: 3px;
-  padding: 3px 5px;
   cursor: pointer;
+  font-size: 0.9em;
+  padding: 0 6px;
 }
 
+.crm_page_wp_crm_add_new .ui-datepicker .ui-datepicker-current-day {
+  background: #FE941C;
+}
 
-.ui-datepicker  .ui-datepicker-prev  {
+.crm_page_wp_crm_add_new .ui-datepicker .ui-datepicker-current-day a {
+  text-decoration: none;
+  color: #FFF;
+}
+
+.crm_page_wp_crm_add_new .ui-datepicker .ui-datepicker-today a{
+  color: #3C3A3A;
+}
+
+.crm_page_wp_crm_add_new .ui-datepicker .ui-datepicker-prev  {
   float: left;
 }
 
-.ui-datepicker  .ui-datepicker-next  {
+.crm_page_wp_crm_add_new .ui-datepicker .ui-datepicker-next  {
   float: right;
 
 }
-.ui-datepicker  .ui-datepicker-title  {
-  text-align: center;
+.crm_page_wp_crm_add_new .ui-datepicker .ui-datepicker-title  {
+  line-height: 25px;
+  margin-top: -3px;
+  text-align: center;  
 }
-.ui-datepicker  .ui-datepicker-title  select {
+.crm_page_wp_crm_add_new .ui-datepicker .ui-datepicker-title  select {
   padding:2px;
 }
-
-
 
 .wp_crm_attribute_uneditable textarea,
 .wp_crm_attribute_uneditable input {
@@ -198,6 +229,11 @@ table.color-palette td {
 .uploadifyQueueItem div.cancel{
     float: left;
     margin: 3px 6px 0 1px;
+}
+
+textarea.wp_crm_input_error {
+  background: none repeat scroll 0 0 #FCF2DB;
+  border: 1px solid #9C3E3E !important;
 }
 
 input.regular-text.wp_crm_input_error {
@@ -258,7 +294,11 @@ body.crm_page_wp_crm_add_new  #primary_information.postbox .inside {
   padding: 0;
 }
 
-body.crm_page_wp_crm_add_new  input.regular-text {
+body.crm_page_wp_crm_add_new input.regular-text.wpc_date_picker {
+  width: 8em;
+}
+
+body.crm_page_wp_crm_add_new input.regular-text {
   width: 20em;
 }
 
@@ -431,10 +471,6 @@ div.wp_crm_advanced_user_actions.wp-tab-panel {
   width: 90%;
   padding: 5px;
   min-height: 95px;
-}
-
-.wp_crm_user_entry_row input.regular-text {
-
 }
 
 #icon-wp_crm {

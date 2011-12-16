@@ -13,6 +13,119 @@
 class WP_CRM_F {
 
   /**
+   * Get details about an attribute.
+   *
+   * @version 1.30.2
+   */
+  function get_attribute($attribute = false) {
+    global $wp_crm;
+    
+    if(!$attribute) {
+      return;
+    }
+        
+    $user_table_keys = array(
+      'ID',
+      'user_login',
+      'user_pass',
+      'user_nicename',
+      'user_email',
+      'user_url',
+      'user_registered',
+      'user_activation_key',
+      'user_status',
+      'display_name'
+    );    
+        
+    //** Try to get data from settings */
+    $return = (array) $wp_crm['data_structure']['attributes'][$attribute];
+    
+    $return['key'] = $attribute;
+    
+    if(in_array($attribute, $user_table_keys)) {
+      $return['storage_type'] = 'user_table';
+    } else {
+      $return['storage_type'] = 'meta_table';    
+    }  
+  
+    return apply_filters('wp_crm_attribute_data', $return);
+  
+  }  
+  
+  
+  
+  /**
+   * Track detailed activity such as logins and password resets.
+   *
+   * @version 1.17.3
+   */
+  function track_detailed_user_activity() {
+  
+    add_action('password_reset', create_function('$user', '  WP_CRM_F::insert_event(array("object_id"=> $user->ID, "attribute" => "detailed_log", "other" => 5, "action" => "password_reset")); '));
+    add_action('wp_login', create_function('$user_login', ' $user = get_userdatabylogin($user_login);  WP_CRM_F::insert_event(array("object_id"=> $user->ID, "attribute" => "detailed_log", "other" => 2, "action" => "login")); '));
+      
+  }
+  
+  
+  
+  /**
+   * Makes sure the script is loaded, otherwise loads it
+   *
+   * @version 1.17.3
+   */
+  function force_script_inclusion($handle = false) {
+    global $wp_scripts;
+
+    //** WP 3.3+ allows inline wp_enqueue_script(). Yay. */
+    wp_enqueue_script($handle);
+
+    if(!$handle) {
+      return;
+    }
+
+    //** Check if already included */
+    if(wp_script_is($handle, 'done')) {
+      return true;
+    }
+
+    //** Check if script has dependancies that have not been loaded */
+    if(is_array($wp_scripts->registered[$handle]->deps)) {
+      foreach($wp_scripts->registered[$handle]->deps as $dep_handle) {
+        if(!wp_script_is($dep_handle, 'done')) {
+          $wp_scripts->in_footer[] = $dep_handle;
+        }
+      }
+    }
+    //** Force script into footer */
+    $wp_scripts->in_footer[] = $handle;
+  }
+  
+  
+
+  /**
+   * Makes sure the style is loaded, otherwise loads it
+   *
+   * @param string $handle registered style's name
+   * @author Maxim Peshkov
+   */
+  function force_style_inclusion($handle = false) {
+    global $wp_styles;
+    static $printed_styles = array();
+
+    if(!$handle) {
+      return;
+    }
+    //** Check if already included */
+    if(wp_style_is($handle, 'done') || isset($printed_styles[$handle])) {
+      return true;
+    } else {
+      $printed_styles[$handle] = true;
+      wp_print_styles($handle);
+    }
+  }
+
+  
+  /**
    * Scans through filters to see if anything is hooked into the regular profile page.
    *
    * personal_options traditionally appears towards the top of the profile before visual editor selector
@@ -78,8 +191,6 @@ class WP_CRM_F {
         $file_path = trailingslashit($directory) . $plugin_slug . '.php';
 
         if(file_exists($file_path)) {
-
-          /* WP_CRM_F::console_log(sprintf(__('Plugin %1s: loading extra functionality in %2s.', 'wp_crm'), $plugin_slug, $file_path)); */
 
           if(WP_DEBUG == true) {
             include_once($file_path);
@@ -905,7 +1016,7 @@ class WP_CRM_F {
             unset($or);
             foreach($key_terms as $single_term) {
               $or = (isset($or) ? " OR " : "");
-              $sql .= "{$or}u.ID IN (SELECT user_id FROM {$wpdb->usermeta} WHERE meta_key = '{$wpdb->prefix}capabilities' AND meta_value LIKE '%$single_term%')";
+              $sql .= "{$or}u.ID IN (SELECT user_id FROM {$wpdb->usermeta} WHERE meta_key = '{$wpdb->prefix}capabilities' AND meta_value LIKE '%{$single_term}%')";
             }
             $sql .= ")";
             continue;
@@ -917,7 +1028,7 @@ class WP_CRM_F {
             $sql .= " AND (1";
             foreach($key_terms as $single_term) {
               $meta_key = $wp_crm['data_structure']['attributes'][$primary_key]['option_keys'][$single_term];
-              $sql .= " AND u.ID IN (SELECT user_id FROM {$wpdb->usermeta} WHERE meta_key = '$meta_key' AND (meta_value = 'on' OR meta_value = 'true'))";
+              $sql .= " AND u.ID IN (SELECT user_id FROM {$wpdb->usermeta} WHERE meta_key = '{$meta_key}' AND (meta_value = 'on' OR meta_value = 'true'))";
             }
             $sql .= ")";
           }
@@ -1166,7 +1277,7 @@ class WP_CRM_F {
 
       case 'archive_message':
 
-        $wpdb->update($wpdb->prefix . 'crm_log', array('value' => 'archived'), array('id' =>$object_id));
+        $wpdb->update($wpdb->crm_log, array('value' => 'archived'), array('id' =>$object_id));
         $return['success'] = 'true';
         $return['message'] = __('Message archived.', 'wp_crm');
         $return['action'] = 'hide_element';
@@ -1178,7 +1289,7 @@ class WP_CRM_F {
 
         do_action('wp_crm_delete_log_entry', $object_id);
 
-        if($wpdb->query("DELETE FROM {$wpdb->prefix}crm_log WHERE id = {$object_id}")) {
+        if($wpdb->query("DELETE FROM {$wpdb->crm_log} WHERE id = {$object_id}")) {
           $return['success'] = 'true';
           $return['message'] = __('Message deleted.', 'wp_crm');
           $return['action'] = 'hide_element';
@@ -1189,7 +1300,7 @@ class WP_CRM_F {
       case 'trash_message_and_user':
 
         if( current_user_can( 'delete_users' ) ) {
-         $user_id = $wpdb->get_var("SELECT object_id FROM {$wpdb->prefix}crm_log WHERE id = $object_id AND object_type = 'user' ");
+         $user_id = $wpdb->get_var("SELECT object_id FROM {$wpdb->crm_log} WHERE id = {$object_id} AND object_type = 'user' ");
 
          if($user_id) {
           wp_delete_user($user_id);
@@ -1234,7 +1345,7 @@ class WP_CRM_F {
    function deleted_user($object_id) {
     global $wpdb;
 
-    $wpdb->query("DELETE FROM {$wpdb->prefix}crm_log WHERE object_type = 'user' AND object_id = {$object_id}");
+    $wpdb->query("DELETE FROM {$wpdb->crm_log} WHERE object_type = 'user' AND object_id = {$object_id}");
 
    }
 
@@ -1359,15 +1470,16 @@ class WP_CRM_F {
 
     foreach($replace_with as $key => $value) {
 
-      if(is_array($value))
+      if(is_array($value)) {
         $value = WP_CRM_F::get_first_value($value);
+      }
 
-      foreach($notification_data as $n_key => $n_value)
+      foreach($notification_data as $n_key => $n_value) {
         $notification_data[$n_key] = str_replace('[' . $key . ']', $value, $n_value);
+      }
 
     }
-
-
+ 
     return $notification_data;
 
    }
@@ -1727,6 +1839,12 @@ class WP_CRM_F {
     if($attribute['input_type'] == 'text') {
       $class[] = 'regular-text';
     }
+    
+    if($attribute['input_type'] == 'date') {
+      $class[] = 'regular-text';
+      $class[] = 'wpc_date_picker';
+    }
+    
     if($attribute['input_type'] == 'dropdown') {
       $class[] = 'wp_crm_dropdown';
     }
@@ -1736,7 +1854,7 @@ class WP_CRM_F {
     }
 
     if($attribute['required'] == 'true') {
-      $class[] = 'required_field';
+      $class[] = 'wp_crm_required_field';
     }
 
     if($attribute['has_options']) {
@@ -1764,6 +1882,7 @@ class WP_CRM_F {
 
     switch ($attribute['input_type']) {
 
+      case 'date':
       case 'password':
       case 'text':
         foreach($values as $rand => $value_data) {  ?>
@@ -1989,6 +2108,10 @@ class WP_CRM_F {
         $wp_crm['data_structure']['attributes']['phone_number']['title'] = 'Phone Number';
         $wp_crm['data_structure']['attributes']['phone_number']['input_type'] = 'text';
         $wp_crm['data_structure']['attributes']['phone_number']['display'] = 'true';
+
+        $wp_crm['data_structure']['attributes']['user_type']['title'] = 'Important Date';
+        $wp_crm['data_structure']['attributes']['user_type']['options'] = 'Birthday, Anniversary';
+        $wp_crm['data_structure']['attributes']['user_type']['input_type'] = 'date';
 
         $wp_crm['data_structure']['attributes']['user_type']['title'] = 'User Type';
         $wp_crm['data_structure']['attributes']['user_type']['options'] = 'Customer,Vendor,Employee';
@@ -2347,7 +2470,7 @@ class WP_CRM_F {
     $sql = array();
 
     if(!$wpdb->crm_log) {
-      $wpdb->crm_log = $wpdb->prefix . 'crm_log';
+      $wpdb->crm_log = $wpdb->base_prefix . 'crm_log';
     }
 
     if(!$wpdb->crm_log_meta) {
@@ -2416,7 +2539,10 @@ class WP_CRM_F {
     }
 
     if(!$result) {
-      $result = WP_CRM_F::get_events('object_id=' . $args['user_id']);
+      $result = WP_CRM_F::get_events(array(
+        'object_id' => $args['user_id'], 
+        'attribute' => array('contact_form_message', 'note'))
+      );
     }
 
     if(!$result) {
@@ -2494,18 +2620,21 @@ class WP_CRM_F {
       $args = wp_parse_args( $args, $defaults );
     }
 
-
     //** Convert time - just in case */
     if(empty($args['time'])) {
       $time_stamp = time();
     } else {
       $time_stamp = strtotime($args['time']);
     }
+    
+    if($args['attribute'] == 'detailed_log' && empty($args['value'])) {
+      $args['value'] = $_SERVER['REMOTE_ADDR'];
+    }
 
     $args['time'] = date('Y-m-d H:i:s', $time_stamp);
 
-
-    $wpdb->insert($wpdb->prefix . 'crm_log', array(
+    //** Insert event. We double-check $wpdb->crm_log exists in case this function is called very early */
+    $wpdb->insert($wpdb->crm_log ? $wpdb->crm_log : $wpdb->base_prefix . 'crm_log', array(
       'object_id' => $args['object_id'],
       'object_type' => $args['object_type'],
       'user_id' => $args['user_id'],
@@ -2519,12 +2648,12 @@ class WP_CRM_F {
       'time' => $args['time']
     ));
 
-
     if($args['ajax'] == 'true')  {
-      if($wpdb->insert_id)
+      if($wpdb->insert_id) {
         return json_encode(array('success' => 'true', 'insert_id' => $wpdb->insert_id));
-      else
+      } else {
         return json_encode(array('success' => 'false'));
+      }
     }
 
     return $wpdb->insert_id;
@@ -2541,32 +2670,41 @@ class WP_CRM_F {
     global $wpdb, $current_user;
 
     $defaults = array(
-        'object_type' => 'user',
-        'order_by' => 'time',
-        'start' => '0',
-        'import_count' => '10',
-        'get_count' => 'false',
+      'object_type' => 'user',
+      'order_by' => 'time',
+      'start' => '0',
+      'import_count' => '10',
+      'get_count' => 'false',
+      'attribute' => apply_filters('wp_crm_default_event_attributes', array('contact_form_message', 'note')),
      );
 
-
     $args = wp_parse_args( $args, $defaults );
-
-    if($args['import_count'])
+    
+    if($args['import_count']) {
       $limit = " LIMIT {$args[start]}, {$args[import_count]} ";
+    }
 
-    if($args['object_id'])
+    if($args['object_id']) {
       $query[] = " (object_id = '{$args['object_id']}') ";
+    }
 
-    if($args['object_type'])
-      $query[] = " object_type = '{$args['object_type']}' ";
+    if($args['object_type']) {
+      $query[] = " (object_type = '{$args['object_type']}') ";
+    }
+    
+    if(is_array($args['attribute'])) {
+      $query[] = " (attribute = '" . implode("' OR attribute= '", $args['attribute']) . "')";
+    }    
 
-    if($query)
+    if($query) {
       $query = " WHERE " . implode(' AND ', $query);
+    }
 
-    if($args['order_by'])
+    if($args['order_by']) {
       $order_by = " ORDER BY {$args[order_by]} DESC ";
+    }
 
-    $results = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}crm_log $query $order_by $limit");
+    $results = $wpdb->get_results("SELECT * FROM {$wpdb->crm_log} {$query} {$order_by} {$limit}");
 
     if($args['get_count'] == 'true') {
       return count($results);

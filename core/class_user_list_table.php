@@ -268,7 +268,7 @@ class CRM_User_List_Table extends WP_CMR_List_Table {
           foreach($user_object[$column_name] as $option_slug =>  $values) {
 
 
-            if($this_attribute['input_type'] == 'text' && $this_attribute['has_options']) {
+            if(($this_attribute['input_type'] == 'text' || $this_attribute['input_type'] == 'date' || $this_attribute['input_type'] == 'textarea') && $this_attribute['has_options']) {
               //** We have a text input with options (dropdown) */
 
               $r .= wp_crm_get_value($column_name, $user_id);
