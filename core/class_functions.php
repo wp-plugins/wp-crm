@@ -616,6 +616,7 @@ class WP_CRM_F {
    * Handle version-specific updates
    *
    * Ran if version in DB is older than version of THIS code right before the DB version is updated.
+   * Reference readme.txt to see details of updates.
    *
    * @since 0.1
    *
@@ -623,15 +624,12 @@ class WP_CRM_F {
    function handle_update($old_version) {
     global $wp_roles;
 
+    $roles = $wp_roles->get_names();
 
-    if($old_version < 0.17) {
-        /*
-          Version prior to 0.17 used poorly labeled and structured capabilities.
-          We remove all old capabilities
-        */
+    switch (true) {
 
-        $roles = $wp_roles->get_names();
-
+      case $old_version <  0.17:
+      echo '1';
         foreach($roles as $role => $role_label) {
           $wp_roles->remove_cap( $role, 'wp_crm_manage_settings' );
           $wp_roles->remove_cap( $role, 'wp_crm_add_prospects' );
@@ -640,13 +638,28 @@ class WP_CRM_F {
           $wp_roles->remove_cap( $role, 'wp_crm_view_messages' );
           $wp_roles->remove_cap( $role, 'wp_crm_add_users' );
           $wp_roles->remove_cap( $role, 'wp_crm_Manage Settings' );
-
-
         }
 
-      }
+      break;
 
-   }
+      case $old_version < 0.31:
+
+        if(is_object($wp_roles)) {
+          foreach($wp_roles->roles as $role => $role_data) {
+            if(is_array($role_data['capabilities']) && array_key_exists('edit_users', $role_data['capabilities'])) {
+              $wp_roles->add_cap($role, 'WP-CRM: Change Passwords', true);
+              $wp_roles->add_cap($role, 'WP-CRM: Change Color Scheme', true);
+            }
+          }
+        }
+
+      break;
+
+    }
+
+
+
+  }
 
 
 /**

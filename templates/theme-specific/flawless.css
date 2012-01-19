@@ -7,40 +7,41 @@ ul.wp_crm_contact_form {
 }
 
 ul.wp_crm_contact_form li.wp_crm_form_element {
-  
+  overflow: auto;
 }
 
 ul.wp_crm_contact_form li.wp_crm_form_element label {
   font-weight: bold;
+  padding-right: 1em;
+}
+
+ul.wp_crm_contact_form li.wp_crm_form_element .wp_crm_input_wrapper {
+  float: left;
+  padding-top: 4px;
 }
 
 ul.wp_crm_contact_form li.wp_crm_form_element .wp_crm_input_wrapper input.regular-text,
 ul.wp_crm_contact_form li.wp_crm_form_element .wp_crm_input_wrapper textarea,
 ul.wp_crm_contact_form li.wp_crm_form_element .wp_crm_input_wrapper select {
-  border: 1px solid #ACACAC;
-  border-radius: 4px 4px 4px 4px;
-  -moz-border-radius: 4px 4px 4px 4px;
-  -webkit-border-radius: 4px 4px 4px 4px;
-  -khtml-border-radius: 4px 4px 4px 4px;
-  -o-border-radius: 4px 4px 4px 4px;
-  -ms-border-radius: 4px 4px 4px 4px;
-  line-height: 19px;
-  margin-right: 4px;
-  padding: 1px 4px 1px 5px;
   position: relative;
-  width: 300px;
 }
 
 ul.wp_crm_contact_form li.wp_crm_form_element .wp_crm_input_wrapper input.regular-text {
-  height: 18px;
+
 }
 
 ul.wp_crm_contact_form li.wp_crm_form_element .wp_crm_input_wrapper select {
-  width: 311px;
+  
+}
+
+ul.wp_crm_contact_form .wp_crm_form_response,
+ul.wp_crm_contact_form .wp_crm_submit_row {
+  left: 144px;
+  position: relative;  
 }
 
 ul.wp_crm_contact_form li.wp_crm_submit_row input {
-  background: url("kmb-assets/action_button.png") repeat-x scroll left top #6F0A08;
+  background: #6F0A08;
   border: 0 none;
   border-radius: 3px;
   -moz-border-radius: 3px;

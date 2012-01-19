@@ -22,6 +22,11 @@ jQuery(document).ready(function() {
     var wp_crm_dev_mode = false;
   }
 
+  /* Hide Toggle Settings link if there are no settings */
+  if(!jQuery('.wp_crm_advanced_user_actions.wp-tab-panel').text().trim().length) {
+    jQuery('ul.wp_crm_advanced_user_actions_wrapper').hide();
+  }
+
   jQuery("form#crm_user input[type=text], form#crm_user input[type=checkbox], form#crm_user select").change(function() {
     var this_attribute = jQuery(this).attr("wp_crm_slug");
     wp_crm_ui.change_made = true;

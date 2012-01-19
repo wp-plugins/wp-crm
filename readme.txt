@@ -71,6 +71,14 @@ Visit CRM -> Settings and click on the "Data" tab.  There you will  be able to a
  
 == Changelog ==
 
+= 0.30.3 =
+* Proper plugin PATH and URL determining.
+* Added capabilities: "Change Passwords", "Change Color Scheme".
+* Sender email address fixed in "CRM Group Messages" Premium Feature.
+* Major fix to messaging function of "CRM Group Messages" Premium Feature.
+* Fix for PDF report generating function of "CRM Group Messages" Premium Feature.
+* Fix for option "Allow user accounts to be created without an e-mail address".
+
 = 0.30.2 =
 * Added Date Picker input option.
 * Updated Notifications to send checkbox and dropdown values correctly, concatenating multiple values with a comma when they exist.
@@ -80,7 +88,9 @@ Visit CRM -> Settings and click on the "Data" tab.  There you will  be able to a
 = 0.30.1 =
 * Fix for WP Network Compatibility.
 
-= 0.30 =
+= 0.30.0 =
+* "Change Passwords" capability added. When WP-CRM is used as profile editor, users with this capability disabled cannot change passwords, even if they have rights to edit users.  On update WP-CRM will add the Change Passwords to all roles that have the edit_users capability.
+* "Change Color Scheme" capability added, which if removed will not let a user change their, or any other user's, color scheme.
 * Added better BuddyPress integration - link to a user's BuddyPress profile can be enabled to display on the overview table for quick access.
 * Added Google Analytics Event tracking to contact forms.
 * Added Admin Bar and Color Scheme selection UI to CRM profiles. 

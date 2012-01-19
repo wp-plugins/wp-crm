@@ -619,7 +619,7 @@ if(!function_exists('wp_crm_save_user_data')) {
       //** Make sure values are always in array format */
       $values = !is_array($values) ? $values : (array) $values;
 
-      foreach($values as $temp_key => $data) {
+      foreach( (array) $values as $temp_key => $data) {
 
         //** If this attribute is in the main user table, we store it here */
         if(in_array($meta_key, $wp_insert_user_vars)) {
@@ -768,9 +768,20 @@ if(!function_exists('wp_crm_save_user_data')) {
       $insert_data['role'] = $args['default_role'];
     }
 
-    if($wp_crm['configuration']['allow_account_creation_with_no_email'] == 'true' && empty($insert_data['user_email'])) {
-      $fake_user_email = rand(10000,99999) . '@' .  rand(10000,99999) . '.com';
-      $insert_data['user_email'] = $fake_user_email;
+    //** @author korotkov@ud */
+    if( empty($insert_data['user_email']) ) {
+      if( $wp_crm['configuration']['allow_account_creation_with_no_email'] == 'true' ) {
+        $fake_user_email = rand(10000,99999) . '@' .  rand(10000,99999) . '.com';
+        $insert_data['user_email'] = $fake_user_email;
+      } else {
+        WP_CRM_F::add_message( __('Error saving user: Email address cannot be empty', 'wp_crm'), 'bad');
+        return false;
+      }
+    } else {
+      if ( !filter_var($insert_data['user_email'], FILTER_VALIDATE_EMAIL) ) {
+        WP_CRM_F::add_message( __('Error saving user: Email address is invalid', 'wp_crm'), 'bad');
+        return false;
+      }
     }
 
     if($new_user) {

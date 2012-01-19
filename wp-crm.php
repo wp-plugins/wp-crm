@@ -4,7 +4,7 @@ Plugin Name: WP-CRM - Customer Relationship Management
 Plugin URI: http://usabilitydynamics.com/products/wp-crm/
 Description: Integrated Customer Relationship Management for WordPress. 
 Author: Usability Dynamics, Inc.
-Version: 0.30.2
+Version: 0.30.3
 Author URI: http://usabilitydynamics.com
 
 Copyright 2011  Usability Dynamics, Inc.    (email : andy.potanin@twincitiestech.com)
@@ -26,10 +26,13 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 /** Plugin Version */
-define('WP_CRM_Version', '0.30.2');
+define('WP_CRM_Version', '0.30.3');
 
 /** Path for Includes */
-define('WP_CRM_Path', WP_PLUGIN_DIR . '/wp-crm');
+define('WP_CRM_Path', untrailingslashit(plugin_dir_path( __FILE__ )));
+
+/** Path for front-end links */
+define('WP_CRM_URL', untrailingslashit(plugin_dir_url( __FILE__ )));
 
 /** Path for Includes */
 define('WP_CRM_Cache', WP_CONTENT_DIR . '/cache');
@@ -40,12 +43,9 @@ define('WP_CRM_Templates', WP_CRM_Path . '/templates');
 /** Path for Includes */
 define('WP_CRM_Connections', WP_CRM_Path . '/core/connections');
 
-/** Path for front-end links */
-define('WP_CRM_URL', WP_PLUGIN_URL . '/wp-crm');
-
 /** Directory path for include_onces of template files  */
 define('WP_CRM_Premium', WP_PLUGIN_DIR . '/wp-crm/core/premium');
-	
+
 // Global Usability Dynamics / TwinCitiesTech.com, Inc. Functions - customized for WP-CRM
 include_once WP_CRM_Path . '/core/class_ud.php';
 	

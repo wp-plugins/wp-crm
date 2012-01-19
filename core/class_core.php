@@ -79,7 +79,7 @@ class WP_CRM_Core {
 
     /** Loads all the class for handling all plugin tables */
     include_once WP_CRM_Path . '/core/class_list_table.php';
-    
+
     if($wp_crm['configuration']['track_detailed_user_activity'] == 'true') {
       WP_CRM_F::track_detailed_user_activity();
     }
@@ -125,7 +125,7 @@ class WP_CRM_Core {
     //** Modify default WP password reset message */
     add_filter("admin_body_class", create_function('', "return WP_CRM_Core::admin_body_class(); "));
 
-     // Load back-end scripts
+     //** Load back-end scripts */
     add_action("admin_enqueue_scripts", array('WP_CRM_Core', "admin_enqueue_scripts"));
 
     add_action("wp_ajax_wp_crm_csv_export", create_function('',' WP_CRM_F::csv_export($_REQUEST["wp_crm_search"]); die();'));
@@ -184,7 +184,7 @@ class WP_CRM_Core {
 
     $mofile_local  = WP_CRM_Path . '/langs/' . $mofile;
 		$mofile_global = WP_LANG_DIR . '/wp_crm/' . $mofile;
-    
+
 		if ( file_exists( $mofile_local ) ) {
 			load_textdomain( 'wp_crm', $mofile_local );
     } elseif ( file_exists( $wp_crm ) ) {
@@ -192,6 +192,7 @@ class WP_CRM_Core {
     }
 
   }
+  
 
   /**
    * Secondary WPP Initialization ran towards the end of init()
@@ -203,8 +204,7 @@ class WP_CRM_Core {
   function init_lower() {
     global $wp_crm;
 
-
-    // Filters for CRM settings are applied
+    //** Filters for CRM settings are applied */
     $wp_crm['configuration'] = apply_filters('wp_crm_configuration', $wp_crm['configuration']);
     $wp_crm['notification_actions'] = apply_filters('wp_crm_notification_actions', $wp_crm['notification_actions']);
 
@@ -349,6 +349,7 @@ class WP_CRM_Core {
     //** Make sure tables are up to date */
     WP_CRM_F::maybe_install_tables();
   }
+
 
   /**
    * Runs pre-header functions on admin-side only - ran on ALL admin pages
@@ -508,6 +509,7 @@ class WP_CRM_Core {
         return $columns;
     }
 
+    
   /**
    * Header functions
    *
@@ -535,6 +537,7 @@ class WP_CRM_Core {
 
     }
 
+    
     /**
      * Returns columns for specific person type based on $_GET[page] variable
      *
@@ -607,7 +610,8 @@ class WP_CRM_Core {
 
   }
 
-/**
+  
+  /**
    * Used for loading back-end UI
    *
    * All back-end pages call this function, which then determines that UI to load below the headers.
@@ -626,8 +630,7 @@ class WP_CRM_Core {
     }
 
   }
-
-
+  
 
   /**
    * Can enqueue scripts on specific pages, and print content into head
@@ -729,6 +732,8 @@ class WP_CRM_Core {
 
   /**
    * Modify admin body class on CRM  pages for CSS
+   *
+   * Note: The white-space on the end of 'wp_crm ' is intentional.
    *
    * @return string|$request a modified request to query listings
    * @since 0.5

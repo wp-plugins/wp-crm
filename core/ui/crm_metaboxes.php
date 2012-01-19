@@ -190,51 +190,61 @@ class crm_page_wp_crm_add_new {
     }
 
    ?>
-<div id="minor-publishing">
-  <ul>
+   
+  <div id="minor-publishing">
+  
+  <ul class="wp_crm_advanced_user_actions_wrapper">
 
-  <?php if(current_user_can( 'edit_users' )) { ?>
+    <li class="wp_crm_advanced_user_actions">
+      <div class="wp_crm_toggle_advanced_user_actions wp_crm_link"><?php _e('Toggle Settings'); ?></div>
+      <div class="wp_crm_advanced_user_actions wp-tab-panel">
 
-  <li class="wp_crm_advanced_user_actions">
-    <div class="wp_crm_toggle_advanced_user_actions wp_crm_link"><?php _e('Toggle Advanced User Settings'); ?></div>
-    <div class="wp_crm_advanced_user_actions wp-tab-panel">
-    <?php _e('Set Password:', 'wp_crm'); ?>
-    <ul>
-      <li>
-        <input type="password" autocomplete="off" value="" size="16" class="wp_crm_user_password" id="wp_crm_password_1" name="wp_crm[user_data][user_pass][<?php echo rand(1000,9999); ?>][value]" />
-        <span class="description"><?php _e('Type in new password twice to change.'); ?></span>
-      </li>
+      <?php if(current_user_can( 'edit_users' )) { ?>
 
-      <li>
-        <input type="password" autocomplete="off" value="" size="16" class="wp_crm_user_password" id="wp_crm_password_2" />
-        <span class="description"><?php _e('Type your new password again.'); ?></span>
-      </li>
+      <?php if(current_user_can('WP-CRM: Change Passwords')) { ?>
+      <?php _e('Set Password:', 'wp_crm'); ?>
+      <ul class="wp_crm_edit_password">
+        <li>
+          <input type="password" autocomplete="off" value="" size="16" class="wp_crm_user_password" id="wp_crm_password_1" name="wp_crm[user_data][user_pass][<?php echo rand(1000,9999); ?>][value]" />
+          <span class="description"><?php _e('Type in new password twice to change.'); ?></span>
+        </li>
 
-    </ul>
+        <li>
+          <input type="password" autocomplete="off" value="" size="16" class="wp_crm_user_password" id="wp_crm_password_2" />
+          <span class="description"><?php _e('Type your new password again.'); ?></span>
+        </li>
 
-    <?php _e('Change role:', 'wp_crm'); ?>
-    <ul>
-      <li>
-        <?php _('User Role:'); ?>
-        <select id="wp_crm_role" <?php echo ($own_profile ? ' disabled="true" ' : ''); ?> name="wp_crm[user_data][role][<?php echo rand(1000,9999); ?>][value]">
-          <option value=""></option>
-          <?php wp_dropdown_roles($object['role']['default'][0]); ?>
-        </select>
-      </li>
-      <li>
-        <input name="show_admin_bar_front" type="hidden" value="false"  />
-        <input name="show_admin_bar_front" type="checkbox" id="show_admin_bar_front" value="true" <?php checked( _get_admin_bar_pref( 'front', $profileuser->ID ) ); ?> />
-        <label for="show_admin_bar_front"><?php _e('Show Admin Bar when viewing site.'); ?> </label>
-      </li>
+      </ul>
+      <?php } ?>
 
-    </ul>
+      <ul>
+        <?php if(current_user_can('edit_roles')) { ?>
+        <li class="wp_crm_edit_roles">
+          <label for="wp_crm_role"><?php _e('Capability Role:', 'wp_crm'); ?></label>
+          <select id="wp_crm_role" <?php echo ($own_profile ? ' disabled="true" ' : ''); ?> name="wp_crm[user_data][role][<?php echo rand(1000,9999); ?>][value]">
+            <option value=""></option>
+            <?php wp_dropdown_roles($object['role']['default'][0]); ?>
+          </select>
+        </li>
+        <?php }?>
 
-    <?php _e('Color Scheme:', 'wp_crm'); ?>
-    <?php do_action( 'admin_color_scheme_picker' ); ?>
+        <li class="wp_crm_capability_bar">
+          <input name="show_admin_bar_front" type="hidden" value="false"  />
+          <input name="show_admin_bar_front" type="checkbox" id="show_admin_bar_front" value="true" <?php checked( _get_admin_bar_pref( 'front', $profileuser->ID ) ); ?> />
+          <label for="show_admin_bar_front"><?php _e('Show Admin Bar when viewing site.'); ?> </label>
+        </li>
 
-    </div>
-  </li>
-  <?php } ?>
+      </ul>
+
+      <?php } ?>
+
+      <?php if(current_user_can('WP-CRM: Change Color Scheme')) {
+        _e('Color Scheme:', 'wp_crm');
+        do_action( 'admin_color_scheme_picker' );
+        } ?>
+
+      </div>
+    </li>
 
   </ul>
 
