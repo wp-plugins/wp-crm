@@ -155,6 +155,11 @@ if(empty($wp_crm['data_structure']['attributes'])) {
               <input id="wp_crm_track_detailed_user_activity" value="true" type="checkbox"  <?php checked($wp_crm['configuration']['track_detailed_user_activity'], 'true'); ?> name="wp_crm[configuration][track_detailed_user_activity]" />
               <label for="wp_crm_track_detailed_user_activity"><?php _e('Track detailed user activity.', 'wp_crm'); ?> (In Development)</label>
             </li>
+            
+            <li>
+              <input id="wp_crm_allow_attributes_grouping" value="true" type="checkbox"  <?php checked($wp_crm['configuration']['allow_attributes_grouping'], 'true'); ?> name="wp_crm[configuration][allow_attributes_grouping]" />
+              <label for="wp_crm_allow_attributes_grouping"><?php _e('Allow attributes grouping.', 'wp_crm'); ?></label>
+            </li>
 
           </ul>
         </td>
@@ -334,9 +339,9 @@ if(empty($wp_crm['data_structure']['attributes'])) {
           </td>
           <td valign="middle"><span class="wp_crm_delete_row  button"><?php _e('Delete','wp_crm') ?></span></td>
         </tr>
-      </tbody>
+      
       <?php endforeach; ?>
-
+      </tbody>
       <tfoot>
         <tr>
           <td colspan='4'>
@@ -373,34 +378,38 @@ if(empty($wp_crm['data_structure']['attributes'])) {
           <th class="wp_crm_type_col"><?php _e('Input Type','wp_crm') ?></th>
           <th class="wp_crm_values_col"><?php _e('Predefined Values','wp_crm') ?></th>
           <th class="wp_crm_delete_col">&nbsp;</th>
-          </tr>
+        </tr>
       </thead>
       <tbody>
-        <?php  foreach($wp_crm['data_structure']['attributes'] as $slug => $data):  $row_hash = rand(100,999); ?>
+        <?php foreach($wp_crm['data_structure']['attributes'] as $slug => $data):  $row_hash = rand(100,999); ?>
 
         <tr class="wp_crm_dynamic_table_row" slug="<?php echo $slug; ?>"  new_row='false'>
         <th class="wp_crm_draggable_handle">&nbsp;</th>
 
         <td>
           <ul>
-          <li>
-          <label><?php _e('Title:'); ?></label>
-          <input class="slug_setter" type="text" name="wp_crm[data_structure][attributes][<?php echo $slug; ?>][title]" value="<?php echo $data['title']; ?>" />
-          </li>
+            <li>
+              <label><?php _e('Title:'); ?></label>
+              <input class="slug_setter" type="text" name="wp_crm[data_structure][attributes][<?php echo $slug; ?>][title]" value="<?php echo $data['title']; ?>" />
+            </li>
+            
+            <?php do_action('wp_crm_attributes_before_advanced_list', array('slug'=>$slug)); ?>
 
-          <li class="wp_crm_advanced_configuration">
-            <label><?php _e('Note:'); ?></label>
-             <input type="text" name="wp_crm[data_structure][attributes][<?php echo $slug; ?>][description]" value="<?php echo $data['description']; ?>" />
-          </li>
+            <li class="wp_crm_advanced_configuration">
+              <label><?php _e('Note:'); ?></label>
+               <input type="text" name="wp_crm[data_structure][attributes][<?php echo $slug; ?>][description]" value="<?php echo $data['description']; ?>" />
+            </li>
 
-          <li class="wp_crm_advanced_configuration">
-            <label><?php _e('Slug:'); ?></label>
-            <input type="text" class="slug" readonly='readonly' value="<?php echo $slug; ?>" />
-          </li>
+            <li class="wp_crm_advanced_configuration">
+              <label><?php _e('Slug:'); ?></label>
+              <input type="text" class="slug" readonly='readonly' value="<?php echo $slug; ?>" />
+            </li>
+          
+            <?php do_action('wp_crm_attributes_after_advanced_list', array('slug'=>$slug)); ?>
 
-          <li>
-            <span class="wp_crm_show_advanced wp_crm_subtle_link"><?php _e('Toggle Advanced'); ?></span>
-          </li>
+            <li>
+              <span class="wp_crm_show_advanced wp_crm_subtle_link"><?php _e('Toggle Advanced'); ?></span>
+            </li>
 
           </ul>
         </td>
@@ -432,51 +441,50 @@ if(empty($wp_crm['data_structure']['attributes'])) {
                   'row_hash' => $row_hash
                 )); ?>
 
-        <?php /*
-        <li>
-            <input  id="<?php echo $row_hash; ?>_allow_multiple"  value="true" type="checkbox"  <?php checked($wp_crm['data_structure']['attributes'][$slug]['allow_multiple'], 'true'); ?> name="wp_crm[data_structure][attributes][<?php echo $slug; ?>][allow_multiple]" />
-            <label  for="<?php echo $row_hash; ?>_allow_multiple"  ><?php _e('Allow Multiple', 'wp_crm'); ?></label>
-        </li>
+          <?php /*
+          <li>
+              <input  id="<?php echo $row_hash; ?>_allow_multiple"  value="true" type="checkbox"  <?php checked($wp_crm['data_structure']['attributes'][$slug]['allow_multiple'], 'true'); ?> name="wp_crm[data_structure][attributes][<?php echo $slug; ?>][allow_multiple]" />
+              <label  for="<?php echo $row_hash; ?>_allow_multiple"  ><?php _e('Allow Multiple', 'wp_crm'); ?></label>
+          </li>
 
-        <li>
-            <input  id="<?php echo $row_hash; ?>_autocomplete"  value="true" type="checkbox"  <?php checked($wp_crm['data_structure']['attributes'][$slug]['autocomplete'], 'true'); ?> name="wp_crm[data_structure][attributes][<?php echo $slug; ?>][autocomplete]" />
-            <label  for="<?php echo $row_hash; ?>_autocomplete"  ><?php _e('Autocomplete Field', 'wp_crm'); ?></label>
-        </li>
-        */ ?>
+          <li>
+              <input  id="<?php echo $row_hash; ?>_autocomplete"  value="true" type="checkbox"  <?php checked($wp_crm['data_structure']['attributes'][$slug]['autocomplete'], 'true'); ?> name="wp_crm[data_structure][attributes][<?php echo $slug; ?>][autocomplete]" />
+              <label  for="<?php echo $row_hash; ?>_autocomplete"  ><?php _e('Autocomplete Field', 'wp_crm'); ?></label>
+          </li>
+          */ ?>
 
-        </ul>
-        </td>
-        <td>
-            <select name="wp_crm[data_structure][attributes][<?php echo $slug; ?>][input_type]">
-              <?php foreach($wp_crm['configuration']['input_types'] as $this_input_type_slug => $this_input_type_label): ?>
-              <option value="<?php echo $this_input_type_slug; ?>" <?php selected($wp_crm['data_structure']['attributes'][$slug]['input_type'] == $this_input_type_slug); ?>><?php echo $this_input_type_label; ?></option>
-              <?php endforeach; ?>
-          </select>
-        </td>
-
-        <td class='wp_crm_values_col'>
-          <textarea  name="wp_crm[data_structure][attributes][<?php echo $slug; ?>][options]"><?php echo $wp_crm['data_structure']['attributes'][$slug]['options']; ?></textarea>
-        </td>
-
-        <td><span class="wp_crm_delete_row  button"><?php _e('Delete','wp_crm') ?></span></td>
-        </tr>
-
-        <?php endforeach; ?>
-      </tbody>
-
-      <tfoot>
-        <tr>
-          <td colspan='6'>
-          <input type="button" class="wp_crm_add_row button-secondary" value="<?php _e('Add Row','wp_crm') ?>" />
+          </ul>
           </td>
-        </tr>
-      </tfoot>
+          <td>
+              <select name="wp_crm[data_structure][attributes][<?php echo $slug; ?>][input_type]">
+                <?php foreach($wp_crm['configuration']['input_types'] as $this_input_type_slug => $this_input_type_label): ?>
+                <option value="<?php echo $this_input_type_slug; ?>" <?php selected($wp_crm['data_structure']['attributes'][$slug]['input_type'] == $this_input_type_slug); ?>><?php echo $this_input_type_label; ?></option>
+                <?php endforeach; ?>
+            </select>
+          </td>
 
-    </table>
+          <td class='wp_crm_values_col'>
+            <textarea  name="wp_crm[data_structure][attributes][<?php echo $slug; ?>][options]"><?php echo $wp_crm['data_structure']['attributes'][$slug]['options']; ?></textarea>
+          </td>
 
-  </tr>
+          <td><span class="wp_crm_delete_row  button"><?php _e('Delete','wp_crm') ?></span></td>
+          </tr>
+
+          <?php endforeach; ?>
+        </tbody>
+
+        <tfoot>
+          <tr>
+            <td colspan='6'>
+            <input type="button" class="wp_crm_add_row button-secondary" value="<?php _e('Add Row','wp_crm') ?>" />
+            </td>
+          </tr>
+        </tfoot>
+      </table>
+    </tr>
+    <?php do_action('wp_crm_after_tab_user_data'); ?>
   </table>
-  </div>
+</div>
 
 <div id="tab_user_roles">
 

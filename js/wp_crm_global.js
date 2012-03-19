@@ -136,8 +136,6 @@ jQuery(document).ready(function() {
   // When the .slug_setter input field is modified, we update names of other elements in row
   jQuery(".wp_crm_dynamic_table_row[new_row=true] input.slug_setter").live("change", function() {
 
-    //console.log('Name changed.');
-
     var this_row = jQuery(this).parents('tr.wp_crm_dynamic_table_row');
 
     // Slug of row in question
@@ -148,12 +146,17 @@ jQuery(document).ready(function() {
 
     // Conver into slug
     var new_slug = wp_crm_create_slug(new_slug);
-    //console.log("New slug: "  + new_slug);
 
     // Don't allow to blank out slugs
     if(new_slug == "")
       return;
-
+    
+    var samename = jQuery(".wp_crm_dynamic_table_row[new_row=false][slug="+new_slug+"]").length;
+    if(samename){
+      var rand=Math.floor(Math.random()*10000);
+      new_slug=new_slug+rand;
+    }
+      
     // If slug input.slug exists in row, we modify it
     jQuery(".slug" , this_row).val(new_slug);
 
@@ -342,24 +345,53 @@ function wp_crm_create_slug(slug) {
 
   }
 
+  /*  */
+  jQuery(".wp_crm_load_more_stream").live("click", function() {
+    var params = {
+      per_page : jQuery(this).attr('per_page'),
+      more_per_page : 1,
+      all_messages : jQuery(this).attr('all_messages'),
+      limited_messages : jQuery(this).attr('limited_messages')
+    }
+    wp_crm_update_activity_stream(params);
+  });
 
   /**
    * Contact history and messages for a user
    *
-   *
+   * 
    */
-  function wp_crm_update_activity_stream() {
-    var user_id = jQuery("#user_id").val();
+  function wp_crm_update_activity_stream(params) {
+    var params = jQuery.extend(
+      true, 
+      {
+          action: 'wp_crm_get_user_activity_stream',
+          user_id: jQuery("#user_id").val()
+      }, 
+      params
+    );
+    jQuery.post(
+      ajaxurl, params, function(response) {
+        
+        jQuery("#wp_crm_user_activity_stream tbody").html(response.tbody);
+        if (response.more_per_page){
+          jQuery("#user_activity_history .wp_crm_stream_status.wp_crm_load_more_stream").attr('per_page',response.per_page);
+          jQuery("#user_activity_history .wp_crm_stream_status.wp_crm_load_more_stream span.more_count").html(response.more_per_page);
+        }
+        var total = jQuery("#user_activity_history .wp_crm_stream_status.wp_crm_load_more_stream .wp_crm_counts .total_count").html();
+        if (response.current_count>=total){
+          jQuery("#user_activity_history .wp_crm_stream_status.wp_crm_load_more_stream").hide();
+        }else{
+          jQuery("#user_activity_history .wp_crm_stream_status.wp_crm_load_more_stream").show();
+        }
+        jQuery("#user_activity_history .wp_crm_stream_status.wp_crm_load_more_stream .wp_crm_counts .current_count").html(response.current_count);
+        jQuery("#user_activity_history .wp_crm_stream_status.wp_crm_load_more_stream .wp_crm_counts .total_count").html(response.total_count);
 
-    var params = {
-      action: 'wp_crm_get_user_activity_stream',
-      user_id: user_id
-    }
+        jQuery('#wp_crm_user_activity_stream').slideDown("fast");
 
-    jQuery.post(ajaxurl, params, function(response) {
-      jQuery("#wp_crm_user_activity_stream tbody").html(response);
-      jQuery('#wp_crm_user_activity_stream').slideDown("fast");
-    });
+      },
+      "json"
+    );
 
   }
 
@@ -473,7 +505,9 @@ function wp_crm_create_slug(slug) {
       return false;
     }
 
-    console.log(m);
+    if(typeof console == "object" && typeof console.log == "function") {
+      console.log(m);
+    }
 
   }
 

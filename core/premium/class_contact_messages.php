@@ -109,6 +109,8 @@ class class_contact_messages {
       if(!empty($args['shortcode'])) {
         $atts = $args['atts'];
 
+        $atts = stripslashes($atts);
+        
         echo do_shortcode("[{$args['shortcode']} {$atts}]");
       }
     }
@@ -174,9 +176,9 @@ class class_contact_messages {
     </div>
 
     <div class="major-publishing-actions">
-      <div class="other-action">
+      <!-- Commented temporary until this developed <div class="other-action">
         <span class="wp_crm_subtle_link wp_crm_toggle" toggle="wp_crm_user_actions"><?php _e('Show Actions'); ?></span>
-      </div>
+      </div>-->
       <div class="publishing-action">
         <?php submit_button( __('Filter Results'), 'button', false, false, array('id' => 'search-submit') ); ?>
       </div>
@@ -610,7 +612,7 @@ class class_contact_messages {
     }
 
   ?>
-  <form id="<?php echo $wpc_form_id; ?>" class="wp_crm_contact_form wp_crm_contact_form_<?php echo $form_slug; ?>">
+  <form id="<?php echo $wpc_form_id; ?>" class="form-horizontal wp_crm_contact_form wp_crm_contact_form_<?php echo $form_slug; ?>">
   <ul class="wp_crm_contact_form">
     <li class="wp_crm_<?php echo $wp_crm_nonce; ?>_first">
       <?php /* Span Prevention */ ?>
@@ -642,28 +644,34 @@ class class_contact_messages {
 
     ?>
     <li class="wp_crm_form_element <?php echo ($this_attribute['required'] == 'true' ? 'wp_crm_required_field' : ''); ?> wp_crm_<?php echo $field; ?>_container">
-      <label class="wp_crm_input_label"><?php echo $this_attribute['title']; ?></label>
-
-      <div class="wp_crm_input_wrapper">
-      <?php if($display_notes && $this_attribute['input_type'] != 'text') { ?><span class="wp_crm_attribute_note"><?php echo nl2br($this_attribute['description']); ?></span><?php } ?>
-      <?php echo WP_CRM_F::user_input_field($field, $values, $this_attribute, $user_data, "tabindex=$tabindex"); ?>
-      <?php if($display_notes && $this_attribute['input_type'] == 'text') { ?><span class="wp_crm_attribute_note"><?php echo nl2br($this_attribute['description']); ?></span><?php } ?>
-      <span class="wp_crm_error_messages"></span>
+      <div class="control-group wp_crm_<?php echo $field; ?>_div">
+        <label class="control-label wp_crm_input_label"><?php echo $this_attribute['title']; ?></label>
+        <div class="controls wp_crm_input_wrapper">
+          <?php if($display_notes && $this_attribute['input_type'] != 'text') { ?><span class="wp_crm_attribute_note"><?php echo nl2br($this_attribute['description']); ?></span><?php } ?>
+          <?php echo WP_CRM_F::user_input_field($field, $values, $this_attribute, $user_data, "tabindex=$tabindex"); ?>
+          <?php if($display_notes && $this_attribute['input_type'] == 'text') { ?><span class="wp_crm_attribute_note"><?php echo nl2br($this_attribute['description']); ?></span><?php } ?>
+          <span class="help-inline wp_crm_error_messages"></span>
+        </div>
       </div>
     </li>
   <?php $tabindex++; } ?>
 
   <?php  if($form['message_field'] == 'on') { ?>
   <li class="wp_crm_form_element wp_crm_message_field ">
-      <div class="wp_crm_input_wrapper">
+    <div class="control-group">
+      <label class="control-label wp_crm_input_label"></label>
+      <div class="controls wp_crm_input_wrapper">
         <?php echo WP_CRM_F::user_input_field('message_field', false,  array('input_type' => 'textarea'), $user_data, "tabindex=$tabindex"); ?>
+      </div>
     </div>
   </li>
   <?php } ?>
     <li class="wp_crm_form_response"><div class="wp_crm_response_text" style="display:none;"></li>
     <li class="wp_crm_submit_row">
-      <div class="wp_crm_input_wrapper">
-        <input class="<?php echo md5($wp_crm_nonce . '_submit'); ?>" type="submit" value="<?php echo $submit_text; ?>" />
+      <div class="control-group">
+        <div class="controls wp_crm_input_wrapper">
+          <input class="btn-primary <?php echo md5($wp_crm_nonce . '_submit'); ?>" type="submit" value="<?php echo $submit_text; ?>" />
+        </div>
       </div>
       <input type="hidden" name="form_slug" value="<?php echo md5($form_slug); ?>" />
       <input type="hidden" name="associated_object" value="<?php echo $post->ID; ?>" />
@@ -743,6 +751,7 @@ class class_contact_messages {
         }
 
         jQuery("*", form).removeClass(form).removeClass("wp_crm_input_error");
+        jQuery(".control-group", form).removeClass(form).removeClass("error");
 
         jQuery("span.wp_crm_error_messages", form).removeClass(form).text("");
 
@@ -798,7 +807,8 @@ class class_contact_messages {
                   return;
                 }
 
-                jQuery("div.wp_crm_"+field+"_div input.regular-text:first", form).addClass("wp_crm_input_error");
+                jQuery("div.wp_crm_"+field+"_div input.regular-text:first, div.wp_crm_"+field+"_div select", form).addClass("wp_crm_input_error");
+                jQuery("div.wp_crm_"+field+"_div.control-group", form).addClass("error");
                 jQuery("div.wp_crm_"+field+"_div span.wp_crm_error_messages", form).text(result.bad_fields[field]);
               });
             }
@@ -1244,9 +1254,9 @@ class class_contact_messages {
 
           <td valign="middle"><span class="wp_crm_delete_row  button"><?php _e('Delete','wpp') ?></span></td>
         </tr>
-      </tbody>
-      <?php endforeach; ?>
 
+      <?php endforeach; ?>
+      </tbody>
       <tfoot>
         <tr>
           <td colspan='4'>
@@ -1395,7 +1405,6 @@ class class_contact_messages {
     if($wpdb->get_var("SELECT COUNT(id) FROM {$wpdb->crm_log} WHERE value = 'archived'")) {
       $show_filter = true;
     }
-
 
     $show_filter = apply_filters('wp_crm_messages_show_filter', $show_filter);
 

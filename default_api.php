@@ -7,7 +7,6 @@
  * @package WP-CRM
  */
 
-add_filter('wp_crm_trigger_action_arguments', array('wp_crm_default_api', 'trigger_action_arguments'), 0,2);
 add_filter('wp_crm_contact_form_data_validation', array('wp_crm_default_api', 'email_validation'), 0,2);
 add_filter('wp_crm_user_card_keys', array('wp_crm_default_api', 'wpp_crm_card_keys_default'));
 add_filter('wp_crm_primary_user_attribute_keys', array('wp_crm_default_api', 'wpp_crm_card_keys_default'));
@@ -113,31 +112,6 @@ class wp_crm_default_api {
     $message .= sprintf(__('Password reset initiated by user. Reset URL: %1s.', 'wp_crm'), '<a href="' . $reset_url . '">' . $reset_url . '</a>');
 
     wp_crm_add_to_user_log($user_id, $message);
-
-  }
-
-
-
-/**
-   * Load default arguments for trigger actions.
-   *
-   *
-   */
-  function trigger_action_arguments($triggers) {
-    global $wp_crm;
-
-
-    $triggers['new_user_registration'] = array(
-      'test' => 'Tes1',
-      'test2' => 'Tes2'
-    );
-
-    $triggers['support_request'] = array(
-      'test2' => 'Tes2',
-      'test3' => 'Tes3'
-    );
-
-    return $triggers;
 
   }
 
@@ -425,13 +399,10 @@ if(!function_exists('wp_crm_get_user')) {
               }
 
             }
-
           }
-
         }
       }
     }
-
 
     //** Handle roles and capabilities */
     $capabilities = unserialize($wpdb->get_var("SELECT meta_value FROM {$wpdb->usermeta} WHERE user_id = $user_id AND meta_key = '{$wpdb->prefix}capabilities'"));
@@ -464,6 +435,8 @@ if(!function_exists('wp_crm_send_notification')) {
   /**
    * Send an e-mail or a text message to a recipient .
    *
+   * Returns false if not a single notification was sent out. 
+   *
    * @since 0.1
    */
   function wp_crm_send_notification($action = false, $args = false) {
@@ -491,8 +464,8 @@ if(!function_exists('wp_crm_send_notification')) {
       return false;
     }
 
-     //** Act upon every notification one at a time */
-     foreach($notifications as $notification) {
+    //** Act upon every notification one at a time */
+    foreach($notifications as $notification) {
 
       $message = WP_CRM_F::replace_notification_values($notification, $args);
 
@@ -501,19 +474,18 @@ if(!function_exists('wp_crm_send_notification')) {
       }
 
       $headers = "From: {$message[send_from]} \r\n\\";
-
+  
       add_filter('wp_mail_content_type',create_function('', 'return "text/html"; '));
-
+  
       if($wp_crm['configuration']['do_not_use_nl2br_in_messages'] == 'true') {
         $message['message'] = $message['message'];
       } else {
         $message['message'] = nl2br($message['message']);
       }
-
+  
       $result = wp_mail($message['to'], $message['subject'], $message['message'], $headers, ($args['attachments'] ? $args['attachments'] : false));
-
-     }
-
+    }
+    return ( isset($result) ? $result : false );
 
   }
 } /* wp_crm_send_notification */
@@ -702,7 +674,6 @@ if(!function_exists('wp_crm_save_user_data')) {
       }
     }
 
-
     //* Determine user_id */
     if(empty($temp_data['user_id'])) {
       if ($args['match_login'] == 'true' && (isset($user_data['user_login']) || isset($user_data['user_email']))) {
@@ -730,27 +701,19 @@ if(!function_exists('wp_crm_save_user_data')) {
     }
 
     //** Set user_login from user_email or a guessed value if this is a new usr and user_login is not passed */
-    if($new_user && !isset($insert_data['user_login'])) {
+    if($new_user && empty($insert_data['user_login'])) {
+      //** Try getting it from e-mail address */
+      if(!empty($insert_data['user_email'])) {
+        $insert_data['user_login'] = $insert_data['user_email'];
+      } else {
 
-      if(empty($insert_data['user_login'])) {
-        //** Try getting it from e-mail address */
-        if(!empty($insert_data['user_email'])) {
-          $insert_data['user_login'] = $insert_data['user_email'];
-        } else {
-
-          //** Try to guess user_login from first passed user value */
-           if($user_login = WP_CRM_F::get_primary_display_value($user_data)) {
-            $user_login = sanitize_user($user_login, true);
-            $user_login = apply_filters('pre_user_login', $user_login);
-            $insert_data['user_login'] = $user_login;
-          }
+        //** Try to guess user_login from first passed user value */
+         if($user_login = WP_CRM_F::get_primary_display_value($user_data)) {
+          $user_login = sanitize_user($user_login, true);
+          $user_login = apply_filters('pre_user_login', $user_login);
+          $insert_data['user_login'] = $user_login;
         }
       }
-    }
-
-    //** Always update display name if its blank */
-    if(empty($insert_data['display_name']) && isset($insert_data['user_email'])) {
-      $insert_data['display_name'] = $insert_data['user_email'];
     }
 
     //** If password is passed, we hash it */
@@ -758,9 +721,10 @@ if(!function_exists('wp_crm_save_user_data')) {
       //** Unset password to prevent it being cleared out */
       unset($insert_data['user_pass']);
     } else {
-      if($new_user) {
+      //** We don't need to do it because wp_insert/update_user does it too! @author korotkov@ud */
+      /*if($new_user) {
         $insert_data['user_pass'] = wp_hash_password($insert_data['user_pass']);
-      }
+      }*/
     }
 
     //** Set default role if no role set and this isn't a new user */
@@ -782,6 +746,18 @@ if(!function_exists('wp_crm_save_user_data')) {
         WP_CRM_F::add_message( __('Error saving user: Email address is invalid', 'wp_crm'), 'bad');
         return false;
       }
+    }
+
+    //** Determine if data has user_nicename we should sanitize it. peshkov@UD */
+    if(isset($insert_data['user_nicename'])) {
+      $user_nicename = sanitize_title($insert_data['user_nicename']);
+      if(empty($user_nicename)) unset($insert_data['user_nicename']);
+      else $insert_data['user_nicename'] = $user_nicename;
+    }
+    
+    //** Always update display name if its blank */
+    if(empty($insert_data['display_name']) && isset($insert_data['user_email'])) {
+      $insert_data['display_name'] = $insert_data['user_email'];
     }
 
     if($new_user) {
@@ -890,13 +866,15 @@ if(!function_exists('wp_crm_save_user_data')) {
 
 
 if(!function_exists('wp_crm_add_to_user_log')) {
+
   /**
-   * Saves user data
+   * Updated user activity stream.
    *
+   * @todo $args argument should be modifiable to pass extra data - such as importance of message. - potanin@UD
    * @hooked_into WP_CRM_Core::admin_head();
    * @since 0.1
    */
-  function wp_crm_add_to_user_log($user_id, $message, $time = false) {
+  function wp_crm_add_to_user_log($user_id, $message, $time = false, $args = false) {
 
     $insert_data['object_id'] = $user_id;
     $insert_data['attribute'] = 'note';

@@ -36,7 +36,7 @@ ul.wp_crm_notification_main_configuration .wp_crm_checkbox_on_left {
 }
 
 #wp_crm_notification_messages th.wp_crm_settings_col {
-  width: 200px;
+  width: 250px;
 }
 
 #wp_crm_notification_messages th.wp_crm_delete_col {
@@ -125,12 +125,14 @@ ul.wp_crm_notification_main_configuration .wp_crm_checkbox_on_left {
 
 .wp_crm_draggable_handle {
 	width: 22px !important;
-	padding: 0 !important; }
+	padding: 0 !important; 
+}
 
-.wp_crm_draggable_handle_show {
+#wp_crm_attribute_fields tr:hover .wp_crm_draggable_handle {
 	padding: 0 !important;
 	cursor: move;
-	background: url("images/draggable.png") no-repeat scroll 7px center transparent; }
+	background: url("images/draggable.png") no-repeat scroll 7px center transparent; 
+}
 
 #wp_crm_settings_tabs .form-table p, #wp_crm_settings_tabs .form-table h3 { margin-top: 0; }
 
@@ -1474,3 +1476,7 @@ button.ui-button::-moz-focus-inner {
 	-moz-border-radius: 8px; /*{cornerRadiusShadow}*/
 	-webkit-border-radius: 8px; /*{cornerRadiusShadow}*/
 	border-radius: 8px; /*{cornerRadiusShadow}*/ }
+
+select.wp_crm_bp_group {
+  width: 11em;
+}

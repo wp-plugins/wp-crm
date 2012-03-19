@@ -289,8 +289,9 @@ div.wp_crm_description {
 #primary_information .wp-tab-panel ul.wp_crm_checkbox_list {
   padding: 10px;
 }
-body.crm_page_wp_crm_add_new  #user_activity_history.postbox .inside,
-body.crm_page_wp_crm_add_new  #primary_information.postbox .inside {
+body.crm_page_wp_crm_add_new #user_activity_history.postbox .inside,
+body.crm_page_wp_crm_add_new #primary_information.postbox .inside,
+body.crm_page_wp_crm_add_new #bp_profile_fields.postbox .inside {
   padding: 0;
 }
 
@@ -477,13 +478,31 @@ div.wp_crm_advanced_user_actions.wp-tab-panel {
     background: url("images/wp-crm-icon.png") no-repeat center center;
 }
 
-#primary_information .inside {
-	margin: 0;
+#primary_information .inside,
+#bp_profile_fields .inside,
+.custom_group .inside {
+	margin: 0 !important;
   overflow: hidden;
 }
 
-#primary_information table {
+#primary_information table,
+#bp_profile_fields table,
+.custom_group .inside table {
 	margin: 0;
+}
+
+.custom_group .inside {
+  padding: 0;
+}
+
+#bp_profile_fields .wp_crm_bp_group_name {
+  background: #EDEDED;
+}
+
+#bp_profile_fields .wp_crm_bp_group_name label {
+  font-size: 14px;
+  font-weight: bold;
+  color: #414141;
 }
 
 div.blank_slate {
@@ -586,4 +605,47 @@ tr.wp_crm_user_entry_row.primary input.regular-text:focus,
 .sent_date,
 .email_summary {
 	color: #928F8F;
+}
+
+/** BUDYPRESS FIELDS */
+
+.bp-profile input,
+.bp-profile select {
+  border: 1px solid #C1C1C1;
+  font-size: 1.2em;
+  padding: 4px;
+}
+
+.bp-profile .readonly input,
+.bp-profile .textbox input,
+.bp-profile .selectbox select,
+.bp-profile .multiselectbox select {
+  width: 20em;
+}
+
+.bp-profile .textbox input,
+.bp-profile .selectbox select,
+.bp-profile .multiselectbox select {
+  background: none repeat scroll 0 0 #F9F9F9;
+}
+
+.bp-profile .checkbox,
+.bp-profile .radio {
+  background: none repeat scroll 0 0 #F8F8F8;
+  border-style: solid;
+  border-width: 1px;
+  width: 90%;
+  padding: 10px 0 5px 0;
+  border-color: #DFDFDF;
+}
+
+.bp-profile .checkbox label,
+.bp-profile .radio label,
+.bp-profile .bp-clear-value {
+  display:block;
+  padding: 0 0 5px 10px;
+}
+
+.bp-profile .multiselectbox .bp-clear-value {
+  padding: 0;
 }

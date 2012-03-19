@@ -71,6 +71,13 @@ Visit CRM -> Settings and click on the "Data" tab.  There you will  be able to a
  
 == Changelog ==
 
+= 0.31.0 =
+* BuddyPress profile integration. Now you have the ability to make WP-CRM data fields to be displayed in users' BuddyPress profiles.
+* User attribute grouping ability added. Grouped attributes will be separated between different metaboxes in the back-end.
+* Activity stream limits. You can limit users' activity streams to be showing a specific number of entities.
+* New Contextual Help. It became fully compatible with WordPress 3.3+. Every information block has it's tab now.
+* Other small improvements of functionality and UI.
+
 = 0.30.3 =
 * Proper plugin PATH and URL determining.
 * Added capabilities: "Change Passwords", "Change Color Scheme".

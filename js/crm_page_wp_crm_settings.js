@@ -48,15 +48,6 @@ jQuery(document).ready(function() {
     delay: 50
   });
 
-  jQuery("#wp_crm_attribute_fields tbody tr").live("mouseover", function() {
-    jQuery(this).addClass("wp_crm_draggable_handle_show");
-  });;
-
-  jQuery("#wp_crm_attribute_fields tbody tr").live("mouseout", function() {
-    jQuery(this).removeClass("wp_crm_draggable_handle_show");
-  });;
-
-
 // Show settings array
   jQuery("#wp_crm_show_settings_array, #wp_crm_show_settings_array_cancel").click(function() {
 
