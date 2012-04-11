@@ -1,15 +1,15 @@
 === WP-CRM - Customer Relations Management for WordPress ===
 Contributors: Usability Dynamics, andypotanin
-Donate link: http://usabilitydynamics.com/products/
-Tags: CRM, user management, contact form, email, feedback, form, contact form plugin, WordPress CRM, contact form builder, newsletters, bbpress
+Donate link: http://usabilitydynamics.com/products/wp-crm/
+Tags: CRM, user management, contact form, shortcode form, email, feedback, form, contact form plugin, WordPress CRM, contact form builder, newsletters, bbpress
 Requires at least: 3.0
-Tested up to: 3.3
+Tested up to: 3.3.1
 Stable tag: trunk
 
 
 == Description ==
 
-This plugin is intended to significantly improve user management, easily create contact forms, and keep track of incoming contact form messages.
+This plugin is intended to significantly improve user management, easily create contact forms, and keep track of incoming shortcode form messages.
 
 WordPress already comes with some basic user management functions - WP-CRM expands on those functionalities by allowing you to organize your users using custom attributes, find them using filters, and keep track of correspondence.
 
@@ -19,14 +19,14 @@ Your WP control panel can effectively be used to manage all your customers, vend
 * Excellent user organization, filtering and editing.
 * Ability to easily add new user data attributes (i.e. Company Name).
 * Dynamic charts representing attributes with quantifiable data.
-* Form Creation and Contact Message Management.
+* Shortcode Form Creation and Contact Message Management.
 * User CSV Exporting.* 
 * User activity and note tracking.
 
 = Other Plugin Integration =
 * User Avatar - Plugin for uploading custom images for users.  Picture and upload functions are located under "Special Actions" in CRM profile pages when User Avatar plugin is activated.
 
-= Contact Forms =
+= Shortcode Forms =
 
 [vimeo http://vimeo.com/26983459]
 
@@ -56,8 +56,8 @@ Visit CRM -> Settings and click on the "Data" tab.  There you will  be able to a
 
 1. Main view and filter
 2. User editing
-3. Incoming contact messages overview
-4. Example of the contact form in action
+3. Incoming shortcode forms overview
+4. Example of the Shortcode Form in action
 5. Graphs and charts.
 
 == Upgrade Notice ==
@@ -70,6 +70,11 @@ Visit CRM -> Settings and click on the "Data" tab.  There you will  be able to a
 * Initial public release.
  
 == Changelog ==
+
+= 0.32.0 =
+* Added User Activity history message filtering and option to set number of messages to display per page. 
+* Added field "Do not require users with existing accounts to sign in first." to shortcode form settings tab
+* Removed uploadify.php (http://packetstormsecurity.org/files/111628/waraxe-2012-SA083.txt). 
 
 = 0.31.0 =
 * BuddyPress profile integration. Now you have the ability to make WP-CRM data fields to be displayed in users' BuddyPress profiles.
@@ -99,7 +104,7 @@ Visit CRM -> Settings and click on the "Data" tab.  There you will  be able to a
 * "Change Passwords" capability added. When WP-CRM is used as profile editor, users with this capability disabled cannot change passwords, even if they have rights to edit users.  On update WP-CRM will add the Change Passwords to all roles that have the edit_users capability.
 * "Change Color Scheme" capability added, which if removed will not let a user change their, or any other user's, color scheme.
 * Added better BuddyPress integration - link to a user's BuddyPress profile can be enabled to display on the overview table for quick access.
-* Added Google Analytics Event tracking to contact forms.
+* Added Google Analytics Event tracking to shortcode forms.
 * Added Admin Bar and Color Scheme selection UI to CRM profiles. 
 * Added option to standardize Display Names by using values from other user attributes.
 * Improvements to WP-Property integration to allow properties associated with an inquiry to be displayed on the Messages page.
@@ -118,25 +123,25 @@ Visit CRM -> Settings and click on the "Data" tab.  There you will  be able to a
 
 = 0.21 =
 * Ability to create user accounts without e-mail addresses.
-* Contact forms verify that a user with an e-mail address does not already exist before processing form.
-* Contact form notifications can be enabled even when no message has been filled out.
+* Shortcode forms verify that a user with an e-mail address does not already exist before processing form.
+* Shortcode form notifications can be enabled even when no message has been filled out.
 * Fake users created via the plugin can be deleted in one click.
 * Bug fix with user fields not being able to be blanked out.
 * User search filter automatically removes white space.
-* Added visualization for incoming contact form messages.
-* Added extra classes to shortcode contact form on the front-end.
+* Added visualization for incoming shortcode form messages.
+* Added extra classes to shortcode form on the front-end.
 * bbPress forum participation can be displayed on user overview.
 * WP-Invoice integration - invoices can be seen in CRM profile.
 
 = 0.20 =
 * Added hook to add new user password reset link to user profile stream.
-* Associated objects, such as properties, are now associated with messages when the contact form shortcode is filled out from a property page.
+* Associated objects, such as properties, are now associated with messages when the shortcode form shortcode is filled out from a property page.
 
 = 0.19 =
 * Added graphs for displaying quantifiable attributes.
 * Fixes to avoid deletion of existing users when reviewing received messages.
-* Added default data that is installed on first run to include contact messages and notifications.
-* Added filtering options to contact messages screen.
+* Added default data that is installed on first run to include shortcode form messages and notifications.
+* Added filtering options to shortcode form tab.
 * Setup default UI settings for metabox layout.
 * Added a setting for default "system" e-mail address.
 * Added contextual help to user editing page.
@@ -167,7 +172,7 @@ Visit CRM -> Settings and click on the "Data" tab.  There you will  be able to a
 * Renamed jquery.cookies.js to jquery.smookie.js to avoid issues with certain hosts that blocks files with the word 'cookie' in the name.
 * Many updates to Contact Forms feature.  Shortcode can now have use_current_user and success_message arguments. use_current_user argument pre-fills the form with currently logged in user's information, and success_message sets the message to display upon successful submittal of form.
 * Added ability to mark attributes as required. 
-* If a Contact Form does not have a message, it is not displayed on the "Messages" screen after submitted.  Contact Forms can effectively be used as front-end profile updating tools.
+* If a Shortcode Form does not have a message, it is not displayed on the "Messages" screen after submitted.  Shortcode Forms can effectively be used as front-end profile updating tools.
 * Fields can be set to be "uneditable".  This can be used for adding a field such as "User Login" which is set by WordPress, and in most cases should not be directly editable.
 * Added "Description" field, which allows descriptions to be displayed next to input fields on profile screen.
 * Added function to delete log entries.

@@ -69,13 +69,13 @@ class crm_page_wp_crm_add_new {
 
     $user_id = WP_CRM_F::get_first_value($object['ID']);
     $all_messages = WP_CRM_F::get_events('import_count=&object_id=' . $user_id);
-
+    $per_page = (get_user_option('crm_page_wp_crm_add_new_per_page')) ? get_user_option('crm_page_wp_crm_add_new_per_page') : 10;
+    
     $params = array(
       'object_id' => $user_id,
+      'import_count' => $per_page
     );
-    if ($per_page = (int) get_user_option('crm_page_wp_crm_add_new_per_page')) {
-      $params['import_count'] = $per_page;
-    }
+    
     $limited_messages = WP_CRM_F::get_events($params);
     $rest_messages = count($all_messages) - count($limited_messages);
     if (current_user_can('WP-CRM: Add User Messages')) :
@@ -83,6 +83,7 @@ class crm_page_wp_crm_add_new {
       <div class="wp_crm_activity_top">
         <input class="wp_crm_toggle_message_entry button" type="button" value="<?php _e('Add Message', 'wp_crm'); ?>" />
         <?php do_action('wp_crm_user_activity_history_top', $object); ?>
+        <img class="loading" src="<?php echo WP_CRM_URL;?>/css/images/ajax-loader-arrows.gif" height="16" width="16" style="margin: 0pt auto; display:none" alt="<?php _e("loading");?>"/>
       </div>
       <?php 
     endif; 
@@ -99,7 +100,15 @@ class crm_page_wp_crm_add_new {
             <input class="datepicker" />
           </div>
         </div>
-        <div class="alignright"><input type="button" id="wp_crm_add_message" value="<?php _e('Add Message', 'wp_crm'); ?>"/></div>
+        <div class="alignright">
+          <label for="wp_crm_message_type"><?php _e('Message type');?></label>
+          <select id="wp_crm_message_type" class='wp_crm_dropdown'>
+            <?php foreach ((array)apply_filters('crm_add_message_types',array('general_message'=>array('title'=>'General Message'),'phone_call'=>array('title'=>'Phone Call'),'meeting'=>array('title'=>'Meeting'))) as $type=>$options):?>
+            <option value="<?php echo $type;?>" title="Select type of message"><?php _e($options['title']);?></option>
+          <?php endforeach; ?>
+          </select>
+          <input type="button" id="wp_crm_add_message" value="<?php _e('Add Message', 'wp_crm'); ?>"/>
+        </div>
       </div>
     </div>
 
@@ -115,10 +124,10 @@ class crm_page_wp_crm_add_new {
       </tbody>
     </table>
 
-    <div class="wp_crm_stream_status wp_crm_load_more_stream" limited_messages="<?php echo count($limited_messages); ?>" all_messages="<?php echo count($all_messages); ?>"  per_page="<?php echo (((!empty($stream->per_page)) ? $stream->per_page : $per_page) + $per_page); ?>">
-      <?php if ($limited_messages < $all_messages) { ?>
-        <span class="wp_crm_counts"><?php printf(__('Showing <span class="current_count">%1s</span> messages of <span class="total_count">%2s</span>. Load <span class="more_count">%3s</span> more.', 'wp_crm'), count($limited_messages), count($all_messages), (($rest_messages>=$per_page)) ? $per_page : $rest_messages); ?><span>
-      <?php } ?>
+    <div class="wp_crm_stream_status wp_crm_load_more_stream" limited_messages="<?php echo count($limited_messages); ?>" all_messages="<?php echo count($all_messages); ?>"  per_page="<?php echo (((!empty($stream->per_page)) ? $stream->per_page : $per_page)); ?>" <?php if (empty($rest_messages)) { ?>style="display:none;" <?php } ?>>
+      
+        <span class="wp_crm_counts"><?php printf(__('Showing <span class="current_count">%1s</span> messages of <span class="total_count">%2s</span>. Load <span class="more_count">%3s</span> more.', 'wp_crm'), count($limited_messages), count($all_messages), (($rest_messages>=$per_page)) ? $per_page : $rest_messages); ?>&nbsp;<img class="loading" src="<?php echo WP_CRM_URL;?>/css/images/ajax-loader-arrows.gif" height="16" width="16" style="margin: 0pt auto; display:none" alt="<?php _e("loading");?>"/></span>
+      
     </div>
     <?php
   }

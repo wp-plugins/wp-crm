@@ -435,7 +435,7 @@ if(!function_exists('wp_crm_send_notification')) {
   /**
    * Send an e-mail or a text message to a recipient .
    *
-   * Returns false if not a single notification was sent out. 
+   * Returns false if not a single notification was sent out.
    *
    * @since 0.1
    */
@@ -474,15 +474,15 @@ if(!function_exists('wp_crm_send_notification')) {
       }
 
       $headers = "From: {$message[send_from]} \r\n\\";
-  
+
       add_filter('wp_mail_content_type',create_function('', 'return "text/html"; '));
-  
+
       if($wp_crm['configuration']['do_not_use_nl2br_in_messages'] == 'true') {
         $message['message'] = $message['message'];
       } else {
         $message['message'] = nl2br($message['message']);
       }
-  
+
       $result = wp_mail($message['to'], $message['subject'], $message['message'], $headers, ($args['attachments'] ? $args['attachments'] : false));
     }
     return ( isset($result) ? $result : false );
@@ -503,16 +503,14 @@ if(!function_exists('wp_crm_save_user_data')) {
     $insert_data = array();
     $insert_custom_data = array();
 
-    $defaults = array(
+    $args = wp_parse_args( $args, array(
       'use_global_messages' => 'true',
       'match_login' => 'false',
       'no_errors' => 'false',
       'return_detail' => 'false',
       'default_role' => get_option('default_role'),
       'no_redirect' => 'false'
-    );
-
-    $args = wp_parse_args( $args, $defaults );
+    ));
 
     $wp_insert_user_vars = array(
       'user_pass',
@@ -754,7 +752,7 @@ if(!function_exists('wp_crm_save_user_data')) {
       if(empty($user_nicename)) unset($insert_data['user_nicename']);
       else $insert_data['user_nicename'] = $user_nicename;
     }
-    
+
     //** Always update display name if its blank */
     if(empty($insert_data['display_name']) && isset($insert_data['user_email'])) {
       $insert_data['display_name'] = $insert_data['user_email'];
@@ -875,10 +873,11 @@ if(!function_exists('wp_crm_add_to_user_log')) {
    * @since 0.1
    */
   function wp_crm_add_to_user_log($user_id, $message, $time = false, $args = false) {
-
-    $insert_data['object_id'] = $user_id;
-    $insert_data['attribute'] = 'note';
-    $insert_data['text'] = $message;
+    $insert_data = wp_parse_args( $args, array(
+      'object_id' => $user_id,
+      'attribute' => 'note',
+      'text' => $message
+    ));
 
     if($time) {
       $insert_data['time'] = $time;

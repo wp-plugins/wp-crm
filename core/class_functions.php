@@ -1050,22 +1050,19 @@ class WP_CRM_F {
     }
 
 
-/**
-   * Performs a user search
-   *
-   * @todo Need to add some sort of option, configured in settings, on whether the searches are inclusive or exclusive potanin@UD
-   * @since 0.1
-   *
-   */
+    /**
+     * Performs a user search
+     *
+     * @todo Need to add check if user is in the current site when in MultiSite mode. -potanin@UD
+     * @since 0.1
+     */
     static function user_search($search_vars = false, $args = array()) {
       global $wp_crm, $wpdb, $blog_id;
 
-      $defaults = array(
+      $args = wp_parse_args( $args, array(
         'select_what' => '*',
         'ids_only' => 'false'
-      );
-
-      $args = wp_parse_args( $args, $defaults );
+      ));
 
       if($args['ids_only'] == 'true') {
         $args['select_what'] = 'ID';
@@ -1080,7 +1077,7 @@ class WP_CRM_F {
         foreach($search_vars as $primary_key => $key_terms) {
 
           //** Handle search_string differently, it applies to all meta values */
-          if($primary_key == 'search_string'){
+          if($primary_key == 'search_string') {
             /* First, go through the users table */
             $tofind = trim(strtolower($key_terms));
             $sql .= " AND (";
@@ -1151,24 +1148,20 @@ class WP_CRM_F {
       parse_str($_REQUEST['wp_crm_filter_vars'], $wp_crm_filter_vars);
       $wp_crm_search = $wp_crm_filter_vars['wp_crm_search'];
 
-
       //* Init table object */
       $wp_list_table = new CRM_User_List_Table("ajax=true&per_page={$per_page}&iDisplayStart={$iDisplayStart}&iColumns={$iColumns}");
 
       $wp_list_table->prepare_items($wp_crm_search);
 
+      if ( $wp_list_table->has_items() ) {
 
-      	if ( $wp_list_table->has_items() ) {
-
-          foreach ( $wp_list_table->items as $count => $item ) {
-
-            $data[] = $wp_list_table->single_row( $item );
-          }
-
-        } else {
-            $data[] = $wp_list_table->no_items();
+        foreach ( $wp_list_table->items as $count => $item ) {
+          $data[] = $wp_list_table->single_row( $item );
         }
 
+      } else {
+        $data[] = $wp_list_table->no_items();
+      }
 
       return json_encode(array(
         'sEcho' => $sEcho,
@@ -1768,8 +1761,8 @@ class WP_CRM_F {
 
     if($args['auto_redirect'] == 'true') {
       //** Redirect to overview page so all updates take affect on page reload. Not done on activation() */
-      wp_redirect(admin_url('admin.php?page=wp_crm&message=plugin_updated'));
-      die();
+      die( wp_redirect(admin_url('admin.php?page=wp_crm&message=plugin_updated')) );
+
     }
 
 
@@ -2423,20 +2416,13 @@ class WP_CRM_F {
         @mkdir(WP_CRM_Premium, 0755);
       }
 
-      // If didn't work, we quit
-      if(!is_dir(WP_CRM_Premium)) {
-        continue;
-      }
-
       // Save code
-      if(is_object($response->code)) {
+      if(is_dir(WP_CRM_Premium) && is_object($response->code)) {
         foreach($response->code as $code) {
 
           $filename = $code->filename;
           $php_code = $code->code;
           $version = $code->version;
-
-          // Check version
 
           $default_headers = array(
           'Name' => __('Feature Name','wp_crm'),
@@ -2524,7 +2510,6 @@ class WP_CRM_F {
 
           $plugin_slug = str_replace(array('.php'), '', $file);
 
-
           if(WP_DEBUG) {
             $plugin_data = get_file_data( WP_CRM_Premium . "/" . $file, $default_headers, 'plugin' );
           } else {
@@ -2544,10 +2529,12 @@ class WP_CRM_F {
             }
 
              // Disable plugin if class does not exists - file is empty
-            if(!class_exists($plugin_slug))
+            if(!class_exists($plugin_slug)) {
               unset($wp_crm['installed_features'][$plugin_slug]);
+            }
 
             $wp_crm['installed_features'][$plugin_slug]['disabled'] = 'false';
+
           }
 
         }
@@ -2555,8 +2542,6 @@ class WP_CRM_F {
     }
 
   }
-
-
 
 
   /**
@@ -2652,6 +2637,79 @@ class WP_CRM_F {
 
   }
 
+  /*
+   * Set Custom Screen Options
+   * @author odokienko@UD
+   */
+
+  function crm_screen_options() {
+    global $current_screen, $wpdb, $current_user;
+
+    $user_filter = (is_numeric($_REQUEST['user_id']))? " object_id={$_REQUEST['user_id']} " : '1';
+
+    $output = '';
+    
+    switch ($current_screen->id) {
+      case 'crm_page_wp_crm_add_new':
+        $results = $wpdb->get_results("SELECT DISTINCT attribute,other FROM `{$wpdb->prefix}crm_log` WHERE {$user_filter} ");   
+        
+        foreach ((array) $results as $row){
+          $name = $row->attribute . (($row->other)?'['.$row->other.']':'');
+          $output[] = '<label for="wp_crm_ui_crm_user_activity_' . $name . '">';
+          $output[] = '<input type="checkbox" ' . checked( get_user_option('wp_crm_ui_crm_user_activity_'.$name),'false', true ) . ' value="' . $name . '" id="wp_crm_ui_crm_user_activity_' . $name . '" name="wp_crm_ui_crm_user_activity_' . $name . '"  class="non-metabox-option" attribute="' . $row->attribute . '" other="' . $row->other . '" />';
+          $output[] = apply_filters( 'wp_crm_entry_type_label' , $row->attribute, $row );
+          $output[] = '</label>';
+        }
+
+        if( !empty( $output ) ) {
+          $output = '<div id="crm_user_activity_filter"><h5>' . __('Show in User Activity History', 'wp_crm').'</h5>' .  implode( '', (array) $output ) .  '</div>';
+        }
+
+        break;
+    }
+
+    return $output;
+  }
+
+   /**
+   * Create label for user activity stream attribute
+   *
+   * @version 1.0
+   * @author odokienko@UD
+   */
+  function wp_crm_entry_type_label($attr,$entity) {
+    global $wp_crm;
+
+    switch ($attr){
+      case "note":
+        $attr = __("Note", 'wp_crm');
+        break;
+      case "general_message":
+        $attr = __("General Message" , 'wp_crm');
+        break;
+      case "phone_call":
+        $attr = __("Phone Call", 'wp_crm');
+        break;
+      case "meeting":
+        $attr = __("Meeting", 'wp_crm');
+        break;
+      case "file":
+        $attr = __("File", 'wp_crm');
+        break;
+      case "detailed_log":
+        $attr = __("Detailed Log", 'wp_crm');
+        break;
+      case "contact_form_message":
+        $attr = sprintf( __( 'Shortcode Form Message %1s.' , 'wp_crm' ), $entity->other );
+        break;
+
+    }
+
+    return $attr;
+
+  }
+
+
   /**
    * Displays user activity stream for display.
    *
@@ -2660,37 +2718,38 @@ class WP_CRM_F {
   function get_user_activity_stream($args = '', $passed_result = false) {
     global $wpdb, $current_user;
 
-    $defaults = array(
-      // Set per page from the screen options
-      'per_page'=>(int)get_user_option( 'crm_page_wp_crm_add_new_per_page' ),
+    $args = wp_parse_args( $args, array(
+      'per_page'=>((get_user_option( 'crm_page_wp_crm_add_new_per_page' )) ? (int)get_user_option( 'crm_page_wp_crm_add_new_per_page' ) : 10),
       'more_per_page' => false,
-    );
+      'filter_types'=>false
+    ));
 
-    $args = wp_parse_args( $args, $defaults );
+    if (empty($args['per_page'])){
+      $args['per_page'] = ((get_user_option( 'crm_page_wp_crm_add_new_per_page' )) ? (int)get_user_option( 'crm_page_wp_crm_add_new_per_page' ) : 10);
+      $args['more_per_page'] = $args['per_page'];
+    }
 
     if(empty($args['user_id'])) {
       return;
     }
+
+    foreach ((array)$args['filter_types'] as $row){
+      update_user_option($args['user_id'], "crm_ui_crm_user_activity_{$row['attribute']}".(($row['other'])?'['.$row['other'].']':''), $row['hidden']);
+    }
+
+    $params = array(
+      'object_id' => $args['user_id'],
+      'filter_types' => $args['filter_types'],
+      'import_count' => ''
+    );
+    $all_messages = WP_CRM_F::get_events($params);
+
     /** @todo $messages is not initialized */
     if(!empty($passed_result)) {
-      $result = $passed_result;
-    }
-
-    if(!$result) {
-      $params = array(
-        'object_id' => $args['user_id'],
-        'attribute' => array('contact_form_message', 'note'),
-      );
-      $all_messages = WP_CRM_F::get_events('import_count=&object_id=' . $args['user_id']);
-      if (!empty($args['per_page'])){
-        $params['import_count'] = $args['per_page'];
-      }
+      $result =$passed_result;
+    }else{
+      $params['import_count'] = $args['per_page'];
       $result = WP_CRM_F::get_events($params);
-
-    }
-
-    if(!$result) {
-      return;
     }
 
     $result = stripslashes_deep($result);
@@ -2739,13 +2798,18 @@ class WP_CRM_F {
     </tr>
     <?php endforeach;
 
+    $new_per_page =  (($args['per_page'])?$args['per_page']:0)+((get_user_option( 'crm_page_wp_crm_add_new_per_page')) ? get_user_option( 'crm_page_wp_crm_add_new_per_page') : 10);
+
+    $rest = count($all_messages)-count($result);
+
     $output  = array(
       'tbody' => ob_get_clean(),
-      'per_page'=> (($args['more_per_page'])?$args['per_page']+(int)get_user_option( 'crm_page_wp_crm_add_new_per_page') : $args['per_page']),
+      'per_page'=> $new_per_page,
       'current_count' => count($result),
       'total_count'  => count($all_messages),
-      'more_per_page' => $args['more_per_page']
+      'more_per_page' => (($rest>=$args['more_per_page'])?$args['more_per_page']:$rest)
     );
+
 
     return json_encode($output);
 
@@ -2829,12 +2893,24 @@ class WP_CRM_F {
       'object_type' => 'user',
       'order_by' => 'time',
       'start' => '0',
-      'import_count' => (int)get_user_option('crm_page_wp_crm_add_new_per_page'),
+      'import_count' => ((get_user_option('crm_page_wp_crm_add_new_per_page'))? get_user_option('crm_page_wp_crm_add_new_per_page') : 10),
       'get_count' => 'false',
-      'attribute' => apply_filters('wp_crm_default_event_attributes', array('contact_form_message', 'note')),
+      'filter_types'=>array()
      );
 
     $args = wp_parse_args( $args, $defaults );
+
+    /** if enmpty input 'filter_types' then get filters from get_user_option */
+    if (empty($args['filter_types'])){
+      $results = $wpdb->get_results("SELECT DISTINCT `attribute`,`other` FROM {$wpdb->crm_log}" . (($args['object_id'])?" WHERE object_id=".(int)$args['object_id']:''));
+      foreach ($results as $row){
+        if('true'==get_user_option("crm_ui_crm_user_activity_{$row->attribute}".(($row->other)?'['.$row->other.']':''))){
+          $args['filter_types'][] = array("attribute"=>$row->attribute,'other'=>$row->other,'hidden'=>'true');
+        }else{
+          $args['filter_types'][] = array("attribute"=>$row->attribute,'other'=>$row->other,'hidden'=>'false');
+        }
+      }
+    }
 
     if($args['import_count']) {
       $limit = " LIMIT {$args[start]}, {$args[import_count]} ";
@@ -2848,8 +2924,24 @@ class WP_CRM_F {
       $query[] = " (object_type = '{$args['object_type']}') ";
     }
 
-    if(is_array($args['attribute'])) {
-      $query[] = " (attribute = '" . implode("' OR attribute= '", $args['attribute']) . "')";
+    if(is_array($args['filter_types'])) {
+      $temp_type = array();
+      $check_all_fields_are_filtered = true;
+      foreach ($args['filter_types'] as $filter_type){
+        if ($filter_type['hidden']=='true'){
+          $temp_type[] =
+            'not ('.(($filter_type['attribute'])?"attribute='{$filter_type['attribute']}'":'').
+            (($filter_type['attribute']&&$filter_type['other'])?' and ':'').
+            (($filter_type['other'])?"other='{$filter_type['other']}'":'').')';
+        }else{
+          $check_all_fields_are_filtered = false;
+        }
+      }
+
+      if ($temp_type && !$check_all_fields_are_filtered){
+        $query[] = " ( " . implode(" and ", $temp_type ) . ") ";
+      }
+
     }
 
     if($query) {
@@ -2859,8 +2951,9 @@ class WP_CRM_F {
     if($args['order_by']) {
       $order_by = " ORDER BY {$args[order_by]} DESC ";
     }
+    $sql = "SELECT * FROM {$wpdb->crm_log} {$query} {$order_by} {$limit}";
 
-    $results = $wpdb->get_results("SELECT * FROM {$wpdb->crm_log} {$query} {$order_by} {$limit}");
+    $results = $wpdb->get_results($sql);
 
     if($args['get_count'] == 'true') {
       return count($results);
@@ -2881,16 +2974,9 @@ class WP_CRM_F {
   function deactivation() {
     global $wp_crm, $wp_roles;
 
-    /*
-    if(is_array($wp_crm['capabilities']))
-      foreach($wp_crm['capabilities'] as $capability => $description)
-        $wp_roles->remove_cap('administrator','wp_crm_' . $capability);
-    */
-
     $timestamp = wp_next_scheduled( 'wp_crm_premium_feature_check' );
     wp_unschedule_event($timestamp, 'wp_crm_premium_feature_check' );
     wp_clear_scheduled_hook('wp_crm_premium_feature_check');
-
 
   }
 
@@ -3041,10 +3127,10 @@ class WP_CRM_F {
             <tbody>
                 <tr>
                   <td>
-                    <input readonly="readonly" type="text" value="<?php _e('Primary Information', 'wpp'); ?>" />
+                    <input readonly="readonly" type="text" value="<?php _e('Primary Information', 'wp_crm'); ?>" />
                   </td>
                   <td>
-                    <input readonly="readonly" type="text" value="<?php _e('Primary Information', 'wpp'); ?>" />
+                    <input readonly="readonly" type="text" value="<?php _e('Primary Information', 'wp_crm'); ?>" />
                   </td>
                   <td>
                   </td>

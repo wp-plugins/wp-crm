@@ -941,7 +941,7 @@ class class_contact_messages {
     global $wp_crm;
 
     //** Server seems to return nothing somethines, adding space in beginning seems to solve */
-    /** This needs to be removed - it causes a warning when the header items are set later in the code, when then causes the form NOT to work echo ' '; */
+    //** This needs to be removed - it causes a warning when the header items are set later in the code, when then causes the form NOT to work echo ' '; */
 
     //** watch for spam */
     if(!empty($_REQUEST['comment']) ||
@@ -999,13 +999,33 @@ class class_contact_messages {
         $required_fields[] = $field_slug;
       }
     }
+    
+    $check_fields = array();
+    if($confirmed_form_data['do_not_check_user_email'] != 'on'){
+      $check_fields[] = 'user_email';
+    }
 
-    $check_fields = apply_filters('wp_crm_distinct_user_fields', array('user_email'));
+    $check_fields = apply_filters('wp_crm_distinct_user_fields',$check_fields);
 
     //** Do not check any fields if nothing to check */
     foreach($data['user_data'] as $field_slug => $field_data) {
 
-      foreach($field_data as $value) {
+      foreach($field_data as $key => $value) {
+
+        /**
+         * If current field is textarea and it has predefined values as CSV then it displays the dropdown
+         * under the textarea on front-end. So it is expected that we can use one of them. 
+         * For instance - type text into textarea or select it in dropdown or even both.
+         * This fix is for the case when select option in dropdown.
+         * 
+         * @author korotkov@UD
+         */
+        if ( $wp_crm['data_structure']['attributes'][$field_slug]['input_type'] == 'textarea' ) {
+          if ( !empty( $value['option'] ) && empty( $value['value'] ) ) {
+            $data['user_data'][$field_slug][$key]['value'] = $wp_crm['data_structure']['attributes'][$field_slug]['option_labels'][$value['option']];
+          }
+        }
+
         $value = WP_CRM_F::get_first_value($value);
 
         //** Check for completion */
@@ -1039,7 +1059,6 @@ class class_contact_messages {
       }
 
     }
-
 
     //** If this is a validation request, we check to make sure everything is good */
     if($crm_action == 'system_validate') {
@@ -1206,6 +1225,10 @@ class class_contact_messages {
                 <label for="blank_message<?php echo $row_hash; ?>"><?php _e('Send message notification even if no message is submitted.', 'wp_crm'); ?></label>
               </li>
 
+              <li class="wp_crm_checkbox_on_left">
+                <input <?php checked($data['do_not_check_user_email'], 'on'); ?> id="do_not_check_user_email<?php echo $row_hash; ?>" type="checkbox"  name="wp_crm[wp_crm_contact_system_data][<?php echo $contact_form_slug; ?>][do_not_check_user_email]"  value="on"  value="<?php echo $data['do_not_check_user_email']; ?>" />
+                <label for="do_not_check_user_email<?php echo $row_hash; ?>"><?php _e('Do not require users with existing accounts to sign in first.', 'wp_crm'); ?></label>
+              </li>
 
             </ul>
           </td>

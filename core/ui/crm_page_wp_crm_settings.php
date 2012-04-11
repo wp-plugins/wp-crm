@@ -89,7 +89,7 @@ if(empty($wp_crm['data_structure']['attributes'])) {
 
 <?php WP_CRM_F::print_messages(); ?>
 
-<form method="post" action="<?php echo admin_url('admin.php?page=wp_crm_settings'); ?>"  enctype="multipart/form-data" >
+<form id="wp_crm_settings" method="post" action="<?php echo admin_url('admin.php?page=wp_crm_settings'); ?>"  enctype="multipart/form-data" >
 <?php wp_nonce_field('wp_crm_setting_save'); ?>
 
 <div id="wp_crm_settings_tabs" class="wp_crm_settings_tabs clearfix">
@@ -153,12 +153,12 @@ if(empty($wp_crm['data_structure']['attributes'])) {
 
             <li>
               <input id="wp_crm_track_detailed_user_activity" value="true" type="checkbox"  <?php checked($wp_crm['configuration']['track_detailed_user_activity'], 'true'); ?> name="wp_crm[configuration][track_detailed_user_activity]" />
-              <label for="wp_crm_track_detailed_user_activity"><?php _e('Track detailed user activity.', 'wp_crm'); ?> (In Development)</label>
+              <label for="wp_crm_track_detailed_user_activity"><?php _e('Track detailed user activity.', 'wp_crm'); ?></label>
             </li>
             
             <li>
               <input id="wp_crm_allow_attributes_grouping" value="true" type="checkbox"  <?php checked($wp_crm['configuration']['allow_attributes_grouping'], 'true'); ?> name="wp_crm[configuration][allow_attributes_grouping]" />
-              <label for="wp_crm_allow_attributes_grouping"><?php _e('Allow attributes grouping.', 'wp_crm'); ?></label>
+              <label for="wp_crm_allow_attributes_grouping"><?php _e('Enable Attribute Grouping.', 'wp_crm'); ?></label>
             </li>
 
           </ul>
@@ -170,7 +170,7 @@ if(empty($wp_crm['data_structure']['attributes'])) {
         <td>
           <ul>
             <li>
-              <input id="wp_crm_standardize_display_name" wrapper="wp_crm_smart_row" class="wp_crm_show_advanced" value="true" type="checkbox" <?php checked($wp_crm['configuration']['standardize_display_name'], 'true'); ?> name="wp_crm[configuration][standardize_display_name]" />
+              <input id="wp_crm_standardize_display_name" wrapper="wp_crm_smart_row" toggle_logic="reverse" class="wp_crm_show_advanced" value="true" type="checkbox" <?php checked($wp_crm['configuration']['standardize_display_name'], 'true'); ?> name="wp_crm[configuration][standardize_display_name]" />
               <label for="wp_crm_standardize_display_name" ><?php _e('Standardize Display Names.', 'wp_crm'); ?></label>
             </li>
             <li class="wp_crm_advanced_configuration">
@@ -193,6 +193,8 @@ if(empty($wp_crm['data_structure']['attributes'])) {
           </ul>
         </td>
       </tr>
+      
+      <?php do_action('wp_crm::settings_page::main_tab_bottom'); ?>
       
     </table>
   </div>
@@ -226,7 +228,6 @@ if(empty($wp_crm['data_structure']['attributes'])) {
             </select>
             </li>
           </ul>
-          </div>
         </td>
       </tr>
 

@@ -142,6 +142,7 @@ class WP_CRM_Core {
     //** Modify default WP password reset message */
     add_filter("admin_body_class", create_function('', "return WP_CRM_Core::admin_body_class(); "));
 
+    add_filter('wp_crm_entry_type_label', array('WP_CRM_F', 'wp_crm_entry_type_label'), 10, 2);
      //** Load back-end scripts */
     add_action("admin_enqueue_scripts", array('WP_CRM_Core', "admin_enqueue_scripts"));
 
@@ -150,8 +151,8 @@ class WP_CRM_Core {
     add_action('wp_ajax_wp_crm_check_plugin_updates', create_function("",'  die(WP_CRM_F::check_plugin_updates());'));
     add_action("wp_ajax_wp_crm_user_object", create_function('',' echo "CRM Object Report: \n" . print_r(wp_crm_get_user($_REQUEST[user_id]), true) . "\nRaw Meta Report: \n" .  print_r(WP_CRM_F::show_user_meta_report($_REQUEST[user_id]), true); '));
     add_action("wp_ajax_wp_crm_show_meta_report", create_function('',' die(print_r(WP_CRM_F::show_user_meta_report(), true)); '));
-    add_action("wp_ajax_wp_crm_get_user_activity_stream", create_function('',' die(WP_CRM_F::get_user_activity_stream(array("user_id"=>$_REQUEST[user_id],"per_page"=>$_REQUEST[per_page],"more_per_page"=>$_REQUEST[more_per_page]))); '));
-    add_action("wp_ajax_wp_crm_insert_activity_message", create_function('',' die(WP_CRM_F::insert_event("time={$_REQUEST[time]}&attribute=note&object_id={$_REQUEST[user_id]}&text={$_REQUEST[content]}&ajax=true")); '));
+    add_action("wp_ajax_wp_crm_get_user_activity_stream", create_function('',' die(WP_CRM_F::get_user_activity_stream(array("user_id"=>$_REQUEST[user_id],"per_page"=>$_REQUEST[per_page],"more_per_page"=>$_REQUEST[more_per_page],"filter_types"=>$_REQUEST[filter_types]))); '));
+    add_action("wp_ajax_wp_crm_insert_activity_message", create_function('',' die(WP_CRM_F::insert_event("time={$_REQUEST[time]}&attribute=".((!empty($_REQUEST[message_type]))?$_REQUEST[message_type]:"note")."&object_id={$_REQUEST[user_id]}&text={$_REQUEST[content]}&ajax=true")); '));
     add_action("wp_ajax_wp_crm_get_notification_template", create_function('','  die(WP_CRM_F::get_notification_template($_REQUEST["template_slug"])); '));
     add_action("wp_ajax_wp_crm_do_fake_users", create_function('',' die(WP_CRM_F::do_fake_users("number={$_REQUEST[number]}&do_what={$_REQUEST[do_what]}")); '));
     add_action("wp_ajax_wp_crm_list_table", create_function('',' die(WP_CRM_F::ajax_table_rows());  '));
@@ -184,7 +185,7 @@ class WP_CRM_Core {
     //** Check if installed DB version is older than THIS version */
     if(is_admin()) {
       if(!get_option('wp_crm_caps_set')) {
-        WP_CRM_F::manual_activation('update_caps=true&auto_redirect=true');
+        WP_CRM_F::manual_activation('update_caps=true');
       }
 
       //** Load defaults */
@@ -212,9 +213,9 @@ class WP_CRM_Core {
     } elseif ( file_exists( $wp_crm ) ) {
 			load_textdomain( 'wp_crm', $mofile_global );
     }
-    
 
-    add_filter("retrieve_password", array('WP_CRM_F', "retrieve_password"));    
+
+    add_filter("retrieve_password", array('WP_CRM_F', "retrieve_password"));
 
   }
 
@@ -362,6 +363,8 @@ class WP_CRM_Core {
       WP_CRM_F::grouped_metaboxes();
     }
 
+    add_filter("screen_settings", array('WP_CRM_F', 'crm_screen_options'));
+
     //** Screen Options */
     if(function_exists('add_screen_option')) {
       add_screen_option('layout_columns', array('max' => 2, 'default' => 2) );
@@ -381,6 +384,7 @@ class WP_CRM_Core {
     do_action( 'wp_crm_contextual_help', array('contextual_help'=>$contextual_help) );
 
   }
+
 
   /**
    * Runs pre-header functions for settings page
@@ -734,7 +738,7 @@ class WP_CRM_Core {
         wp_enqueue_script('wp-crm-data-tables');
         wp_enqueue_script('google-jsapi');
         wp_enqueue_style('wp-crm-data-tables');
-        
+
        break;
 
       case 'crm_page_wp_crm_add_new':
@@ -750,7 +754,7 @@ class WP_CRM_Core {
         wp_enqueue_script('jquery-ui-widget');
         wp_enqueue_script('jquery-ui-sortable');
         wp_enqueue_script('jquery-ui-mouse');
-        
+
       break;
       default:
       break;
@@ -841,7 +845,7 @@ class WP_CRM_Core {
 
   /**
    * WP-CRM Contextual Help
-   * @param type $args 
+   * @param type $args
    * @author korotkov@UD
    */
   function wp_crm_contextual_help( $args=array() ) {
@@ -869,12 +873,14 @@ class WP_CRM_Core {
 
       }
 
-      //** Add help sidebar with More Links */
-      get_current_screen()->set_help_sidebar(
-        '<p><strong>' . __('For more information:', 'wp_crm') . '</strong></p>' .
-        '<p>' . __('<a href="https://usabilitydynamics.com/products/wp-crm/" target="_blank">WP-CRM Product Page</a>', 'wp_crm') . '</p>' .
-        '<p>' . __('<a href="https://usabilitydynamics.com/products/wp-crm/forum/" target="_blank">WP-CRM Forums</a>', 'wp_crm') . '</p>'
-      );
+      if ( is_callable(array('WP_Screen','set_help_sidebar')) ) {
+        //** Add help sidebar with More Links */
+        get_current_screen()->set_help_sidebar(
+          '<p><strong>' . __('For more information:', 'wp_crm') . '</strong></p>' .
+          '<p>' . __('<a href="https://usabilitydynamics.com/products/wp-crm/" target="_blank">WP-CRM Product Page</a>', 'wp_crm') . '</p>' .
+          '<p>' . __('<a href="https://usabilitydynamics.com/products/wp-crm/forum/" target="_blank">WP-CRM Forums</a>', 'wp_crm') . '</p>'
+        );
+      }
 
     } else {
       //** If WP is out of date */
