@@ -3,7 +3,7 @@ Contributors: Usability Dynamics, andypotanin
 Donate link: http://usabilitydynamics.com/products/wp-crm/
 Tags: CRM, user management, contact form, shortcode form, email, feedback, form, contact form plugin, WordPress CRM, contact form builder, newsletters, bbpress
 Requires at least: 3.0
-Tested up to: 3.3.1
+Tested up to: 3.4-RC1
 Stable tag: trunk
 
 
@@ -20,7 +20,7 @@ Your WP control panel can effectively be used to manage all your customers, vend
 * Ability to easily add new user data attributes (i.e. Company Name).
 * Dynamic charts representing attributes with quantifiable data.
 * Shortcode Form Creation and Contact Message Management.
-* User CSV Exporting.* 
+* User CSV Exporting.*
 * User activity and note tracking.
 
 = Other Plugin Integration =
@@ -37,7 +37,7 @@ Your WP control panel can effectively be used to manage all your customers, vend
 
 = Premium Features =
 
-* Newsletter Management - ability to send newsletters to users, or user groups. (in development)
+* CRM Group Messages - ability to send newsletters to users, or user groups.
 * Email Synchronization - synchronized email management. (in development)
 
 == Installation ==
@@ -46,7 +46,7 @@ Immediately after activation you will see a new "CRM" section which will list yo
 Default data will be loaded on the first install, which can then be configured further on the CRM -> Settings page.
 For additional help, please reference the contextual help dropdowns the different plugin pages.
 
-== Frequently Asked Questions == 
+== Frequently Asked Questions ==
 
 = How do I add a new attribute?  =
 
@@ -63,18 +63,37 @@ Visit CRM -> Settings and click on the "Data" tab.  There you will  be able to a
 == Upgrade Notice ==
 
 = 0.30.1 =
-* Required input fields that also have dropdown options now require that a dropdown value is selcted during validation, in addition to text. 
+* Required input fields that also have dropdown options now require that a dropdown value is selected during validation, in addition to text.
 
 = 0.08 =
 
 * Initial public release.
- 
+
 == Changelog ==
 
+= 0.33.0 =
+* Added WordPress 3.4-RC1 compatibility.
+* Added ability to set Capability Role on user's edit page
+* Added ability to view/remove uploaded files (File Uploader field).
+* Added "Email" field Ajax validation on user's edit page.
+* Fixed jQuery UI scripts and styles adding.
+* Fixed File Uploader: If a user does not have the necessary capabilities the field will not be displayed.
+* Fixed Quick Password Reset functionality.
+* Fixed Access for non-admin users to their profile if common User management was replaced by WP-CRM
+* Fixed All Peoples page Filter
+* Fixed toggling of filter options on All Peoples page.
+* Fixed selecting of active menu item when Profile user's page loaded.
+* Screen Options and Metabox functionality fixes.
+* Modified advanced actions.
+* Deprecated and removed "Add a general note" Button.
+* Standardize Display Names was fixed.
+* Replaced "From name" on sending Group messages from default 'WordPress' to sender e-mail address which is set on CRM Settings page.
+* Updated Contextual help.
+
 = 0.32.0 =
-* Added User Activity history message filtering and option to set number of messages to display per page. 
+* Added User Activity history message filtering and option to set number of messages to display per page.
 * Added field "Do not require users with existing accounts to sign in first." to shortcode form settings tab
-* Removed uploadify.php (http://packetstormsecurity.org/files/111628/waraxe-2012-SA083.txt). 
+* Removed uploadify.php (http://packetstormsecurity.org/files/111628/waraxe-2012-SA083.txt).
 
 = 0.31.0 =
 * BuddyPress profile integration. Now you have the ability to make WP-CRM data fields to be displayed in users' BuddyPress profiles.
@@ -105,10 +124,10 @@ Visit CRM -> Settings and click on the "Data" tab.  There you will  be able to a
 * "Change Color Scheme" capability added, which if removed will not let a user change their, or any other user's, color scheme.
 * Added better BuddyPress integration - link to a user's BuddyPress profile can be enabled to display on the overview table for quick access.
 * Added Google Analytics Event tracking to shortcode forms.
-* Added Admin Bar and Color Scheme selection UI to CRM profiles. 
+* Added Admin Bar and Color Scheme selection UI to CRM profiles.
 * Added option to standardize Display Names by using values from other user attributes.
 * Improvements to WP-Property integration to allow properties associated with an inquiry to be displayed on the Messages page.
-* Required input fields that also have dropdown options now require that a dropdown value is selected during validation, in addition to text. 
+* Required input fields that also have dropdown options now require that a dropdown value is selected during validation, in addition to text.
 * Added "My Profile" link to WP-CRM navigation menu.
 * Added admin color picker to WP-CRM profile editor (located in Advanced User Settings)
 * Disabled changing role of own profile.
@@ -147,7 +166,7 @@ Visit CRM -> Settings and click on the "Data" tab.  There you will  be able to a
 * Added contextual help to user editing page.
 
 = 0.18 =
-* Added check to prevent self-deletion. 
+* Added check to prevent self-deletion.
 * Added hook to check if bbPress exists, and display user statistics in their CRM profile.
 * Improved connection with WPI where "Total Sales" can not be seen for users from overview screen.
 
@@ -171,7 +190,7 @@ Visit CRM -> Settings and click on the "Data" tab.  There you will  be able to a
 = 0.15 =
 * Renamed jquery.cookies.js to jquery.smookie.js to avoid issues with certain hosts that blocks files with the word 'cookie' in the name.
 * Many updates to Contact Forms feature.  Shortcode can now have use_current_user and success_message arguments. use_current_user argument pre-fills the form with currently logged in user's information, and success_message sets the message to display upon successful submittal of form.
-* Added ability to mark attributes as required. 
+* Added ability to mark attributes as required.
 * If a Shortcode Form does not have a message, it is not displayed on the "Messages" screen after submitted.  Shortcode Forms can effectively be used as front-end profile updating tools.
 * Fields can be set to be "uneditable".  This can be used for adding a field such as "User Login" which is set by WordPress, and in most cases should not be directly editable.
 * Added "Description" field, which allows descriptions to be displayed next to input fields on profile screen.
@@ -179,7 +198,7 @@ Visit CRM -> Settings and click on the "Data" tab.  There you will  be able to a
 * Added wp_crm_after_{$slug}_input filter which is ran after an input field is rendered.
 * Added wp_crm_render_input action which can be used for custom input types.
 * Fixed Entry Log date picker styles.
-* Minor UI Improvements on overview and settings pages. 
+* Minor UI Improvements on overview and settings pages.
 
 = 0.14 =
 * UI fixes to overview screen (roles are now collapsed too)
@@ -201,11 +220,11 @@ Visit CRM -> Settings and click on the "Data" tab.  There you will  be able to a
 * Added option to have WP-CRM replace default User Management menu.
 
 = 0.11 =
-* Minor fix with message notifications. 
-* Better screenshots included. 
+* Minor fix with message notifications.
+* Better screenshots included.
 
 = 0.10 =
-* Added screenshots. 
+* Added screenshots.
 
 = 0.09 =
 * Minor release.

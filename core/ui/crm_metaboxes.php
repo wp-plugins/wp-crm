@@ -24,31 +24,27 @@ class toplevel_page_wp_crm {
     </div>
 
     <div class="major-publishing-actions">
-      <div class="other-action">
-        <span class="wp_crm_subtle_link wp_crm_toggle" toggle="wp_crm_user_actions"><?php _e('Show Actions', 'wp_crm'); ?></span>
-      </div>
+
       <div class="publishing-action">
         <?php submit_button(__('Filter Results'), 'button', false, false, array('id' => 'search-submit')); ?>
       </div>
       <br class="clear" />
     </div>
 
-    <div class="wp_crm_user_actions hidden">
+    <div class="wp_crm_user_actions">
       <ul class="wp_crm_action_list">
-        <li class="wp_crm_orange_link wp_crm_export_to_csv"><?php _e('Export to CSV', 'wp_crm'); ?></li>
-        <?php if (WP_CRM_F::get_quantifiable_attributes()) { ?>
-          <li class="wp_crm_orange_link wp_crm_visualize_results"><?php _e('Visualize User Data', 'wp_crm'); ?></li>
-        <?php } ?>
+        <li class="button wp_crm_export_to_csv"><?php _e('Export to CSV', 'wp_crm'); ?></li>
+      <?php if (WP_CRM_F::get_quantifiable_attributes()) { ?>
+        <li class="button wp_crm_visualize_results"><?php _e('Visualize User Data', 'wp_crm'); ?></li>
+      <?php } ?>
         <?php do_action('wp_crm_user_actions'); ?>
       </ul>
     </div>
 
-    <?php
-  }
-
-  function performed_actions($wp_list_table) {
-    ?>
-    <div class="wp_crm_quick_report_wrapper"></div>
+    <div id="performed_actions">
+      <h3><?php _e('Perfomed actions', 'wp_crm'); ?></h3>
+      <div class="wp_crm_quick_report_wrapper"></div>
+    </div>
     <?php
   }
 
@@ -70,23 +66,23 @@ class crm_page_wp_crm_add_new {
     $user_id = WP_CRM_F::get_first_value($object['ID']);
     $all_messages = WP_CRM_F::get_events('import_count=&object_id=' . $user_id);
     $per_page = (get_user_option('crm_page_wp_crm_add_new_per_page')) ? get_user_option('crm_page_wp_crm_add_new_per_page') : 10;
-    
+
     $params = array(
       'object_id' => $user_id,
       'import_count' => $per_page
     );
-    
+
     $limited_messages = WP_CRM_F::get_events($params);
     $rest_messages = count($all_messages) - count($limited_messages);
     if (current_user_can('WP-CRM: Add User Messages')) :
       ?>
       <div class="wp_crm_activity_top">
-        <input class="wp_crm_toggle_message_entry button" type="button" value="<?php _e('Add Message', 'wp_crm'); ?>" />
+        <input class="wp_crm_toggle_message_entry" type="button" value="<?php _e('Add Message', 'wp_crm'); ?>" />
         <?php do_action('wp_crm_user_activity_history_top', $object); ?>
         <img class="loading" src="<?php echo WP_CRM_URL;?>/css/images/ajax-loader-arrows.gif" height="16" width="16" style="margin: 0pt auto; display:none" alt="<?php _e("loading");?>"/>
       </div>
-      <?php 
-    endif; 
+      <?php
+    endif;
     ?>
 
     <div class="wp_crm_new_message hidden">
@@ -101,7 +97,7 @@ class crm_page_wp_crm_add_new {
           </div>
         </div>
         <div class="alignright">
-          <label for="wp_crm_message_type"><?php _e('Message type');?></label>
+          <label for="wp_crm_message_type"><?php _e('Message type', 'wp_crm');?></label>
           <select id="wp_crm_message_type" class='wp_crm_dropdown'>
             <?php foreach ((array)apply_filters('crm_add_message_types',array('general_message'=>array('title'=>'General Message'),'phone_call'=>array('title'=>'Phone Call'),'meeting'=>array('title'=>'Meeting'))) as $type=>$options):?>
             <option value="<?php echo $type;?>" title="Select type of message"><?php _e($options['title']);?></option>
@@ -125,9 +121,9 @@ class crm_page_wp_crm_add_new {
     </table>
 
     <div class="wp_crm_stream_status wp_crm_load_more_stream" limited_messages="<?php echo count($limited_messages); ?>" all_messages="<?php echo count($all_messages); ?>"  per_page="<?php echo (((!empty($stream->per_page)) ? $stream->per_page : $per_page)); ?>" <?php if (empty($rest_messages)) { ?>style="display:none;" <?php } ?>>
-      
+
         <span class="wp_crm_counts"><?php printf(__('Showing <span class="current_count">%1s</span> messages of <span class="total_count">%2s</span>. Load <span class="more_count">%3s</span> more.', 'wp_crm'), count($limited_messages), count($all_messages), (($rest_messages>=$per_page)) ? $per_page : $rest_messages); ?>&nbsp;<img class="loading" src="<?php echo WP_CRM_URL;?>/css/images/ajax-loader-arrows.gif" height="16" width="16" style="margin: 0pt auto; display:none" alt="<?php _e("loading");?>"/></span>
-      
+
     </div>
     <?php
   }
@@ -139,6 +135,10 @@ class crm_page_wp_crm_add_new {
     <table class="form-table">
       <?php if (!empty($wp_crm['data_structure']) && is_array($wp_crm['data_structure']['attributes'])) : ?>
         <?php foreach (apply_filters('wp_crm_primary_information_attributes', $wp_crm['data_structure']['attributes']) as $slug => $attribute):
+
+                /* we already have an Actions box to change user pass, so we can just skip it here */
+                if ($slug=='user_pass') continue;
+
                 $row_classes = array();
                 $row_classes[] = (@$attribute['has_options'] ? 'wp_crm_has_options' : 'wp_crm_no_options');
                 $row_classes[] = (@$attribute['required'] == 'true' ? 'wp_crm_required_field' : '');
@@ -149,16 +149,14 @@ class crm_page_wp_crm_add_new {
         ?>
                 <tr meta_key="<?php echo esc_attr($slug); ?>" wp_crm_input_type="<?php echo esc_attr($attribute['input_type']); ?>" class="<?php echo implode(' ', $row_classes); ?>">
                   <th>
-                    <?php if (@$attribute['input_type'] != 'checkbox' || isset($attribute['options'])): ?>
-                      <?php ob_start(); ?>
-                      <label for="wp_crm_<?php echo $slug; ?>_field">
-                        <?php echo $attribute['title']; ?>
-                      </label>
-                      <div class="wp_crm_description"><?php echo $attribute['description']; ?></div>
-                      <?php $label = ob_get_contents();
-                      ob_end_clean(); ?>
-                      <?php echo apply_filters('wp_crm_user_input_label', $label, $slug, $attribute, $user_object); ?>
-                    <?php endif; ?>
+                    <?php ob_start(); ?>
+                    <label for="wp_crm_<?php echo $slug; ?>_field">
+                      <?php echo $attribute['title']; ?>
+                    </label>
+                    <div class="wp_crm_description"><?php echo $attribute['description']; ?></div>
+                    <?php $label = ob_get_contents();
+                    ob_end_clean(); ?>
+                    <?php echo apply_filters('wp_crm_user_input_label', $label, $slug, $attribute, $user_object); ?>
                   </th>
                   <td class="wp_crm_user_data_row"  wp_crm_attribute="<?php echo $slug; ?>">
                     <div class="blank_slate hidden" show_attribute="<?php echo $slug; ?>"><?php echo (!empty($attribute['blank_message']) ? $attribute['blank_message'] : "Add {$attribute['title']}"); ?></div>
@@ -211,9 +209,10 @@ class crm_page_wp_crm_add_new {
                         <span class="description"><?php _e('Type your new password again.'); ?></span>
                       </li>
                     </ul>
-              <?php } ?>
+            <?php } ?>
+              <?php _e('Admin Options:', 'wp_crm'); ?>
                     <ul>
-                      <?php if (current_user_can('edit_roles')) { ?>
+                      <?php if (current_user_can('edit_users')) { ?>
                         <li class="wp_crm_edit_roles">
                           <label for="wp_crm_role"><?php _e('Capability Role:', 'wp_crm'); ?></label>
                           <select id="wp_crm_role" <?php echo ($own_profile ? ' disabled="true" ' : ''); ?> name="wp_crm[user_data][role][<?php echo rand(1000, 9999); ?>][value]">
@@ -228,7 +227,7 @@ class crm_page_wp_crm_add_new {
                         <label for="show_admin_bar_front"><?php _e('Show Admin Bar when viewing site.'); ?> </label>
                       </li>
                     </ul>
-            <?php } ?>
+          <?php } ?>
             <?php
             if (current_user_can('WP-CRM: Change Color Scheme')) {
               _e('Color Scheme:', 'wp_crm');
@@ -256,9 +255,6 @@ class crm_page_wp_crm_add_new {
         </div>
 
         <div class="major-publishing-actions">
-          <div class="other-action">
-            <span class="wp_crm_subtle_link wp_crm_toggle" toggle="wp_crm_user_actions"><?php _e('Show Actions'); ?></span>
-          </div>
           <div id="publishing-action">
             <input type="hidden" value="Publish" id="original_publish" name="original_publish" />
             <?php if (current_user_can('edit_users') || (current_user_can('add_users') && $object['new'])) { ?>
@@ -270,14 +266,11 @@ class crm_page_wp_crm_add_new {
           <div class="clear"></div>
         </div>
 
-        <div class="wp_crm_user_actions hidden">
+        <div class="wp_crm_user_actions">
           <ul class="wp_crm_action_list">
-            <?php if (current_user_can('WP-CRM: Add User Messages')) { ?>
-              <li class="wp_crm_orange_link wp_crm_toggle_message_entry"><?php _e('Add a general note.', 'wp_crm'); ?></li>
-            <?php } ?>
             <?php do_action('wp_crm_single_user_actions', $object); ?>
             <?php if ((current_user_can('remove_users') || current_user_can('delete_users')) && (!$object['new'] && $user_id != $current_user->ID)) { ?>
-              <li class="wp_crm_orange_link"><a href="<?php echo wp_nonce_url("admin.php?wp_crm_action=delete_user&page=wp_crm&user_id={$user_id}", 'wp-crm-delete-user-' . $user_id); ?>" class="submitdelete deletion"><?php _e('Delete'); ?></a></li>
+              <li><a href="<?php echo wp_nonce_url("admin.php?wp_crm_action=delete_user&page=wp_crm&user_id={$user_id}", 'wp-crm-delete-user-' . $user_id); ?>" class="submitdelete deletion button"><?php _e('Delete'); ?></a></li>
             <?php } ?>
           </ul>
         </div>

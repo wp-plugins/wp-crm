@@ -11,6 +11,17 @@
 
 wp_crm_ui.changed_fields = new Array();
 
+/**
+ * Hack fo IE7,8
+ * Adds standart function trim() to string
+ * @author peshkov@UD
+ */
+if(typeof String.prototype.trim !== 'function') {
+  String.prototype.trim = function() {
+    return this.replace(/^\s+|\s+$/g, '');
+  }
+}
+
 jQuery( document ).ready( function() {
 
   if( typeof wp_crm_dev_mode == 'undefined' ) {
@@ -27,6 +38,43 @@ jQuery( document ).ready( function() {
     wp_crm_ui.change_made = true;
     wp_crm_ui.changed_fields.push( this_attribute );
   });
+
+  /**
+   * Validate new user email for duplacates
+   * @Author odokienko@UD
+   */
+  jQuery( "input.wp_crm_user_email_field").change( function ( ) {
+      var obj = this;
+      var user_id = jQuery("#user_id").val();
+
+      /* elear all error notifications */
+      jQuery( obj ).removeClass( "wp_crm_input_error" ).parent().removeClass( "wp_crm_input_error" );
+      jQuery( obj ).removeClass( "email_validated" ).parent().removeClass( "email_validated" );
+      jQuery( 'span.error', jQuery( obj ).parent()).remove();
+
+      /* indicate validationg state */
+      if ( jQuery( obj ).val() ){
+        jQuery( obj ).attr('disabled', obj).parent().addClass( "email_validating" );
+        jQuery.post(ajaxurl, {
+          action:'wp_crm_check_email_for_duplicates',
+          email: jQuery( obj ).val(),
+          user_id: user_id
+        },function(response) {
+          /* double check: submit may set error status and not wait for response */
+          jQuery( obj ).removeClass( "wp_crm_input_error" ).parent().removeClass( "wp_crm_input_error" );
+
+          if(response == 'Ok') {
+            /* class 'email_validated' are used by .submit(). If class is not present then form will be invalid and won't  submitted */
+            jQuery( obj ).addClass( "email_validated" ).parent().addClass( "email_validated" );
+          }else{
+            jQuery( obj ).addClass( "wp_crm_input_error" ).parent().addClass( "wp_crm_input_error" ).append("<span class='error'>"+response+"</span>");
+          }
+          /* remove validation state */
+          jQuery( obj ).attr('disabled', false).parent().removeClass( "email_validating" );
+        });
+      }
+  });
+
 
    /* Handles form saving */
   jQuery( "form#crm_user" ).submit( function( form ) {
@@ -56,13 +104,6 @@ jQuery( document ).ready( function() {
   jQuery( 'tr.not_primary .wp_crm_input_wrap select,  tr.not_primary .wp_crm_input_wrap select' ).live( 'mousedown', function() {
     jQuery( this ).trigger( 'wp_crm_value_changed', {object: this, action: 'option_mousedown'});
   });
-
-  if( typeof jQuery.prototype.datepicker == 'function' ) {
-    jQuery( ".datepicker" ).datepicker( {
-      changeMonth: true,
-      changeYear: true
-    });
-  }
 
   jQuery( ".wp_crm_truncated_show_hidden" ).click( function() {
     var parent = jQuery( this ).parent();
@@ -141,7 +182,7 @@ jQuery( document ).ready( function() {
   jQuery('#crm_user_activity_filter input').change(function() {
     wp_crm_update_activity_stream();
   });
-    
-  
+
+
 
 });

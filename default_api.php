@@ -475,6 +475,9 @@ if(!function_exists('wp_crm_send_notification')) {
 
       $headers = "From: {$message[send_from]} \r\n\\";
 
+      /** @todo It would be better to find way send ReplyTo data that would be able to get it over phpmailer object to add it to ReplyTo massage field */
+      //$headers .= "ReplyTo: {$message[send_from]} \r\n\\";
+
       add_filter('wp_mail_content_type',create_function('', 'return "text/html"; '));
 
       if($wp_crm['configuration']['do_not_use_nl2br_in_messages'] == 'true') {
@@ -587,9 +590,9 @@ if(!function_exists('wp_crm_save_user_data')) {
       }
 
       //** Make sure values are always in array format */
-      $values = !is_array($values) ? $values : (array) $values;
+      $values = (array) $values;
 
-      foreach( (array) $values as $temp_key => $data) {
+      foreach( $values as $temp_key => $data) {
 
         //** If this attribute is in the main user table, we store it here */
         if(in_array($meta_key, $wp_insert_user_vars)) {
@@ -779,7 +782,6 @@ if(!function_exists('wp_crm_save_user_data')) {
 
         //** Delete old option meta keys for this meta_key  */
         if($wp_crm['data_structure']['attributes'][$meta_key]['has_options']) {
-
           //** Delete "holder" meta key (this may not be necessary */
           delete_user_meta($user_id, $meta_key);
           foreach($wp_crm['data_structure']['attributes'][$meta_key]['option_keys'] as $old_meta_key) {
@@ -787,9 +789,17 @@ if(!function_exists('wp_crm_save_user_data')) {
             delete_user_meta($user_id, $old_meta_key);
           }
         }
+        /**
+         * If attribute is just CHECKBOX (input type) and it doesn't store any predefined values
+         * we have to remove it from usermeta on using admin user edit page, because
+         * when attribute is not checked it's not set here (in funstion's params), so we MUSTN'T store t anymore.
+         * peshkov@UD
+         */
+        elseif (isset($args['admin_save_action']) && $wp_crm['data_structure']['attributes'][$meta_key]['input_type'] == 'checkbox') {
+          delete_user_meta($user_id, $meta_key);
+        }
 
       }
-
 
       //** Add meta values */
       if(is_array($insert_custom_data) && !empty($insert_custom_data)) {
@@ -825,7 +835,9 @@ if(!function_exists('wp_crm_save_user_data')) {
 
       // Don't redirect if data was passed
       if($args['no_redirect'] != 'true') {
-        wp_redirect(admin_url("admin.php?page=wp_crm_add_new&user_id=$user_id&message=" . ($new_user ? 'created' : 'updated')));
+        if(!empty($_REQUEST['redirect_to'])) $url = urldecode($_REQUEST['redirect_to']) . "&message=updated";
+        else $url = admin_url("admin.php?page=wp_crm_add_new&user_id=$user_id&message=" . ($new_user ? 'created' : 'updated'));
+        wp_redirect($url);
       }
 
     } else {

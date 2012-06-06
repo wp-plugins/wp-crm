@@ -1,10 +1,10 @@
-/* 
- * Default WP-CRM Front-End Styles 
- * 
+/*
+ * Default WP-CRM Front-End Styles
+ *
  */
- 
- 
- 
+
+ @import url("../css/jquery-ui-1.8.20.custom.css");
+
  ul.wp_crm_contact_form,
  ul.wp_crm_contact_form ul,
  ul.wp_crm_contact_form li  {
@@ -16,8 +16,8 @@
 
  ul.wp_crm_contact_form input.regular-text.wp_crm_input_error {
     border: 1px solid red;
- } 
- 
+ }
+
  ul.wp_crm_contact_form .input_div.has_options input {
   /*
   display: table-cell;
@@ -25,87 +25,24 @@
   margin-right: 10px;
   */
  }
- 
+
  ul.wp_crm_contact_form .input_div.has_options .wp_crm_input_options {
   /*
-  display: table-cell; 
+  display: table-cell;
   */
  }
- 
-.ui-datepicker  {
-  background: none repeat scroll 0 0 #F2F2F2;
-  border: 1px solid #C4C4C4;
-  box-shadow: 1px 2px 6px #A9A9A9;
-  margin-top: 4px;
-}
-  
-.ui-datepicker .ui-datepicker-header  {
-  background: none repeat scroll 0 0 #E6E6E6;
-  padding: 7px;
-  height: 20px;
+
+.uploadifyQueue {
+  margin-top: 10px;
 }
 
-.ui-datepicker select option {
-  padding: 0 7px 0 0;
+.uploadifyQueueItem {
+  background: none repeat scroll 0 0 #E4E4E4;
+  border: 1px solid #BABABA;
+  margin-top: 3px;
 }
 
-.ui-datepicker .ui-datepicker-group {
-  float: left;  
-}
-
-.ui-datepicker.ui-datepicker-multi-2 .ui-datepicker-group {
-  width: 50%;
-}
-
-.ui-datepicker .ui-datepicker-group.ui-datepicker-group-first .ui-datepicker-calendar {
-  border-right: 1px solid #E6E6E6;
-}
-
-.ui-datepicker .ui-datepicker-calendar  {
-  padding: 7px;
-  width: 100%;
-}
-
-.ui-datepicker .ui-datepicker-calendar  td {
-  padding: 2px 6px;
-}
-
-.ui-datepicker .ui-datepicker-prev,
-.ui-datepicker .ui-datepicker-next  {
-  background: none repeat scroll 0 0 #D7D7D7;
-  color: #414141;
-  cursor: pointer;
-  font-size: 0.9em;
-  padding: 0 6px;
-}
-
-.ui-datepicker .ui-datepicker-current-day {
-  background: #FE941C;
-}
-
-.ui-datepicker .ui-datepicker-current-day a {
-  text-decoration: none;
-  color: #FFF;
-}
-
-.ui-datepicker .ui-datepicker-today a{
-  color: #3C3A3A;
-}
-
-.ui-datepicker .ui-datepicker-prev  {
+.uploadifyQueueItem div.cancel{
   float: left;
+  margin: 3px 6px 0 1px;
 }
-
-.ui-datepicker .ui-datepicker-next  {
-  float: right;
-
-}
-.ui-datepicker .ui-datepicker-title  {
-  line-height: 25px;
-  margin-top: -3px;
-  text-align: center;  
-}
-.ui-datepicker .ui-datepicker-title  select {
-  padding:2px;
-}
-

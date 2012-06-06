@@ -11,11 +11,6 @@ jQuery(document).ready(function () {
 
   jQuery("#wp_crm_text_search").focus();
 
-  jQuery("#actions .misc-pub-section input").change(function() {
-    jQuery(".wp_crm_user_actions").hide();
-  });
-
-
   jQuery(".wp_crm_user_row_actions .wp_crm_user_action[action=reset_password]").live("click", function() {
     var this_button = this;
     var user_id = jQuery(this).attr("user_id");

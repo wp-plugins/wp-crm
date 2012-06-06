@@ -7,7 +7,7 @@ ul {
   input.wp_crm_forced_default_value {
     color: #828282;
   }
-  
+
   .wp_crm_input_quick_fade {
     color: #AAAAAA;
     line-height: 20px;
@@ -17,67 +17,67 @@ ul {
  .wp_crm_contact_form {
   list-style-type:none;
  }
- 
+
  .wp_crm_contact_form ul {
   list-style-type:none;
- } 
- 
+ }
+
  .wp_crm_contact_form li.wp_crm_form_element {
     overflow: auto;
     margin-bottom: 10px;
  }
- 
+
  .wp_crm_contact_form li label.wp_crm_input_label {
   float: left;
   display: block;
   width: 120px;
   padding-right: 15px;
  }
- 
+
  .wp_crm_contact_form li.wp_crm_form_response,
  .wp_crm_contact_form li.wp_crm_submit_row div.wp_crm_input_wrapper,
  .wp_crm_contact_form li.wp_crm_message_field div.wp_crm_input_wrapper {
-    margin-left: 136px;  
+    margin-left: 136px;
  }
- 
- .wp_crm_contact_form li.wp_crm_form_response div.success, 
+
+ .wp_crm_contact_form li.wp_crm_form_response div.success,
  .wp_crm_contact_form li.wp_crm_form_response div.failure {
     padding: 10px;
  }
- 
+
 .wp_crm_contact_form li.wp_crm_form_response div.failure {
     background: none repeat scroll 0 0 #FFEAEA;
     border: 1px solid #C57878;
  }
- 
+
 .wp_crm_contact_form li.wp_crm_form_response div.success {
     background: none repeat scroll 0 0 #E0F4DF;
     border: 1px solid #B5C4B8;
- } 
- 
+ }
+
  .wp_crm_contact_form li.wp_crm_submit_row {
   padding-top: 15px;
  }
- 
+
  .wp_crm_contact_form li div.wp_crm_input_wrapper {
     float: left;
  }
- 
+
  .wp_crm_contact_form li div.wp_crm_input_wrapper ul {
   margin:0;
   padding:0;
  }
- 
+
  .wp_crm_contact_form li div.wp_crm_input_wrapper textarea {
   width: 100%;
   height: 150px;
  }
- 
+
  .wp_crm_contact_form li div.wp_crm_input_wrapper{
   width: 400px;
  }
- 
- 
+
+
 .wp_crm_performed_action {
   text-decoration:line-through;
 }
@@ -96,10 +96,10 @@ div.wp_crm_visualize_results {
     padding: 13px 10px 10px;
     position: relative;
     top: 9px;
-  
+
 }
 
-.wp_crm_visualize_results .wp_crm_chart_title { 
+.wp_crm_visualize_results .wp_crm_chart_title {
     background: none repeat scroll 0 0 #EAEAEA;
     display: block;
     font-weight: bold;
@@ -118,8 +118,8 @@ div.wp_crm_visualize_results {
 
 
 .inside .wp_crm_user_actions {
-  background: none repeat scroll 0 0 #4E4E4D;
-  border-top: 3px solid #3A3939;
+  background: none repeat scroll 0 0 inherit;
+  border-top: 1px solid #DFDFDF;
   color: #FFFFFF;
   padding: 10px;
 }
@@ -207,9 +207,9 @@ div.wp_crm_visualize_results {
   max-width: 99%;
   min-height: 200px;
 }
- 
- .wp_crm_newsletter_ui .wp_crm_newsletter_ui_fields .send_to, 
-.wp_crm_newsletter_ui .wp_crm_newsletter_ui_fields .newsletter_content, 
+
+ .wp_crm_newsletter_ui .wp_crm_newsletter_ui_fields .send_to,
+.wp_crm_newsletter_ui .wp_crm_newsletter_ui_fields .newsletter_content,
 .wp_crm_newsletter_ui .wp_crm_newsletter_ui_fields select,
 .wp_crm_newsletter_ui .wp_crm_newsletter_ui_fields .regular-text {
     width: 99%;
@@ -221,7 +221,7 @@ div.wp_crm_visualize_results {
   border: 2px solid #BBCCFF;
 }
 
-.wp_crm_newsletter_ui .wp_crm_newsletter_ui_fields .newsletter_content:focus, 
+.wp_crm_newsletter_ui .wp_crm_newsletter_ui_fields .newsletter_content:focus,
 .wp_crm_newsletter_ui .wp_crm_newsletter_ui_fields .regular-text:focus {
   border: 2px solid #73A6FF;
 }
@@ -258,8 +258,8 @@ div.wp_crm_visualize_results {
 	margin-right: 10px;
 	float: left;
 }
-	
-.user_card.column-user_card{ 
+
+.user_card.column-user_card{
 	padding: 10px;
 	color: #737373;
 }
@@ -268,37 +268,22 @@ div.wp_crm_visualize_results {
   float: left;
 }
 
- 
+
 .user_card .primary {
 	font-size: 1.4em;
 	font-weight:bold;
 }
- 
+
  .major-publishing-actions .other-action {
   float: left;
   margin-top: 6px;
  }
- 
- 
+
+
 .wp_crm_subtle_link {
   color: #737373;
   cursor: pointer;
-  font-size: 0.9em;    
-}
-
-.wp_crm_orange_link a:link  {
-  color: #FFD565 !important;
-}
-
-.wp_crm_orange_link:active {
-  color: #FFD565;
-}
-
-.wp_crm_orange_link {
-  color: #FFB639;
-  cursor: pointer;
-  font-size: 1.1em;
-  text-decoration: underline;
+  font-size: 0.9em;
 }
 
 .wp_crm_subtle_link:hover {
@@ -310,8 +295,8 @@ div.wp_crm_visualize_results {
 	cursor: pointer;
 	text-decoration: underline; }
 
-.wp_crm_link:hover { 
-  color: #D54E21; 
+.wp_crm_link:hover {
+  color: #D54E21;
 }
 
 .wp_crm_checkbox_on_left label{
@@ -321,4 +306,17 @@ div.wp_crm_visualize_results {
 }
 .wp_crm_checkbox_on_left input{
   float: left;
+}
+
+/* buttons */
+
+.wp_crm_action_list .button {
+  padding: 10px;
+  border-radius: 5px;
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
+  width: 70%;
+  margin: 7px auto;
+  text-align: center;
+  display:block;
 }

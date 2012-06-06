@@ -38,7 +38,7 @@ if(empty($wp_crm['data_structure']['attributes'])) {
     jQuery("#wp_crm_settings_tabs").tabs({ cookie: { expires: 30 } });
 
     // Check plugin updates
-    jQuery("#wp_crm_ajax_check_plugin_updates").click(function() {
+    jQuery(".wp_crm_ajax_check_plugin_updates").click(function() {
 
       jQuery('.plugin_status').remove();
 
@@ -116,7 +116,7 @@ if(empty($wp_crm['data_structure']['attributes'])) {
     ?>
 
     <?php if(count($wp_crm['available_features']) > 0): ?>
-    <li><a href="#tab_plugins"><?php _e('Features','wp_crm'); ?></a></li>
+    <li><a href="#tab_plugins"><?php _e('Premium Features','wp_crm'); ?></a></li>
     <?php endif; ?>
     <li><a href="#tab_troubleshooting"><?php _e('Help','wp_crm'); ?></a></li>
 
@@ -155,7 +155,7 @@ if(empty($wp_crm['data_structure']['attributes'])) {
               <input id="wp_crm_track_detailed_user_activity" value="true" type="checkbox"  <?php checked($wp_crm['configuration']['track_detailed_user_activity'], 'true'); ?> name="wp_crm[configuration][track_detailed_user_activity]" />
               <label for="wp_crm_track_detailed_user_activity"><?php _e('Track detailed user activity.', 'wp_crm'); ?></label>
             </li>
-            
+
             <li>
               <input id="wp_crm_allow_attributes_grouping" value="true" type="checkbox"  <?php checked($wp_crm['configuration']['allow_attributes_grouping'], 'true'); ?> name="wp_crm[configuration][allow_attributes_grouping]" />
               <label for="wp_crm_allow_attributes_grouping"><?php _e('Enable Attribute Grouping.', 'wp_crm'); ?></label>
@@ -176,7 +176,7 @@ if(empty($wp_crm['data_structure']['attributes'])) {
             <li class="wp_crm_advanced_configuration">
               <label for="wp_crm_standardize_display_name_rule"><?php _e('Display name components: ', 'wp_crm'); ?></label>
               <input id="wp_crm_standardize_display_name_rule" class="regular-text wp_crm_force_default" default_value="[user_email]" type="text" value="<?php echo esc_attr($wp_crm['configuration']['display_name_rule']); ?>" name="wp_crm[configuration][display_name_rule]" />
-            </li>            
+            </li>
           </ul>
         </td>
       </tr>
@@ -193,9 +193,9 @@ if(empty($wp_crm['data_structure']['attributes'])) {
           </ul>
         </td>
       </tr>
-      
+
       <?php do_action('wp_crm::settings_page::main_tab_bottom'); ?>
-      
+
     </table>
   </div>
 
@@ -340,7 +340,7 @@ if(empty($wp_crm['data_structure']['attributes'])) {
           </td>
           <td valign="middle"><span class="wp_crm_delete_row  button"><?php _e('Delete','wp_crm') ?></span></td>
         </tr>
-      
+
       <?php endforeach; ?>
       </tbody>
       <tfoot>
@@ -393,7 +393,7 @@ if(empty($wp_crm['data_structure']['attributes'])) {
               <label><?php _e('Title:'); ?></label>
               <input class="slug_setter" type="text" name="wp_crm[data_structure][attributes][<?php echo $slug; ?>][title]" value="<?php echo $data['title']; ?>" />
             </li>
-            
+
             <?php do_action('wp_crm_attributes_before_advanced_list', array('slug'=>$slug)); ?>
 
             <li class="wp_crm_advanced_configuration">
@@ -405,7 +405,7 @@ if(empty($wp_crm['data_structure']['attributes'])) {
               <label><?php _e('Slug:'); ?></label>
               <input type="text" class="slug" readonly='readonly' value="<?php echo $slug; ?>" />
             </li>
-          
+
             <?php do_action('wp_crm_attributes_after_advanced_list', array('slug'=>$slug)); ?>
 
             <li>
@@ -560,6 +560,11 @@ if(empty($wp_crm['data_structure']['attributes'])) {
   <div id="tab_plugins">
     <div class="wp_crm_inner_tab">
 
+      <div class="wp_crm_settings_block">
+        <?php _e('Force check of allowed premium features.', 'wpp_crm'); ?>
+        <input type="button" class="wp_crm_ajax_check_plugin_updates" value="<?php _e('Check Updates', 'wp_crm'); ?>">
+      </div>
+
       <div class="wp_crm_settings_block wp_crm_main_block">
         <?php _e('When purchasing the premium features you will need to specify your domain to add the license correctly. <br />This is your domain:','wp_crm'); echo ' <b>'. $this_domain; ?></b>
       </div>
@@ -575,7 +580,7 @@ if(empty($wp_crm['data_structure']['attributes'])) {
         <?php $active = (@$wp_crm['installed_features'][$plugin_slug]['disabled'] != 'false' ? true : false); ?>
 
             <strong><?php echo $plugin_data['title']; ?></strong>
-            <p><?php echo $plugin_data['tagline']; ?> <a href="http://usabilitydynamics.com/products/wp-crm/premium/"><?php _e('[learn more]','wp_crm') ?></a></p>
+            <p><?php echo $plugin_data['tagline']; ?> <a href="http://usabilitydynamics.com/products/wp-crm/premium-features/"><?php _e('[learn more]','wp_crm') ?></a></p>
 
             <div class="wp_crm_box_content">
               <p><?php echo $plugin_data['description']; ?></p>
@@ -587,7 +592,7 @@ if(empty($wp_crm['data_structure']['attributes'])) {
                 <li><?php echo CRM_UD_UI::checkbox("name=wp_crm_settings[installed_features][$plugin_slug][disabled]&label=" . __('Disable feature.','wp_crm'), $wp_crm['installed_features'][$plugin_slug]['disabled']); ?></li>
                 <li><?php _e('Feature installed, using version','wp_crm') ?> <?php echo $wp_crm['installed_features'][$plugin_slug]['version']; ?>.</li>
               <?php } else { ?>
-                <li><?php echo sprintf(__('Please visit <a href="%s">UsabilityDynamics.com</a> to purchase this feature.','wp_crm'),'http://usabilitydynamics.com/products/wp-crm/premium/'); ?></li>
+                <li><?php echo sprintf(__('Please visit <a href="%s">UsabilityDynamics.com</a> to purchase this feature.','wp_crm'),'http://usabilitydynamics.com/products/wp-crm/premium-features/'); ?></li>
               <?php } ?>
             </ul>
           </div>
@@ -602,12 +607,11 @@ if(empty($wp_crm['data_structure']['attributes'])) {
   <div id="tab_troubleshooting">
     <div class="wp_crm_inner_tab">
 
-
       <div class="wp_crm_settings_block">
         <?php _e('Force check of allowed premium features.', 'wpp_crm'); ?>
-        <input type="button" id="wp_crm_ajax_check_plugin_updates" value="<?php _e('Check Updates', 'wp_crm'); ?>">
+        <input type="button" class="wp_crm_ajax_check_plugin_updates" value="<?php _e('Check Updates', 'wp_crm'); ?>">
       </div>
-
+      
       <div class="wp_crm_settings_block">
         <?php _e('Look up the <b>$wp_crm</b> global settings array. This array stores all the default settings, which are overwritten by database settings, and custom filters.','wp_crm') ?>
         <input type="button" value="<?php _e('Show $wp_crm','wp_crm') ?>" id="wp_crm_show_settings_array"> <span id="wp_crm_show_settings_array_cancel" class="wp_crm_link hidden"><?php _e('Cancel','wp_crm') ?></span>

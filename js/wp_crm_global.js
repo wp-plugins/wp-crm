@@ -234,11 +234,14 @@ jQuery( document ).ready( function() {
 
 
     jQuery( '.wpp_crm_filter_section_title' ).click( function(){
-
       var parent = jQuery( this ).parents( '.wp_crm_overview_filters' );
-      jQuery( ' .wp_crm_checkbox_filter', parent ).toggle();
-      jQuery( '.wpp_crm_filter_show', parent ).toggle();
-
+      jQuery(' .wp_crm_checkbox_filter', parent).slideToggle('fast', function(){
+        if(jQuery(this).css('display') == 'none') {
+          jQuery('.wpp_crm_filter_show', parent).html('Show');
+        } else {
+          jQuery('.wpp_crm_filter_show', parent).html('Hide');
+        }
+      });
     });
 
   });
@@ -277,7 +280,7 @@ function wp_crm_create_slug( slug ) {
 
         if( response.success == 'true' ) {
           jQuery( '#wp_crm_user_activity_stream' ).slideUp( 'fast' );
-          wp_crm_update_activity_stream();
+          wp_crm_update_activity_stream({filter_types:false});
           jQuery( '#wp_crm_message_content' ).val( '' );
           jQuery( '.wp_crm_new_message' ).slideUp( 'fast' );
 
@@ -353,9 +356,9 @@ function wp_crm_create_slug( slug ) {
    *
    */
   function wp_crm_update_activity_stream( params ) {
-    
+
     var obj = jQuery('#crm_user_activity_filter :input').first();
-    
+
     var parent =  jQuery( obj ).closest( '#crm_user_activity_filter' );
     var msglist = jQuery( '.wp_crm_stream_status.wp_crm_load_more_stream' );
 
@@ -374,14 +377,14 @@ function wp_crm_create_slug( slug ) {
         hidden: true
       };
     });
-    
+
     var params = jQuery.extend( true, {
       action: 'wp_crm_get_user_activity_stream',
       user_id: jQuery( "#user_id" ).val(),
       limited_messages : jQuery(msglist).attr('limited_messages'),
       filter_types: filter_types_visible.concat(filter_types_hidden)
     }, params );
-    
+
 
     jQuery( "#user_activity_history .loading" ).show();
     jQuery.post(
@@ -486,6 +489,16 @@ function wp_crm_create_slug( slug ) {
       }
 
     });
+
+    if( jQuery( "input.wp_crm_user_email_field:not(.email_validated)", form ).length) {
+
+      jQuery( "input.wp_crm_user_email_field:not(.email_validated):first", form ).addClass( "wp_crm_input_error" );
+      jQuery( "input.wp_crm_user_email_field:not(.email_validated):first", form ).focus();
+      jQuery( ".blank_slate", form ).hide();
+      jQuery( ".input_div", form ).show();
+      stop_form = true;
+
+    }
 
     if( stop_form ) {
       return false;

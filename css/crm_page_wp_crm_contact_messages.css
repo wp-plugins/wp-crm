@@ -12,7 +12,7 @@
   font-size: 1.1em;
   font-weight: bold;
 }
- 
+
 .wp_crm_overview_filters{
   clear: both;
   margin: 5px 0 5px 0;
@@ -28,4 +28,9 @@
     float: right;
     line-height: 23px;
     text-align: right;
+}
+
+.metabox-holder .postbox-container .empty-container, #post-body.columns-2 #side-sortables:empty {
+  border: none !important;
+  height: auto !important;
 }

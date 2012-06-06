@@ -79,7 +79,7 @@ class WP_CRM_Core {
 
     if($wp_crm['configuration']['replace_default_user_page'] == 'true') {
       $current_user = wp_get_current_user();
-      if($wp_crm['configuration']['replace_default_user_page'] == 'true' && basename($_SERVER['SCRIPT_NAME'])=='profile.php' && !empty($current_user->ID)) {
+      if($wp_crm['configuration']['replace_default_user_page'] == 'true' && basename($_SERVER['SCRIPT_NAME'])=='profile.php' && !empty($current_user->ID) && current_user_can('edit_users')) {
         die(wp_redirect("admin.php?page=wp_crm_add_new&user_id={$current_user->ID}"));
       }
       add_filter('edit_profile_url', array('WP_CRM_F', 'edit_profile_url'),10,3);
@@ -95,11 +95,6 @@ class WP_CRM_Core {
     wp_register_script('jquery-cookie', WP_CRM_URL. '/third-party/jquery.smookie.js', array('jquery'), '1.7.3' );
     wp_register_script('swfobject', WP_CRM_URL. '/third-party/swfobject.js', array('jquery'));
     wp_register_script('jquery-uploadify', WP_CRM_URL. '/third-party/uploadify/jquery.uploadify.v2.1.4.min.js', array('jquery', 'swfobject'));
-    wp_register_script('jquery-position', WP_CRM_URL. '/third-party/jquery.ui.position.min.js', array('jquery-ui-core'));
-    wp_register_script('jquery-slider', WP_CRM_URL. '/third-party/jquery.ui.slider.min.js', array('jquery-ui-core'));
-    wp_register_script('jquery-widget', WP_CRM_URL. '/third-party/jquery.ui.widget.min.js', array('jquery-ui-core'));
-    wp_register_script('jquery-datepicker', WP_CRM_URL. '/third-party/jquery.ui.datepicker.js', array('jquery-ui-core'));
-    wp_register_script('jquery-autocomplete', WP_CRM_URL. '/third-party/jquery.ui.autocomplete.min.js', array('jquery-widget','jquery-position'));
     wp_register_script('wp-crm-data-tables', WP_CRM_URL. '/third-party/dataTables/jquery.dataTables.min.js', array('jquery'));
     wp_register_script('wp_crm_global', WP_CRM_URL. '/js/wp_crm_global.js', array('jquery'), WP_CRM_Version, true);
     wp_register_script('wp_crm_profile_editor', WP_CRM_URL. '/js/wp_crm_profile_editor.js', array('wp_crm_global'), WP_CRM_Version, true);
@@ -158,9 +153,15 @@ class WP_CRM_Core {
     add_action("wp_ajax_wp_crm_list_table", create_function('',' die(WP_CRM_F::ajax_table_rows());  '));
     add_action("wp_ajax_wp_crm_quick_action", create_function('',' die(WP_CRM_F::quick_action());'));
 
-    add_action("admin_init", array('WP_CRM_Core', "admin_init"));
+    add_action("wp_ajax_wp_crm_check_email_for_duplicates", create_function('','die(WP_CRM_F::check_email_for_duplicates($_REQUEST[email],$_REQUEST[user_id]));'));
 
+    add_action("admin_init", array('WP_CRM_Core', "admin_init"));
+    add_action("current_screen", array('WP_CRM_Core', "current_screen"));
     add_action("admin_head", array('WP_CRM_Core', "admin_head"));
+
+    /** phpmailer_init can be used to access phpmailer object which is used by wp_mail function
+     * I planed to use it to add ReplyTo field in message */
+    //add_action('phpmailer_init', array('WP_CRM_F','shortcode_form_send_notification'),1);
 
     //* Init action hook */
     do_action('wp_crm_init');
@@ -171,6 +172,7 @@ class WP_CRM_Core {
     add_action('load-toplevel_page_wp_crm',     array('WP_CRM_Core', 'toplevel_page_wp_crm'));
     add_action('load-crm_page_wp_crm_settings', array('WP_CRM_Core', 'crm_page_wp_crm_settings'));
     add_action('load-crm_page_wp_crm_add_new',  array('WP_CRM_Core', 'crm_page_wp_crm_add_new'));
+    add_action('load-crm_page_wp_crm_my_profile',  array('WP_CRM_Core', 'crm_page_wp_crm_add_new'));
 
     //** Take over traditional user pages if option is enabled */
     add_action('load-user-edit.php', array('WP_CRM_Core',  'crm_page_traditional_user_page'));
@@ -181,16 +183,6 @@ class WP_CRM_Core {
     add_action("deleted_user",      array('WP_CRM_F', "deleted_user"));
 
     add_filter('set-screen-option', array('WP_CRM_F', "crm_set_option"), 10, 3);
-
-    //** Check if installed DB version is older than THIS version */
-    if(is_admin()) {
-      if(!get_option('wp_crm_caps_set')) {
-        WP_CRM_F::manual_activation('update_caps=true');
-      }
-
-      //** Load defaults */
-      WP_CRM_F::manual_activation();
-    }
   }
 
 
@@ -200,23 +192,18 @@ class WP_CRM_Core {
    * @author Maxim Peshkov
    */
   function init_upper() {
-
     $locale = apply_filters( 'wp_crm_locale', get_locale() );
-
     $mofile = sprintf( 'wp_crm-%s.mo', $locale );
-
     $mofile_local  = WP_CRM_Path . '/langs/' . $mofile;
-		$mofile_global = WP_LANG_DIR . '/wp_crm/' . $mofile;
+    $mofile_global = WP_LANG_DIR . '/wp_crm/' . $mofile;
 
-		if ( file_exists( $mofile_local ) ) {
-			load_textdomain( 'wp_crm', $mofile_local );
+    if ( file_exists( $mofile_local ) ) {
+      load_textdomain( 'wp_crm', $mofile_local );
     } elseif ( file_exists( $wp_crm ) ) {
-			load_textdomain( 'wp_crm', $mofile_global );
+      load_textdomain( 'wp_crm', $mofile_global );
     }
 
-
     add_filter("retrieve_password", array('WP_CRM_F', "retrieve_password"));
-
   }
 
 
@@ -241,6 +228,8 @@ class WP_CRM_Core {
 
     $wp_crm = apply_filters('wp_crm_settings_lower', $wp_crm);
 
+    //** Check premium feature availability */
+    add_action('wp_crm_premium_feature_check', array('WP_CRM_F', 'feature_check'));
   }
 
 
@@ -318,7 +307,7 @@ class WP_CRM_Core {
       die(wp_redirect("admin.php?page=wp_crm_add_new&user_id={$_GET['user_id']}"));
     }
 
-    if($wp_crm['configuration']['replace_default_user_page'] != 'true') {
+    if($wp_crm['configuration']['replace_default_user_page'] != 'true' ) {
       return;
     }
 
@@ -421,10 +410,23 @@ class WP_CRM_Core {
     $contextual_help['General Help'][] = '<p>' . __('If certain user attributes are not applicable to certain roles, such as "Client Type" to the "Administrator" role, you can elect to hide the unapplicable attributes on profile editing pages.', 'wp_crm') . '</p>';
     $contextual_help['General Help'][] = '<h3>' . __('Predefined Values', 'wp_crm') . '</h3>';
     $contextual_help['General Help'][] = '<p>' . __('If you want your attributes to have predefiend values, such as in a dropdown, or a checkbox list, enter a comma separated list of values you want to use.  You can also get more advanced by using taxonomies - to load all values from a taxonomy, simply type ine: <b>taxonomy:taxonomy_name</b>.', 'wp_crm') . '</p>';
-    $contextual_help['General Help'][] = '<h3>' . __('Shortcode Forms', 'wp_crm') . '</h3>';
-    $contextual_help['General Help'][] = '<p>' . __('Shortcode Forms, which can be used for contact forms, or profile editing, are setup here, and then inserted using a shortcode into a page, or a widget. The available contact form attributes are taken from the WP-CRM attributes, and when filled out by a user, are mapped over directly into their profile. User profiles are created based on the e-mail address, if one does not already exist, for keeping track of users. ', 'wp_crm') . '</p>';
-    $contextual_help['General Help'][] = '<p>' . __('If a new user fills out a form, an account will be created for them based on the specified role.  ', 'wp_crm') . '</p>';
-    $contextual_help['General Help'][] = '<p>' . __('<b>Important</b>: user\'s email attribute should have slug \'user_email\'.', 'wp_crm') . '</p>';
+    $contextual_help['Shortcode Forms'][] = '<h3>' . __('Shortcode Forms', 'wp_crm') . '</h3>';
+    $contextual_help['Shortcode Forms'][] = '<p>' . __('Shortcode Forms, which can be used for contact forms, or profile editing, are setup here, and then inserted using a shortcode into a page, or a widget. The available contact form attributes are taken from the WP-CRM attributes, and when filled out by a user, are mapped over directly into their profile. User profiles are created based on the e-mail address, if one does not already exist, for keeping track of users. ', 'wp_crm') . '</p>';
+
+    $contextual_help['Shortcode Forms'][] = '<h3>' . __('Shortcode Forms attributes', 'wp_crm') . '</h3>';
+
+    $contextual_help['Shortcode Forms'][] = '<p> - ' . __('display_notes = [ true | <b>false</b> ] &mdash; If a note exists for an attribute, it will be shown on the right.', 'wp_crm') . '</p>';
+    $contextual_help['Shortcode Forms'][] = '<p> - ' . __('require_login_for_existing_users = [ <b>true</b> | false ]', 'wp_crm') . '</p>';
+    $contextual_help['Shortcode Forms'][] = '<p> - ' . __('use_current_user = [ <b>true</b> | false ]', 'wp_crm') . '</p>';
+    $contextual_help['Shortcode Forms'][] = '<p> - ' . __('success_message = "<i>custom text</i>"  &mdash; default value is "', 'wp_crm') .  __('Your message has been sent. Thank you.', 'wp_crm') . '".</p>';
+    $contextual_help['Shortcode Forms'][] = '<p> - ' . __('submit_text = "<i>custom text</i>"  &mdash; default value is "', 'wp_crm') .  __('Submit', 'wp_crm') . '".</p>';
+    $contextual_help['Shortcode Forms'][] = '<p> - ' . __('js_callback_function = "<i>custom_function_name</i>"  &mdash; default value is "', 'wp_crm') .  __('false', 'wp_crm') . '".</p>';
+    $contextual_help['Shortcode Forms'][] = '<p> - ' . __('js_validation_function = "<i>custom_function_name</i>"  &mdash; default value is "', 'wp_crm') .  __('false', 'wp_crm') . '".</p>';
+
+    $contextual_help['Shortcode Forms'][] = '<p>' . __('For example, <b>[wp_crm_form form=example_from display_notes=true success_message="Your message was successfully sent!" submit_text="Send message!"]</b>', 'wp_crm') . '</p>';
+
+    $contextual_help['Shortcode Forms'][] = '<p>' . __('If a new user fills out a form, an account will be created for them based on the specified role.  ', 'wp_crm') . '</p>';
+    $contextual_help['Shortcode Forms'][] = '<p>' . __('<b>Important</b>: user\'s email attribute should have slug \'user_email\'.', 'wp_crm') . '</p>';
 
     $contextual_help['Shortcodes'][] = '<h3>' . __('Automation', 'wp_crm') . '</h3>';
     $contextual_help['Shortcodes'][] = '<p>' . __('Use other attribute as components. Example: <b>[last_name], [rank]</b> will become <b>Smith, Sgt.</b>', 'wp_crm') . '</p>';
@@ -535,8 +537,32 @@ class WP_CRM_Core {
      }
 
     add_filter('admin_title', array('WP_CRM_F', 'admin_title'));
+
+    WP_CRM_F::manual_activation();
   }
 
+  /**
+   * Handles current screen
+   *
+   * @author peshkov@UD
+   */
+  function current_screen($current_screen) {
+    global $current_user, $current_screen;
+    static $called = false;
+
+    /** Determine if the current screen is profile we re-set it to 'edit user' (crm_page_wp_crm_add_new) screen */
+    if(is_object($current_screen) && $current_screen->id == 'crm_page_wp_crm_my_profile') {
+      $called = true;
+      if(empty($_REQUEST['user_id'])) {
+        $_GET['user_id'] = $_REQUEST['user_id'] = $current_user->id;
+        /** Re-set global $wp_crm_user. It was set earlier on admin_init action. */
+        WP_CRM_F::maybe_load_profile($current_user->id, true);
+      }
+      $_GET['redirect_to'] = $_REQUEST['redirect_to'] = urlencode(admin_url('admin.php?page=wp_crm_my_profile'));
+      set_current_screen('crm_page_wp_crm_add_new');
+    }
+    return $current_screen;
+  }
 
   /**
    * Does user info links
@@ -662,9 +688,8 @@ class WP_CRM_Core {
     global $wp_crm, $menu, $submenu, $current_user;
 
     do_action('wp_crm_admin_menu');
-
     //** Replace default user management screen if set */
-    $position = ($wp_crm['configuration']['replace_default_user_page'] == 'true' ? '70' : '33');
+    $position = (($wp_crm['configuration']['replace_default_user_page'] == 'true' && current_user_can('manage_options')) ? '70' : '33');
 
     /** Setup main overview page */
     $wp_crm['system']['pages']['core'] = add_menu_page('CRM', 'CRM', 'WP-CRM: View Overview', 'wp_crm', array('WP_CRM_Core', 'page_loader'), '', $position);
@@ -672,15 +697,15 @@ class WP_CRM_Core {
     //* Setup child pages (first one is used to be loaded in place of 'CRM' */
     $wp_crm['system']['pages']['overview'] = add_submenu_page('wp_crm', __('All People', 'wp_crm'),__('All People', 'wp_crm'), 'WP-CRM: View Overview', 'wp_crm', array('WP_CRM_Core', 'page_loader'));
     $wp_crm['system']['pages']['add_new'] = add_submenu_page('wp_crm', __( 'New Person', 'wp_crm'),  __( 'New Person', 'wp_crm'), 'WP-CRM: View Profiles', 'wp_crm_add_new', array('WP_CRM_Core', 'page_loader'));
-    $wp_crm['system']['pages']['your_profile'] = add_submenu_page('wp_crm', __('My Profile', 'wp_crm'), __('My Profile', 'wp_crm'), 'WP-CRM: View Profiles', 'wp_crm_add_new&user_id=' . $current_user->data->ID , array('WP_CRM_Core', 'page_loader'));
+    add_submenu_page('wp_crm', __('My Profile', 'wp_crm'), __('My Profile', 'wp_crm'), 'WP-CRM: View Profiles', 'wp_crm_my_profile', array('WP_CRM_Core', 'page_loader'));
+    $wp_crm['system']['pages']['your_profile'] = $wp_crm['system']['pages']['add_new'];
     $wp_crm['system']['pages']['settings'] = add_submenu_page('wp_crm', __('Settings', 'wp_crm'), __('Settings', 'wp_crm'), 'WP-CRM: Manage Settings', 'wp_crm_settings', array('WP_CRM_Core', 'page_loader'));
-
     //** Migrate any pages that are under default user page */
     if($wp_crm['configuration']['replace_default_user_page'] == 'true') {
 
       $wp_crm_excluded_sub_pages = apply_filters('wp_crm_excluded_sub_pages', array(5,10,15));
-
       if(is_array($submenu['users.php'])) {
+
         foreach($submenu['users.php'] as $sub_key => $sub_pages_data) {
 
           if(in_array($sub_key, $wp_crm_excluded_sub_pages)) {
@@ -735,19 +760,20 @@ class WP_CRM_Core {
     switch($current_screen->id)  {
 
       case 'toplevel_page_wp_crm':
+        wp_enqueue_script('post');
+        wp_enqueue_script('postbox');
         wp_enqueue_script('wp-crm-data-tables');
         wp_enqueue_script('google-jsapi');
         wp_enqueue_style('wp-crm-data-tables');
-
        break;
 
       case 'crm_page_wp_crm_add_new':
         wp_enqueue_script('post');
-        wp_enqueue_script('jquery-autocomplete');
-        wp_enqueue_script('jquery-datepicker');
+        wp_enqueue_script('postbox');
+        wp_enqueue_script('jquery-ui-autocomplete');
+        wp_enqueue_script('jquery-ui-datepicker');
         wp_enqueue_script('thickbox');
         wp_enqueue_style('thickbox');
-
       break;
 
       case 'crm_page_wp_crm_settings':

@@ -2,6 +2,15 @@
 
 #performed_actions {
   display: none;
+  border-top: 1px solid #DFDFDF;
+}
+#performed_actions h3 {
+  padding: 10px;
+  margin:0;
+  cursor:default;
+}
+#performed_actions .wp_crm_quick_report_wrapper {
+  padding:10px;
 }
 
 .user_card_inner_wrapper ul.wp_crm_user_row_actions {
@@ -106,5 +115,10 @@ td.wp_crm_user_card div.user_avatar {
   margin-right: 25px;
   cursor: pointer;
   font-weight: normal;
+}
+
+.metabox-holder .postbox-container .empty-container, #post-body.columns-2 #side-sortables:empty {
+  border: none !important;
+  height: auto !important;
 }
 

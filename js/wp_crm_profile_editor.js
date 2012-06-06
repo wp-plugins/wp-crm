@@ -34,13 +34,15 @@ jQuery(document).bind('wp_crm_value_changed', function(event, data) {
     return;
   }
 
-  if(jQuery(object).val() == '') {
-    jQuery('.input_div', parent).hide();
-    jQuery('.blank_slate', parent).show();
-  }
+  /** We need to use timeout here because value of field sometimes is not updated in time. E.g.: datepicker's field */
+  setTimeout(function(){
+    if(jQuery(object).val() == '') {
+      jQuery('.input_div', parent).hide();
+      jQuery('.blank_slate', parent).show();
+    }
+  }, 100);
 
 });
-
 
 jQuery(document).ready(function() {
 
@@ -59,9 +61,9 @@ jQuery(document).ready(function() {
 
   if(typeof jQuery.fn.datepicker == 'function') {
     jQuery('input.wpc_date_picker').datepicker({
-      numberOfMonths: 2,
-       dateFormat: 'yy-mm-dd',
-       changeMonth: true
+      dateFormat: 'yy-mm-dd',
+      changeMonth: true,
+      changeYear: true
     });
   }
 

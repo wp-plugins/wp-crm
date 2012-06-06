@@ -2,8 +2,8 @@
 /*
 Name: Shortcode Contact Forms
 Class: class_contact_messages
-Version: 0.2.1
-Minimum Core Version: 0.30.2
+Version: 0.2.2
+Minimum Core Version: 0.33.0
 Description: Create contact forms using shortcodes and keep track of messages in your dashboard.
 Feature ID: 12
 */
@@ -39,6 +39,7 @@ class class_contact_messages {
     add_action('wp_ajax_process_crm_message', array('class_contact_messages', 'process_crm_message'));
     add_action('wp_ajax_nopriv_process_crm_message', array('class_contact_messages', 'process_crm_message'));
     add_action('admin_enqueue_scripts', array('class_contact_messages', 'admin_enqueue_scripts'));
+    add_action('load-crm_page_wp_crm_contact_messages', array('class_contact_messages', 'load_screen'));
 
     add_action("wp_ajax_wp_crm_messages_table", create_function('',' echo class_contact_messages::ajax_table_rows(); die; '));
     add_action("wp_ajax_wp_crm_visualize_contact_results", create_function('',' class_contact_messages::visualize_contact_results($_REQUEST["filters"]); die();'));
@@ -62,11 +63,25 @@ class class_contact_messages {
    * @since 0.1
    */
    function admin_init() {
+     global $wpdb, $wp_crm, $wp_crm_contact_messages_filter;
 
     //** A work around to load the table columns early enough for ajax functions to use them */
     add_filter("manage_crm_page_wp_crm_contact_messages_columns", array('class_contact_messages', "overview_columns"));
 
-    add_meta_box('wp_crm_messages_filter', __('Filter') , array('class_contact_messages','metabox_filter'), 'crm_page_wp_crm_contact_messages', 'normal', 'default');
+    /** Determine if metabox of sidebar filter should be added to page */
+    $wp_crm_contact_messages_filter = false;
+    if(count($wp_crm['wp_crm_contact_system_data']) > 1) {
+      $wp_crm_contact_messages_filter = true;
+    }
+    /** Check if we have archived messaged*/
+    if($wpdb->get_var("SELECT COUNT(id) FROM {$wpdb->crm_log} WHERE value = 'archived'")) {
+      $wp_crm_contact_messages_filter = true;
+    }
+    $wp_crm_contact_messages_filter = apply_filters('wp_crm_messages_show_filter', $wp_crm_contact_messages_filter);
+
+    if($wp_crm_contact_messages_filter) {
+      add_meta_box('wp_crm_messages_filter', __('Filter') , array('class_contact_messages','metabox_filter'), 'crm_page_wp_crm_contact_messages', 'normal', 'default');
+    }
 
    }
 
@@ -110,7 +125,7 @@ class class_contact_messages {
         $atts = $args['atts'];
 
         $atts = stripslashes($atts);
-        
+
         echo do_shortcode("[{$args['shortcode']} {$atts}]");
       }
     }
@@ -176,18 +191,15 @@ class class_contact_messages {
     </div>
 
     <div class="major-publishing-actions">
-      <!-- Commented temporary until this developed <div class="other-action">
-        <span class="wp_crm_subtle_link wp_crm_toggle" toggle="wp_crm_user_actions"><?php _e('Show Actions'); ?></span>
-      </div>-->
       <div class="publishing-action">
         <?php submit_button( __('Filter Results'), 'button', false, false, array('id' => 'search-submit') ); ?>
       </div>
       <br class='clear' />
     </div>
 
-    <div class="wp_crm_user_actions hidden">
+    <div class="wp_crm_user_actions">
       <ul class="wp_crm_action_list">
-      <li class="wp_crm_orange_link wp_crm_visualize_contact_results"><?php _e('Visualize Contact Data', 'wp_crm'); ?></li>
+        <li class="button wp_crm_visualize_contact_results"><?php _e('Visualize Contact Data', 'wp_crm'); ?></li>
       <?php do_action('wp_crm_message_actions'); ?>
       </ul>
     </div>
@@ -468,6 +480,8 @@ class class_contact_messages {
       switch($current_screen->id)  {
 
         case 'crm_page_wp_crm_contact_messages':
+          wp_enqueue_script('post');
+          wp_enqueue_script('postbox');
           wp_enqueue_script('google-jsapi');
           wp_enqueue_style('wp_crm_global');
           wp_enqueue_script('wp-crm-data-tables');
@@ -588,7 +602,7 @@ class class_contact_messages {
       return false;
     }
 
-    WP_CRM_F::force_script_inclusion('jquery-datepicker');
+    WP_CRM_F::force_script_inclusion('jquery-ui-datepicker');
     WP_CRM_F::force_script_inclusion('wp_crm_profile_editor');
 
     $wp_crm_nonce = md5(NONCE_KEY . $form_slug);
@@ -641,6 +655,8 @@ class class_contact_messages {
       } else {
         $values = false;
       }
+      $continue = apply_filters("wp_crm_before_{$field}_frontend", array('continue'=>false, 'values' => $values, 'attribute' => $this_attribute, 'user_object' => $user_data, 'args' => $args));
+      if($continue['continue']){ continue; };
 
     ?>
     <li class="wp_crm_form_element <?php echo ($this_attribute['required'] == 'true' ? 'wp_crm_required_field' : ''); ?> wp_crm_<?php echo $field; ?>_container">
@@ -654,7 +670,9 @@ class class_contact_messages {
         </div>
       </div>
     </li>
-  <?php $tabindex++; } ?>
+  <?php
+    do_action("wp_crm_after_{$slug}_frontend", array('values' => $values, 'attribute' => $attribute, 'user_object' => $user_object, 'args' => $args));
+  $tabindex++; } ?>
 
   <?php  if($form['message_field'] == 'on') { ?>
   <li class="wp_crm_form_element wp_crm_message_field ">
@@ -999,7 +1017,7 @@ class class_contact_messages {
         $required_fields[] = $field_slug;
       }
     }
-    
+
     $check_fields = array();
     if($confirmed_form_data['do_not_check_user_email'] != 'on'){
       $check_fields[] = 'user_email';
@@ -1014,10 +1032,10 @@ class class_contact_messages {
 
         /**
          * If current field is textarea and it has predefined values as CSV then it displays the dropdown
-         * under the textarea on front-end. So it is expected that we can use one of them. 
+         * under the textarea on front-end. So it is expected that we can use one of them.
          * For instance - type text into textarea or select it in dropdown or even both.
          * This fix is for the case when select option in dropdown.
-         * 
+         *
          * @author korotkov@UD
          */
         if ( $wp_crm['data_structure']['attributes'][$field_slug]['input_type'] == 'textarea' ) {
@@ -1142,7 +1160,7 @@ class class_contact_messages {
     if(current_user_can('manage_options')) {
       $result['user_id'] = $user_id;
     }
- 
+
     echo json_encode($result);
     die();
   }
@@ -1374,7 +1392,23 @@ class class_contact_messages {
     return $columns;
   }
 
+  /**
+   * Adds screen options and contextual help.
+   *
+   * Called after admin_init and current_screen initialization
+   * See: wp-admin/includes/admin.php
+   *
+   * @action load-crm_page_wp_crm_contact_messages
+   * @author peshkov@UD
+   */
+  function load_screen() {
+    global $wp_crm_contact_messages_filter;
 
+    /** Screen Options */
+    if(function_exists('add_screen_option')) {
+      add_screen_option('layout_columns', array('max' => 2, 'default' => ( $wp_crm_contact_messages_filter ? 2 : 1 )) );
+    }
+  }
 
     /**
     * Used for loading back-end UI
@@ -1404,64 +1438,50 @@ class class_contact_messages {
    * Copyright 2011 Andy Potanin, Usability Dynamics, Inc.  <andy.potanin@usabilitydynamics.com>
    */
   function crm_page_wp_crm_contact_messages() {
-    global $current_screen, $wp_crm, $wpdb;
+    global $current_screen, $wp_crm, $wpdb, $screen_layout_columns;
 
     $wp_list_table = new WP_CMR_List_Table("table_scope=wp_crm_contact_messages&per_page=25&ajax_action=wp_crm_messages_table");
-
     //** Load items into table class */
     $wp_list_table->all_items = class_contact_messages::get_messages();
-
     //** Items are only loaded, prepare_items() only paginates them */
     $wp_list_table->prepare_items();
-
     $wp_list_table->data_tables_script();
 
-    //** Determine if sidebar filter shuold be displayed */
-
-    $show_filter = false;
-
-    if(count($wp_crm['wp_crm_contact_system_data']) > 1) {
-      $show_filter = true;
-    }
-
-    //** Check if we have archived messaged*/
-    if($wpdb->get_var("SELECT COUNT(id) FROM {$wpdb->crm_log} WHERE value = 'archived'")) {
-      $show_filter = true;
-    }
-
-    $show_filter = apply_filters('wp_crm_messages_show_filter', $show_filter);
-
     ?>
-
-
-
-<div class="wp_crm_overview_wrapper wrap">
-  <div class="wp_crm_ajax_result"></div>
-  <h2><?php _e('Contact Messages', 'wp_crm'); ?></h2>
-
-  <div id="poststuff" class="<?php echo $current_screen->id; ?>_table metabox-holder <?php if($show_filter){ ?>has-right-sidebar<?php } ?>">
-    <form id="wp-crm-filter" action="#" method="POST">
-
-    <?php if($show_filter){ ?>
-      <div class="wp_crm_sidebar inner-sidebar">
-        <div class="meta-box-sortables ui-sortable">
-          <?php do_meta_boxes($current_screen->id, 'normal', $wp_list_table); ?>
-        </div>
-      </div>
-      <?php } ?>
-
-      <div id="post-body">
-        <div id="post-body-content">
-          <?php $wp_list_table->display(); ?>
-        </div> <?php /* .post-body-content */ ?>
-      </div> <?php /* .post-body */ ?>
-
-    </form>
-    <br class="clear" />
-
-</div> <?php /* #poststuff */ ?>
-</div> <?php /* .wp_crm_overview_wrapper */ ?>
-
+    <div class="wp_crm_overview_wrapper wrap">
+      <div class="wp_crm_ajax_result"></div>
+      <h2><?php _e('Contact Messages', 'wp_crm'); ?></h2>
+      <form id="wp-crm-filter" action="#" method="POST">
+        <?php if(!CRM_UD_F::is_older_wp_version('3.4')) : ?>
+        <div id="poststuff">
+          <div id="post-body" class="metabox-holder <?php echo 2 == $screen_layout_columns ? 'columns-2' : 'columns-1'; ?>">
+            <div id="post-body-content">
+              <?php $wp_list_table->display(); ?>
+            </div>
+            <div id="postbox-container-1" class="postbox-container">
+              <div id="side-sortables" class="meta-box-sortables ui-sortable">
+                <?php do_meta_boxes($current_screen->id, 'normal', $wp_list_table); ?>
+              </div>
+            </div>
+          </div>
+        </div><!-- /poststuff -->
+        <?php else : ?>
+        <div id="poststuff" class="<?php echo $current_screen->id; ?>_table metabox-holder <?php echo 2 == $screen_layout_columns ? 'has-right-sidebar' : ''; ?>">
+          <div class="wp_crm_sidebar inner-sidebar">
+            <div class="meta-box-sortables ui-sortable">
+              <?php do_meta_boxes($current_screen->id, 'normal', $wp_list_table); ?>
+            </div>
+          </div>
+          <div id="post-body">
+            <div id="post-body-content">
+              <?php $wp_list_table->display(); ?>
+            </div><!-- /.post-body-content -->
+          </div><!-- /.post-body -->
+          <br class="clear" />
+        </div><!-- /#poststuff -->
+        <?php endif; ?>
+      </form>
+    </div><!-- /.wp_crm_overview_wrapper -->
     <?php
   }
 
