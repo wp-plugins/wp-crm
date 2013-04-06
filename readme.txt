@@ -71,6 +71,9 @@ Visit CRM -> Settings and click on the "Data" tab.  There you will  be able to a
 
 == Changelog ==
 
+= 0.34.1 =
+* Fixed profile page metaboxes.
+
 = 0.34.0 =
 * Added WordPress MU compatibility.
 * Fixed JavaScript error on edit user page.
