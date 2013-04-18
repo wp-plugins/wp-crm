@@ -71,6 +71,10 @@ Visit CRM -> Settings and click on the "Data" tab.  There you will  be able to a
 
 == Changelog ==
 
+= 0.34.2 =
+* Fixed fatal error on new user creation.
+* WordPress MU compatibility fixes.
+
 = 0.34.1 =
 * Fixed profile page metaboxes.
 
