@@ -3,8 +3,8 @@ Contributors: Usability Dynamics, andypotanin
 Donate link: http://usabilitydynamics.com/products/wp-crm/
 Tags: CRM, user management, contact form, shortcode form, email, feedback, form, contact form plugin, WordPress CRM, contact form builder, newsletters, bbpress
 Requires at least: 3.0
-Tested up to: 3.5.1
-Stable tag: 0.35.0
+Tested up to: 3.7
+Stable tag: 0.35.1
 
 
 == Description ==
@@ -71,10 +71,15 @@ Visit CRM -> Settings and click on the "Data" tab.  There you will  be able to a
 
 == Changelog ==
 
-= 0.35.0 =
-* Added method ( GET, POST ) option to contact forms.
-* Fix into activity stream.
+= 0.35.1 =
+* Fixed Activity Stream metabox.
+* Fixed WP-Invoice connection ("From" notification field).
+* Fixed CSV User Export.
 
+= 0.35.0 =
+* Added column sort functionality on overview ('All people') page
+* Fixed activity stream.
+* Improved notification's functionality.
 
 = 0.34.2 =
 * Fixed fatal error on new user creation.

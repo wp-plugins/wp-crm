@@ -686,6 +686,7 @@ class class_contact_messages {
     </div>
   </li>
   <?php } ?>
+  <?php do_action('wp_crm_after_form_'.$form_slug, $form_settings); ?>
     <li class="wp_crm_form_response"><div class="wp_crm_response_text" style="display:none;"></li>
     <li class="wp_crm_submit_row">
       <div class="control-group">
@@ -1143,7 +1144,7 @@ class class_contact_messages {
       $notification_info['profile_link'] = admin_url("admin.php?page=wp_crm_add_new&user_id={$user_id}");
 
       /** Add extra filters */
-      $maybe_notification_info = apply_filters('wp_crm_notification_info', $notification_info, $associated_object);
+      $maybe_notification_info = apply_filters('wp_crm_notification_info', $notification_info, $associated_object, $confirmed_form_slug);
 
       //** Make sure our array wasn't overwritten by a poorly written hooked in function, it shuold never be blank */
       if(!empty($maybe_notification_info) || !is_array($maybe_notification_info)) {
@@ -1152,6 +1153,8 @@ class class_contact_messages {
 
       //** Pass the trigger and array of notification arguments to sender function */
       wp_crm_send_notification($confirmed_form_slug, $notification_info);
+
+      do_action('process_crm_message_'.$confirmed_form_slug);
 
     }
 
