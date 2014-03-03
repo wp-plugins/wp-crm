@@ -71,6 +71,9 @@ Visit CRM -> Settings and click on the "Data" tab.  There you will  be able to a
 
 == Changelog ==
 
+= 0.36.1 =
+* Updated libraries.
+
 = 0.36.0 =
 * Added back-end styles compatibility with WordPress 3.8 and higher.
 * Fixed default role on user creation.
