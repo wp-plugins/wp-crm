@@ -1634,4 +1634,3 @@ class class_contact_messages {
   }
 
 }
-
