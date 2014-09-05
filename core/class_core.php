@@ -29,7 +29,7 @@ class WP_CRM_Core {
    *
    */
   function WP_CRM_Core() {
-    global $wp_crm, $wp_roles, $wpdb;
+    global $wpdb;
 
     do_action( 'wp_crm_pre_load' );
 
@@ -53,11 +53,11 @@ class WP_CRM_Core {
     //** Hook in lower init */
     add_action( 'init', array( $this, 'init_lower' ), 100 );
 
-    if ( !$wpdb->crm_log ) {
+    if ( empty($wpdb->crm_log) ) {
       $wpdb->crm_log = $wpdb->base_prefix . 'crm_log';
     }
 
-    if ( !$wpdb->crm_log_meta ) {
+    if ( empty($wpdb->crm_log_meta) ) {
       $wpdb->crm_log_meta = $wpdb->crm_log . '_meta';
     }
 
@@ -76,9 +76,9 @@ class WP_CRM_Core {
    *
    */
   function init() {
-    global $wpdb, $wp_crm, $wp_roles;
+    global $wp_crm;
 
-    if ( $wp_crm[ 'configuration' ][ 'replace_default_user_page' ] == 'true' ) {
+    if ( !empty($wp_crm[ 'configuration' ][ 'replace_default_user_page' ]) && $wp_crm[ 'configuration' ][ 'replace_default_user_page' ] == 'true' ) {
       $current_user = wp_get_current_user();
       if ( $wp_crm[ 'configuration' ][ 'replace_default_user_page' ] == 'true' && basename( $_SERVER[ 'SCRIPT_NAME' ] ) == 'profile.php' && !empty( $current_user->ID ) && current_user_can( 'edit_users' ) ) {
         die( wp_redirect( "admin.php?page=wp_crm_add_new&user_id={$current_user->ID}" ) );
@@ -88,7 +88,7 @@ class WP_CRM_Core {
     /** Loads all the class for handling all plugin tables */
     include_once WP_CRM_Path . '/core/class_list_table.php';
 
-    if ( $wp_crm[ 'configuration' ][ 'track_detailed_user_activity' ] == 'true' ) {
+    if ( !empty($wp_crm[ 'configuration' ][ 'track_detailed_user_activity' ]) && $wp_crm[ 'configuration' ][ 'track_detailed_user_activity' ] == 'true' ) {
       WP_CRM_F::track_detailed_user_activity();
     }
 
@@ -118,7 +118,7 @@ class WP_CRM_Core {
     wp_register_style( 'wp-crm-data-tables', WP_CRM_URL . "/css/crm-data-tables.css", array(), WP_CRM_Version );
 
     //** Attribute grouping options */
-    if ( $wp_crm[ 'configuration' ][ 'allow_attributes_grouping' ] == 'true' ) {
+    if ( !empty($wp_crm[ 'configuration' ][ 'allow_attributes_grouping' ]) && $wp_crm[ 'configuration' ][ 'allow_attributes_grouping' ] == 'true' ) {
       //** Add Group selector */
       add_action( 'wp_crm_attributes_before_advanced_list', array( 'WP_CRM_F', 'attribute_grouping_options' ) );
       //** Add Groups table */
@@ -142,19 +142,18 @@ class WP_CRM_Core {
     //** Load back-end scripts */
     add_action( "admin_enqueue_scripts", array( 'WP_CRM_Core', "admin_enqueue_scripts" ) );
 
-    add_action( "wp_ajax_wp_crm_csv_export", create_function( '', ' WP_CRM_F::csv_export($_REQUEST["wp_crm_search"]); die();' ) );
-    add_action( "wp_ajax_wp_crm_visualize_results", create_function( '', ' WP_CRM_F::visualize_results($_REQUEST["filters"]); die();' ) );
-    add_action( 'wp_ajax_wp_crm_check_plugin_updates', create_function( "", '  die(WP_CRM_F::check_plugin_updates());' ) );
-    add_action( "wp_ajax_wp_crm_user_object", create_function( '', ' echo "CRM Object Report: \n" . print_r(wp_crm_get_user($_REQUEST[user_id]), true) . "\nRaw Meta Report: \n" .  print_r(WP_CRM_F::show_user_meta_report($_REQUEST[user_id]), true); ' ) );
-    add_action( "wp_ajax_wp_crm_show_meta_report", create_function( '', ' die(print_r(WP_CRM_F::show_user_meta_report(), true)); ' ) );
-    add_action( "wp_ajax_wp_crm_get_user_activity_stream", create_function( '', ' die(WP_CRM_F::get_user_activity_stream(array("user_id"=>$_REQUEST[user_id],"per_page"=>$_REQUEST[per_page],"more_per_page"=>$_REQUEST[more_per_page],"filter_types"=>$_REQUEST[filter_types]))); ' ) );
-    add_action( "wp_ajax_wp_crm_insert_activity_message", create_function( '', ' die(WP_CRM_F::insert_event("time={$_REQUEST[time]}&attribute=".((!empty($_REQUEST[message_type]))?$_REQUEST[message_type]:"note")."&object_id={$_REQUEST[user_id]}&text={$_REQUEST[content]}&ajax=true")); ' ) );
-    add_action( "wp_ajax_wp_crm_get_notification_template", create_function( '', '  die(WP_CRM_F::get_notification_template($_REQUEST["template_slug"])); ' ) );
-    add_action( "wp_ajax_wp_crm_do_fake_users", create_function( '', ' die(WP_CRM_F::do_fake_users("number={$_REQUEST[number]}&do_what={$_REQUEST[do_what]}")); ' ) );
-    add_action( "wp_ajax_wp_crm_list_table", create_function( '', ' die(WP_CRM_F::ajax_table_rows());  ' ) );
-    add_action( "wp_ajax_wp_crm_quick_action", create_function( '', ' die(WP_CRM_F::quick_action());' ) );
-
-    add_action( "wp_ajax_wp_crm_check_email_for_duplicates", create_function( '', 'die(WP_CRM_F::check_email_for_duplicates($_REQUEST[email],$_REQUEST[user_id]));' ) );
+    add_action( "wp_ajax_wp_crm_csv_export", array( 'WP_CRM_AJAX', 'csv_export' ) );
+    add_action( "wp_ajax_wp_crm_visualize_results", array( 'WP_CRM_AJAX', 'visualize_results' ) );
+    add_action( 'wp_ajax_wp_crm_check_plugin_updates', array( 'WP_CRM_AJAX', 'check_plugin_updates' ) );
+    add_action( "wp_ajax_wp_crm_user_object", array( 'WP_CRM_AJAX', 'user_object' ) );
+    add_action( "wp_ajax_wp_crm_show_meta_report", array( 'WP_CRM_AJAX', 'show_meta_report' ) );
+    add_action( "wp_ajax_wp_crm_get_user_activity_stream", array( 'WP_CRM_AJAX', 'get_user_activity_stream' ) );
+    add_action( "wp_ajax_wp_crm_insert_activity_message", array( 'WP_CRM_AJAX', 'insert_activity_message' ) );
+    add_action( "wp_ajax_wp_crm_get_notification_template", array( 'WP_CRM_AJAX', 'get_notification_template' ) );
+    add_action( "wp_ajax_wp_crm_do_fake_users", array( 'WP_CRM_AJAX', 'do_fake_users' ) );
+    add_action( "wp_ajax_wp_crm_list_table", array( 'WP_CRM_AJAX', 'list_table' ) );
+    add_action( "wp_ajax_wp_crm_quick_action", array( 'WP_CRM_AJAX', 'quick_action' ) );
+    add_action( "wp_ajax_wp_crm_check_email_for_duplicates", array( 'WP_CRM_AJAX', 'check_email_for_duplicates' ) );
 
     add_action( "admin_init", array( 'WP_CRM_Core', "admin_init" ) );
     add_action( "current_screen", array( 'WP_CRM_Core', "current_screen" ) );
@@ -195,7 +194,7 @@ class WP_CRM_Core {
 
     if ( file_exists( $mofile_local ) ) {
       load_textdomain( 'wp_crm', $mofile_local );
-    } elseif ( file_exists( $wp_crm ) ) {
+    } elseif ( file_exists( $mofile_global ) ) {
       load_textdomain( 'wp_crm', $mofile_global );
     }
 
@@ -213,13 +212,13 @@ class WP_CRM_Core {
     global $wp_crm;
 
     //** Add Password Reset Trigger Action if the default WP password reset email is disabled */
-    if ( $wp_crm[ 'configuration' ][ 'disable_wp_password_reset_email' ] == 'true' ) {
+    if ( !empty($wp_crm[ 'configuration' ][ 'disable_wp_password_reset_email' ]) && $wp_crm[ 'configuration' ][ 'disable_wp_password_reset_email' ] == 'true' ) {
       $wp_crm[ 'notification_actions' ][ 'password_reset' ] = __( 'Password Reset', 'wp_crm' );
     }
 
     //** Filters for CRM settings are applied */
     $wp_crm[ 'configuration' ] = apply_filters( 'wp_crm_configuration', $wp_crm[ 'configuration' ] );
-    $wp_crm[ 'notification_actions' ] = apply_filters( 'wp_crm_notification_actions', $wp_crm[ 'notification_actions' ] );
+    $wp_crm[ 'notification_actions' ] = apply_filters( 'wp_crm_notification_actions', !empty($wp_crm[ 'notification_actions' ])?$wp_crm[ 'notification_actions' ]:array() );
 
     $wp_crm = apply_filters( 'wp_crm_settings_lower', $wp_crm );
 
@@ -234,8 +233,8 @@ class WP_CRM_Core {
    * @since 0.1
    *
    */
-  function template_redirect() {
-    global $post, $wp, $wp_query, $wp_styles;
+  static function template_redirect() {
+    global $post;
 
     if ( !strpos( $post->post_content, "wp_crm_form" ) ) {
       return;
@@ -243,7 +242,6 @@ class WP_CRM_Core {
 
     //** Print front-end styles */
     add_action( "wp_print_styles", array( 'WP_CRM_Core', "wp_print_styles" ) );
-
   }
 
   /**
@@ -254,10 +252,9 @@ class WP_CRM_Core {
    * @since 0.1
    *
    */
-  function wp_print_styles() {
-    global $post, $wp, $wp_query, $wp_styles;
+  static function wp_print_styles() {
 
-    // Load theme-specific stylesheet if it exists
+    //** Load theme-specific stylesheet if it exists */
     wp_enqueue_script( 'jquery' );
     wp_enqueue_style( 'wp-crm-theme-specific' );
     wp_enqueue_style( 'wp-crm-default-styles' );
@@ -270,7 +267,7 @@ class WP_CRM_Core {
    * @since 0.1
    *
    */
-  function toplevel_page_wp_crm() {
+  static function toplevel_page_wp_crm() {
     add_screen_option( 'layout_columns', array( 'max' => 2, 'default' => 2 ) );
     add_screen_option( 'per_page', array( 'label' => __( 'Users', 'wp_crm' ) ) );
 
@@ -292,8 +289,8 @@ class WP_CRM_Core {
    * @since 0.22
    *
    */
-  function crm_page_traditional_user_page() {
-    global $wp_crm, $current_screen, $hook_suffix, $typenow, $taxnow;
+  static function crm_page_traditional_user_page() {
+    global $wp_crm, $current_screen;
 
     /* If avatar-delection redirection originated from CRM profile, we muts return there */
     if ( $_GET[ 'delete_avatar' ] == 'true' && strpos( $_SERVER[ 'HTTP_REFERER' ], 'admin.php?page=wp_crm_add_new' ) ) {
@@ -334,14 +331,11 @@ class WP_CRM_Core {
    * @since 0.22
    *
    */
-  function crm_page_wp_crm_add_new() {
+  static function crm_page_wp_crm_add_new() {
     global $wp_crm;
 
-    //Something wrong with this function. Looks like Metaboxed now had been made in another way. odokienko@UD
-    //WP_CRM_F::crm_profile_page_metaboxes();
-
     //** If we are on 'crm_page_wp_crm_add_new' screen - render metaboxes for groups */
-    if ( $wp_crm[ 'configuration' ][ 'allow_attributes_grouping' ] == 'true' ) {
+    if ( !empty($wp_crm[ 'configuration' ][ 'allow_attributes_grouping' ]) && $wp_crm[ 'configuration' ][ 'allow_attributes_grouping' ] == 'true' ) {
       WP_CRM_F::grouped_metaboxes();
     }
 
@@ -374,10 +368,10 @@ class WP_CRM_Core {
    * @since 0.1
    *
    */
-  function crm_page_wp_crm_settings() {
+  static function crm_page_wp_crm_settings() {
 
     //** Download backup of configuration */
-    if ( $_REQUEST[ 'wp_crm_action' ] == 'download-wp_crm-backup'
+    if ( !empty($_REQUEST[ 'wp_crm_action' ]) && $_REQUEST[ 'wp_crm_action' ] == 'download-wp_crm-backup'
       && wp_verify_nonce( $_REQUEST[ '_wpnonce' ], 'download-wp_crm-backup' )
     ) {
       global $wp_crm;
@@ -441,8 +435,9 @@ class WP_CRM_Core {
    * @since 0.1
    *
    */
-  function admin_init() {
-    global $wp_rewrite, $wp_roles, $wp_crm, $wpdb, $current_user;
+  static function admin_init() {
+    global $wp_crm, $wpdb, $current_user;
+    
     //** Check if current page is profile page, and load global variable */
     WP_CRM_F::maybe_load_profile();
 
@@ -451,12 +446,14 @@ class WP_CRM_Core {
     //** Add overview table rows. Static because admin_menu is not loaded on ajax calls. */
     add_filter( "manage_toplevel_page_wp_crm_columns", array( 'WP_CRM_Core', "overview_columns" ) );
 
-    add_action( 'admin_print_scripts-' . $wp_crm[ 'system' ][ 'pages' ][ 'settings' ], create_function( '', "wp_enqueue_script('jquery-ui-tabs');wp_enqueue_script('jquery-cookie');" ) );
-
+    if ( !empty( $wp_crm[ 'system' ][ 'pages' ][ 'settings' ] ) ) {
+      add_action( 'admin_print_scripts-' . $wp_crm[ 'system' ][ 'pages' ][ 'settings' ], create_function( '', "wp_enqueue_script('jquery-ui-tabs');wp_enqueue_script('jquery-cookie');" ) );
+    }
+    
     add_action( 'load-crm_page_wp_crm_add_new', array( 'WP_CRM_Core', 'wp_crm_save_user_data' ) );
 
     // Add metaboxes
-    if ( is_array( $wp_crm[ 'system' ][ 'pages' ] ) ) {
+    if ( !empty($wp_crm[ 'system' ][ 'pages' ]) && is_array( $wp_crm[ 'system' ][ 'pages' ] ) ) {
 
       $sidebar_boxes = array( 'special_actions' );
 
@@ -501,6 +498,7 @@ class WP_CRM_Core {
           $user_id = $_REQUEST[ 'user_id' ];
 
           if ( wp_verify_nonce( $_wpnonce, 'wp-crm-delete-user-' . $user_id ) ) {
+            
             //** Get IDs of users posts */
             $post_ids = $wpdb->get_col( $wpdb->prepare( "SELECT ID FROM $wpdb->posts WHERE post_author = %d", $user_id ) );
 
@@ -524,7 +522,7 @@ class WP_CRM_Core {
 
     }
 
-    if ( $wp_crm[ 'configuration' ][ 'replace_default_user_page' ] == 'true' ) {
+    if ( !empty($wp_crm[ 'configuration' ][ 'replace_default_user_page' ]) && $wp_crm[ 'configuration' ][ 'replace_default_user_page' ] == 'true' ) {
       add_filter( 'admin_user_info_links', array( 'WP_CRM_Core', 'admin_user_info_links' ), 10, 2 );
     }
 
@@ -538,17 +536,18 @@ class WP_CRM_Core {
    *
    * @author peshkov@UD
    */
-  function current_screen( $current_screen ) {
+  static function current_screen( $current_screen ) {
     global $current_user, $current_screen;
     static $called = false;
 
-    /** Determine if the current screen is profile we re-set it to 'edit user' (crm_page_wp_crm_add_new) screen */
+    //** Determine if the current screen is profile we re-set it to 'edit user' (crm_page_wp_crm_add_new) screen */
     if ( is_object( $current_screen ) && $current_screen->id == 'crm_page_wp_crm_my_profile' ) {
       $called = true;
       if ( empty( $_REQUEST[ 'user_id' ] ) ) {
-        $_GET[ 'user_id' ] = $_REQUEST[ 'user_id' ] = $current_user->id;
-        /** Re-set global $wp_crm_user. It was set earlier on admin_init action. */
-        WP_CRM_F::maybe_load_profile( $current_user->id, true );
+        $_GET[ 'user_id' ] = $_REQUEST[ 'user_id' ] = $current_user->ID;
+        
+        //** Re-set global $wp_crm_user. It was set earlier on admin_init action. */
+        WP_CRM_F::maybe_load_profile( $current_user->ID, true );
       }
       $_GET[ 'redirect_to' ] = $_REQUEST[ 'redirect_to' ] = urlencode( admin_url( 'admin.php?page=wp_crm_my_profile' ) );
       set_current_screen( 'crm_page_wp_crm_add_new' );
@@ -561,7 +560,7 @@ class WP_CRM_Core {
    *
    * @author Reid Williams
    */
-  function admin_user_info_links( $links, $current_user ) {
+  static function admin_user_info_links( $links, $current_user ) {
     $links[ 8 ] = '<a href="admin.php?page=wp_crm_add_new&user_id=' . $current_user->ID . '" title="' . esc_attr__( 'Edit your profile', 'wp_crm' ) . '">' . __( 'Your Profile', 'wp_crm' ) . '</a>';
     return $links;
   }
@@ -574,10 +573,10 @@ class WP_CRM_Core {
    * @since 0.01
    *
    */
-  function wp_crm_save_user_data() {
+  static function wp_crm_save_user_data() {
 
-    if ( wp_verify_nonce( $_REQUEST[ 'wp_crm_update_user' ], 'wp_crm_update_user' ) ) {
-      $args = $_REQUEST[ 'wp_crm' ][ 'args' ];
+    if ( !empty($_REQUEST[ 'wp_crm_update_user' ]) && wp_verify_nonce( $_REQUEST[ 'wp_crm_update_user' ], 'wp_crm_update_user' ) ) {
+      $args = !empty($_REQUEST[ 'wp_crm' ][ 'args' ])?$_REQUEST[ 'wp_crm' ][ 'args' ]:array();
 
       $user_data = $_REQUEST[ 'wp_crm' ][ 'user_data' ];
 
@@ -622,8 +621,8 @@ class WP_CRM_Core {
    *
    * @since 0.1
    */
-  function admin_head() {
-    global $current_screen, $wp_filter, $wp_crm;
+  static function admin_head() {
+    global $current_screen, $wp_crm;
 
     do_action( "wp_crm_header_{$current_screen->id}", $current_screen->id );
 
@@ -637,7 +636,7 @@ class WP_CRM_Core {
 
     }
 
-    if ( $wp_crm[ 'configuration' ][ 'developer_mode' ] == 'true' ) {
+    if ( !empty($wp_crm[ 'configuration' ][ 'developer_mode' ]) && $wp_crm[ 'configuration' ][ 'developer_mode' ] == 'true' ) {
       echo '<script type="text/javascript">var wp_crm_dev_mode = true;</script>';
     }
 
@@ -650,7 +649,7 @@ class WP_CRM_Core {
    *
    * @since 0.1
    */
-  function overview_columns( $columns = false ) {
+  static function overview_columns( $columns = false ) {
     global $wp_crm;
 
     $columns[ 'wp_crm_user_card' ] = __( 'Information', 'wp_crm' );
@@ -673,12 +672,12 @@ class WP_CRM_Core {
    * @todo Make position incriment by one to not override anything
    *
    */
-  function admin_menu() {
+  static function admin_menu() {
     global $wp_crm, $menu, $submenu, $current_user;
 
     do_action( 'wp_crm_admin_menu' );
     //** Replace default user management screen if set */
-    $position = ( ( $wp_crm[ 'configuration' ][ 'replace_default_user_page' ] == 'true' && current_user_can( 'manage_options' ) ) ? '70' : '33' );
+    $position = ( ( !empty($wp_crm[ 'configuration' ][ 'replace_default_user_page' ]) && $wp_crm[ 'configuration' ][ 'replace_default_user_page' ] == 'true' && current_user_can( 'manage_options' ) ) ? '70' : '33' );
 
     /** Setup main overview page */
     $wp_crm[ 'system' ][ 'pages' ][ 'core' ] = add_menu_page( 'CRM', 'CRM', 'WP-CRM: View Overview', 'wp_crm', array( 'WP_CRM_Core', 'page_loader' ), '', $position );
@@ -690,12 +689,12 @@ class WP_CRM_Core {
     $wp_crm[ 'system' ][ 'pages' ][ 'your_profile' ] = $wp_crm[ 'system' ][ 'pages' ][ 'add_new' ];
     $wp_crm[ 'system' ][ 'pages' ][ 'settings' ] = add_submenu_page( 'wp_crm', __( 'Settings', 'wp_crm' ), __( 'Settings', 'wp_crm' ), 'WP-CRM: Manage Settings', 'wp_crm_settings', array( 'WP_CRM_Core', 'page_loader' ) );
 
-    if ( $wp_crm[ 'configuration' ][ 'track_detailed_user_activity' ] == 'true' ) {
+    if ( !empty($wp_crm[ 'configuration' ][ 'track_detailed_user_activity' ]) && $wp_crm[ 'configuration' ][ 'track_detailed_user_activity' ] == 'true' ) {
       $wp_crm[ 'system' ][ 'pages' ][ 'user_logs' ] = add_submenu_page( 'wp_crm', __( 'Activity Logs', 'wp_crm' ), __( 'Activity Logs', 'wp_crm' ), 'WP-CRM: View Detailed Logs', 'wp_crm_detailed_logs', array( 'WP_CRM_Core', 'page_loader' ) );
     }
 
     //** Migrate any pages that are under default user page */
-    if ( $wp_crm[ 'configuration' ][ 'replace_default_user_page' ] == 'true' ) {
+    if ( !empty($wp_crm[ 'configuration' ][ 'replace_default_user_page' ]) && $wp_crm[ 'configuration' ][ 'replace_default_user_page' ] == 'true' ) {
 
       $wp_crm_excluded_sub_pages = apply_filters( 'wp_crm_excluded_sub_pages', array( 5, 10, 15 ) );
       if ( is_array( $submenu[ 'users.php' ] ) ) {
@@ -724,7 +723,7 @@ class WP_CRM_Core {
    *
    * @since 0.01
    */
-  function page_loader() {
+  static function page_loader() {
     global $wp_crm, $screen_layout_columns, $current_screen, $wpdb, $crm_messages, $user_ID, $wp_crm_user;
 
     $file_path = WP_CRM_Path . "/core/ui/{$current_screen->base}.php";
@@ -744,8 +743,8 @@ class WP_CRM_Core {
    * @since 0.01
    *
    */
-  function admin_enqueue_scripts() {
-    global $current_screen, $wp_properties, $wp_crm;
+  static function admin_enqueue_scripts() {
+    global $current_screen;
 
     //** Load scripts on specific pages */
     switch ( $current_screen->id ) {
@@ -803,7 +802,7 @@ class WP_CRM_Core {
    * @since 0.5
    *
    */
-  function admin_body_class() {
+  static function admin_body_class() {
     global $current_screen, $wp_crm_user, $current_user;
 
     switch ( $current_screen->id ) {
@@ -836,7 +835,7 @@ class WP_CRM_Core {
 
     }
 
-    if ( is_array( $classes ) ) {
+    if ( !empty( $classes ) && is_array( $classes ) ) {
       echo implode( ' ', $classes );
     }
 
@@ -849,7 +848,7 @@ class WP_CRM_Core {
    * @since 0.60
    *
    */
-  function plugin_action_links( $links, $file ) {
+  static function plugin_action_links( $links, $file ) {
 
     if ( $file == 'wp-crm/wp-crm.php' ) {
       $settings_link = '<a href="' . admin_url( "admin.php?page=wp_crm_settings" ) . '">' . __( 'Settings', 'wp_crm' ) . '</a>';
@@ -865,7 +864,7 @@ class WP_CRM_Core {
    *
    * @author korotkov@UD
    */
-  function wp_crm_contextual_help( $args = array() ) {
+  static function wp_crm_contextual_help( $args = array() ) {
 
     $defaults = array(
       'contextual_help' => array()

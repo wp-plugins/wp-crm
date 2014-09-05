@@ -21,8 +21,7 @@ class WP_CRM_N {
    * @since 0.21
    *
    */
-  function replace_notification_values( $notification_data = false, $replace_with = false ) {
-    global $wp_crm;
+  static function replace_notification_values( $notification_data = false, $replace_with = false ) {
 
     if(!is_array($replace_with)) {
       return;
@@ -49,17 +48,21 @@ class WP_CRM_N {
    * @since 0.1
    *
    */
-  function get_trigger_action_notification($action = false, $force = false) {
+  static function get_trigger_action_notification($action = false, $force = false) {
     global $wp_crm;
+    
+    $notifications = array();
 
-    if(!$action) {
+    if( !$action ) {
       return false;
     }
+    
     foreach($wp_crm['notifications'] as $slug => $notification_data){
       if(is_array($notification_data['fire_on_action']) && in_array($action, $notification_data['fire_on_action']) || $force) {
         $notifications[$slug] = $notification_data;
       }
     }
+    
     return $notifications;
   }
 
@@ -72,7 +75,7 @@ class WP_CRM_N {
    * @author peshkov@UD
    * @version 1.0
    */
-  function phpmailer_init( $phpmailer ) {
+  static function phpmailer_init( $phpmailer ) {
     global $_crm_notification;
 
     $_crm_notification = wp_parse_args( $_crm_notification, array(

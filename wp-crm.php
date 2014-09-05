@@ -4,10 +4,10 @@ Plugin Name: WP-CRM - Customer Relationship Management
 Plugin URI: http://usabilitydynamics.com/products/wp-crm/
 Description: Integrated Customer Relationship Management for WordPress.
 Author: Usability Dynamics, Inc.
-Version: 0.36.2
+Version: 0.36.3
 Author URI: http://usabilitydynamics.com
 
-Copyright 2011  Usability Dynamics, Inc.    (email : andy.potanin@twincitiestech.com)
+Copyright 2011 - 2014  Usability Dynamics, Inc.    (email : andy.potanin@twincitiestech.com)
 
 Created by Usability Dynamics, Inc (website: twincitiestech.com       email : support@twincitiestech.com)
 
@@ -26,7 +26,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 /** Plugin Version */
-define('WP_CRM_Version', '0.36.2');
+define('WP_CRM_Version', '0.36.3');
 
 /** Path for Includes */
 define( 'WP_CRM_Path', untrailingslashit( plugin_dir_path( __FILE__ ) ) );
@@ -69,6 +69,9 @@ include_once WP_CRM_Path . '/core/ui/crm_metaboxes.php';
 
 /** Loads all the metaboxes for the crm page */
 include_once WP_CRM_Path . '/core/class_core.php';
+
+/** Ajax Handlers */
+include_once WP_CRM_Path . '/core/class_ajax.php';
 
 //* Register activation hook -> has to be in the main plugin file */
 register_activation_hook( __FILE__, array( 'WP_CRM_F', 'activation' ) );

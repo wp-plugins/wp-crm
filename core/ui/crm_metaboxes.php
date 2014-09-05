@@ -16,7 +16,7 @@ class toplevel_page_wp_crm {
    * @since 0.01
    *
    */
-  function actions($wp_list_table) {
+  static function actions($wp_list_table) {
     ?>
     <div class="misc-pub-section">
       <?php $wp_list_table->search_box('Search', 'wp_crm_text_search'); ?>
@@ -60,13 +60,13 @@ class crm_page_wp_crm_add_new {
    * @since 0.01
    *
    */
-  function user_activity_history($object) {
-    global $wpdb;
+  static function user_activity_history($object) {
 
-    $user_id = WP_CRM_F::get_first_value($object['ID']);
+    $user_id = WP_CRM_F::get_first_value( !empty($object['ID'])?$object['ID']:array() );
     $all_messages = array();
     $limited_messages = array();
     $rest_messages = 0;
+    $per_page = 10;
     //** If not to check user id it may cause fatal error */
     if ( $user_id ) {
         $all_messages = WP_CRM_F::get_events('import_count=&object_id=' . $user_id);
@@ -131,9 +131,14 @@ class crm_page_wp_crm_add_new {
     <?php
   }
 
-  function primary_information($user_object) {
+  /**
+   * 
+   * @global type $wp_crm
+   * @param type $user_object
+   */
+  static function primary_information($user_object) {
     global $wp_crm;
-    $user_role = WP_CRM_F::get_first_value($user_object['role']);
+    $user_role = WP_CRM_F::get_first_value( !empty($user_object['role'])?$user_object['role']:array() );
     ?>
     <table class="form-table">
       <?php if (!empty($wp_crm['data_structure']) && is_array($wp_crm['data_structure']['attributes'])) : ?>
@@ -146,7 +151,7 @@ class crm_page_wp_crm_add_new {
                 $row_classes[] = (@$attribute['has_options'] ? 'wp_crm_has_options' : 'wp_crm_no_options');
                 $row_classes[] = (@$attribute['required'] == 'true' ? 'wp_crm_required_field' : '');
                 $row_classes[] = (@$attribute['primary'] == 'true' ? 'primary' : 'not_primary');
-                $row_classes[] = ((is_array($wp_crm['hidden_attributes'][$user_role]) && in_array($slug, $wp_crm['hidden_attributes'][$user_role])) ? 'hidden' : '');
+                $row_classes[] = (( !empty($wp_crm['hidden_attributes'][$user_role]) && is_array($wp_crm['hidden_attributes'][$user_role]) && in_array($slug, $wp_crm['hidden_attributes'][$user_role])) ? 'hidden' : '');
                 $row_classes[] = 'wp_crm_user_entry_row';
                 $row_classes[] = "wp_crm_{$slug}_row";
                 ?>
@@ -156,14 +161,14 @@ class crm_page_wp_crm_add_new {
                     <label for="wp_crm_<?php echo $slug; ?>_field">
                       <?php echo $attribute['title']; ?>
                     </label>
-                    <div class="wp_crm_description"><?php echo $attribute['description']; ?></div>
+                    <div class="wp_crm_description"><?php echo !empty($attribute['description'])?$attribute['description']:''; ?></div>
                     <?php $label = ob_get_contents();
                     ob_end_clean(); ?>
                     <?php echo apply_filters('wp_crm_user_input_label', $label, $slug, $attribute, $user_object); ?>
                   </th>
                   <td class="wp_crm_user_data_row"  wp_crm_attribute="<?php echo $slug; ?>">
                     <div class="blank_slate hidden" show_attribute="<?php echo $slug; ?>"><?php echo (!empty($attribute['blank_message']) ? $attribute['blank_message'] : "Add {$attribute['title']}"); ?></div>
-                    <?php echo WP_CRM_F::user_input_field($slug, $user_object[$slug], $attribute, $user_object); ?>
+                    <?php echo WP_CRM_F::user_input_field($slug, !empty($user_object[$slug])?$user_object[$slug]:'', $attribute, $user_object); ?>
                     <?php if (isset($attribute['allow_multiple']) && $attribute['allow_multiple'] == 'true'): ?>
                       <div class="add_another"><?php _('Add Another'); ?></div>
                     <?php endif; ?>
@@ -183,11 +188,11 @@ class crm_page_wp_crm_add_new {
    * @since 0.01
    *
    */
-  function special_actions($object) {
-    global $current_user, $wpdb, $wp_filter, $user_id, $_wp_admin_css_colors;
+  static function special_actions($object) {
+    global $current_user, $wp_filter, $user_id, $_wp_admin_css_colors;
 
     $current_user_id = $current_user->ID;
-    $user_id = $object['ID']['default'][0];
+    $user_id = !empty( $object['ID']['default'][0] ) ? $object['ID']['default'][0] : '';
     $profileuser = get_user_to_edit($user_id);
 
     if ($user_id == $current_user_id) {
@@ -218,15 +223,15 @@ class crm_page_wp_crm_add_new {
                 <?php if (current_user_can('edit_users')) { ?>
                   <li class="wp_crm_edit_roles">
                     <label for="wp_crm_role"><?php _e('Capability Role:', 'wp_crm'); ?></label>
-                    <select id="wp_crm_role" <?php echo ($own_profile ? ' disabled="true" ' : ''); ?> name="wp_crm[user_data][role][<?php echo rand(1000, 9999); ?>][value]">
+                    <select id="wp_crm_role" <?php echo (!empty($own_profile) ? ' disabled="true" ' : ''); ?> name="wp_crm[user_data][role][<?php echo rand(1000, 9999); ?>][value]">
                       <option value=""></option>
-                  <?php wp_dropdown_roles($object['role']['default'][0]); ?>
+                  <?php wp_dropdown_roles(!empty($object['role']['default'][0])?$object['role']['default'][0]:''); ?>
                     </select>
                   </li>
                 <?php } ?>
                 <li class="wp_crm_capability_bar">
                   <input name="show_admin_bar_front" type="hidden" value="false"  />
-                  <input name="show_admin_bar_front" type="checkbox" id="show_admin_bar_front" value="true" <?php checked(_get_admin_bar_pref('front', $profileuser->ID)); ?> />
+                  <input name="show_admin_bar_front" type="checkbox" id="show_admin_bar_front" value="true" <?php checked(_get_admin_bar_pref('front', !empty($profileuser->ID)?$profileuser->ID:'' )); ?> />
                   <label for="show_admin_bar_front"><?php _e('Show Admin Bar when viewing site.','wp_crm'); ?> </label>
                 </li>
               </ul>
@@ -237,7 +242,7 @@ class crm_page_wp_crm_add_new {
             </div>
           </li>
         </ul>
-        <?php if (count($wp_filter['show_user_profile']) || count($wp_filter['profile_personal_options'])) { ?>
+        <?php if ( ( !empty($wp_filter['show_user_profile']) && count( $wp_filter['show_user_profile'] ) ) || ( !empty($wp_filter['profile_personal_options']) && count( $wp_filter['profile_personal_options'] ) ) ) { ?>
           <div class="wp_crm_user_api_actions">
         <?php
             add_filter('wpi_user_information', array('WP_CRM_F', 'wpi_user_information'));
@@ -258,9 +263,9 @@ class crm_page_wp_crm_add_new {
           <div id="publishing-action">
             <input type="hidden" value="Publish" id="original_publish" name="original_publish" />
             <?php if (current_user_can('edit_users') || (current_user_can('add_users') && $object['new'])) { ?>
-            <input type="submit" accesskey="p" tabindex="5" value="<?php echo ($object['new'] ? __('Save', 'wpp_crm') : __('Update', 'wpp_crm')); ?>" class="button-primary" id="publish" name="publish" />
+            <input type="submit" accesskey="p" tabindex="5" value="<?php echo (!empty($object['new']) ? __('Save', 'wpp_crm') : __('Update', 'wpp_crm')); ?>" class="button-primary" id="publish" name="publish" />
               <?php } else { ?>
-                <input type="submit" accesskey="p" tabindex="5" value="<?php echo ($object['new'] ? __('Save', 'wpp_crm') : __('Update', 'wpp_crm')); ?>" class="button-primary" id="publish" name="publish" disabled="true">
+                <input type="submit" accesskey="p" tabindex="5" value="<?php echo (!empty($object['new']) ? __('Save', 'wpp_crm') : __('Update', 'wpp_crm')); ?>" class="button-primary" id="publish" name="publish" disabled="true">
               <?php } ?>
           </div>
           <div class="clear"></div>
@@ -269,7 +274,7 @@ class crm_page_wp_crm_add_new {
         <div class="wp_crm_user_actions">
           <ul class="wp_crm_action_list">
             <?php do_action('wp_crm_single_user_actions', $object); ?>
-            <?php if ((current_user_can('remove_users') || current_user_can('delete_users')) && (!$object['new'] && $user_id != $current_user->ID)) { ?>
+            <?php if ((current_user_can('remove_users') || current_user_can('delete_users')) && (empty($object['new']) && $user_id != $current_user->ID)) { ?>
               <li><a href="<?php echo wp_nonce_url("admin.php?wp_crm_action=delete_user&page=wp_crm&user_id={$user_id}", 'wp-crm-delete-user-' . $user_id); ?>" class="submitdelete deletion button"><?php _e('Delete','wp_crm'); ?></a></li>
             <?php } ?>
           </ul>
