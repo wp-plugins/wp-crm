@@ -17,6 +17,10 @@ class WP_CMR_List_Table extends WP_List_Table {
   var $column_ids;
   
   var $is_site_users;
+  
+  var $all_items;
+  
+  var $item_pages; 
 
   /**
    * Setup options mostly.
