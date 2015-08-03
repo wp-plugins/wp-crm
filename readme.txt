@@ -1,43 +1,49 @@
 === WP-CRM - Customer Relations Management for WordPress ===
-Contributors: usability_dynamics, andypotanin, jbrw1984, maxim.peshkov, Anton Korotkoff, ideric
-Donate link: http://usabilitydynamics.com/products/wp-crm/
-Tags: CRM, user management, contact form, shortcode form, email, feedback, form, contact form plugin, WordPress CRM, contact form builder, newsletters, bbpress
-Requires at least: 3.6
-Tested up to: 4.2
+Contributors: usability_dynamics, andypotanin, jbrw1984, maxim.peshkov, Anton Korotkoff, ideric, MariaKravchenko
+Donate link: http://www.usabilitydynamics.com/product/wp-crm/
+Tags: wp-crm, users, CRM, user management, contact form, shortcode form, email, feedback, form, contact form plugin, WordPress CRM, contact form builder, newsletters, bbpress
+Requires at least: 4.0
+Tested up to: 4.2.3
 Stable tag: 0.36.5
+License: GPLv2 or later
+Organize your business clients, improve user management.
 
 == Description ==
 
 This plugin is intended to significantly improve user management, easily create contact forms, and keep track of incoming shortcode form messages.
 
-WordPress already comes with some basic user management functions - WP-CRM expands on those functionalities by allowing you to organize your users using custom attributes, find them using filters, and keep track of correspondence.
+WordPress already comes with some basic user management functions - WP-CRM expands on this functionality by allowing you to organize your users using custom attributes, find them using filters, and keep track of correspondence.
 
 Your WP control panel can effectively be used to manage all your customers, vendors, partners, affiliates, etc.
 
-= Core Features =
+> WP-CRM on [GitHub](https://github.com/wp-crm/wp-crm)
+
+= Features =
+
 * Excellent user organization, filtering and editing.
 * Ability to easily add new user data attributes (i.e. Company Name).
 * Dynamic charts representing attributes with quantifiable data.
-* Shortcode Form Creation and Contact Message Management.
-* User CSV Exporting.*
+* Contact Forms for front-end.
+* Notifications management.
+* Group notifications (Add-on).
+* User CSV Exporting.
 * User activity and note tracking.
+* WP-Invoice integration.
 
-= Other Plugin Integration =
-* User Avatar - Plugin for uploading custom images for users.  Picture and upload functions are located under "Special Actions" in CRM profile pages when User Avatar plugin is activated.
+= Available Add-ons list =
+If you found the default functionality of WP-CRM is not enough for your needs please take a look at the list of available [Add ons](https://www.usabilitydynamics.com/products#category-wp-crm)
 
-= Shortcode Forms =
+= Group Messages =
+Ability to send newsletters to users, or user groups.
+[More about Add-on](https://www.usabilitydynamics.com/product/wp-crm-group-messages)
+
+= Contact Forms Tutorial =
 
 [vimeo http://vimeo.com/26983459]
 
 = Attribute Management =
 
 [vimeo http://vimeo.com/26984134]
-
-
-= Premium Features =
-
-* CRM Group Messages - ability to send newsletters to users, or user groups.
-* Email Synchronization - synchronized email management. (in development)
 
 == Installation ==
 
@@ -47,9 +53,7 @@ For additional help, please reference the contextual help dropdowns the differen
 
 == Frequently Asked Questions ==
 
-= How do I add a new attribute?  =
-
-Visit CRM -> Settings and click on the "Data" tab.  There you will  be able to add a new and configure new attributes.
+[WP-Invoice FAQ](http://feedback.usabilitydynamics.com/knowledgebase/topics/51306-wp-crm)
 
 == Screenshots ==
 
@@ -70,11 +74,17 @@ Visit CRM -> Settings and click on the "Data" tab.  There you will  be able to a
 
 == Changelog ==
 
-= 0.36.5 =
-* WordPress 4.2 compatibility.
-
-= 0.36.4 =
-* Fixed critical issue with updating premium features.
+= 1.0.0 =
+* Changed plugin initialization functionality.
+* Added Composer ( dependency manager ) modules and moved some functionality to composer modules ( vendors ).
+* Added doing WP-CRM Settings backup on upgrade to new version. Get information about backup: get_option('wp_crm_settings_backup');
+* Moved premium features to separate plugins.
+* Cleaned up functionality of plugin.
+* Refactored file structure of plugin.
+* Refactored 'View All' page.
+* Fixed performance issue.
+* Fixed user profile page UI.
+* Fixed Warnings and Notices.
 
 = 0.36.3 =
 * WordPress 4.0 compatibility.
